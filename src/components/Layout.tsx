@@ -1,16 +1,17 @@
-import { Box, Button, Grommet, type ThemeType } from 'grommet'
+import { Box, Button, Grommet, Heading, type ThemeType } from 'grommet'
 import dynamic from 'next/dynamic'
-import Link from 'next/link'
 import type { ReactNode } from 'react'
 
-const AccountButton = dynamic(() => import('./AccountButton'), {
-  ssr: false,
-})
+// const AccountButton = dynamic(() => import('./AccountButton'), {
+//   ssr: false,
+// })
 
 const theme: ThemeType = {
   global: {
     font: {
-      family: 'sans-serif',
+      family: 'RobotoRegular',
+      size: '18px',
+      height: '20px',
     },
   },
 }
@@ -24,14 +25,7 @@ export default function Layout({ children }: Props) {
     <Grommet theme={theme}>
       <Box direction="column" flex>
         <Box direction="row" elevation="medium" pad="small">
-          <Box>
-            <Link href="/new" passHref>
-              <Button label="New note" />
-            </Link>
-          </Box>
-          <Box align="flex-end" flex>
-            <AccountButton />
-          </Box>
+          <Heading>Regen League</Heading>
         </Box>
         <Box flex>{children}</Box>
       </Box>

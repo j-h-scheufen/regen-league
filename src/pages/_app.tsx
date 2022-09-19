@@ -1,25 +1,19 @@
-import type { ModelTypesToAliases } from '@glazed/types'
-import { Provider as SelfIDProvider } from '@self.id/framework'
+import '../styles/global.css'
 import { Provider as JotaiProvider } from 'jotai'
 import type { AppProps } from 'next/app'
 
-import { aliases as modelAliases } from '../__generated__/aliases'
 import Layout from '../components/Layout'
-import { CERAMIC_NETWORK } from '../constants'
-import type { ModelTypes } from '../types'
-
-const aliases: ModelTypesToAliases<ModelTypes> = modelAliases
+import RelayProvider from '../components/RelayProvider'
 
 export default function App({ Component, pageProps }: AppProps) {
-  const { state, ...props } = pageProps
 
   return (
-    <SelfIDProvider client={{ ceramic: CERAMIC_NETWORK, aliases }} state={state}>
-      <JotaiProvider>
+    <JotaiProvider>
+      <RelayProvider>
         <Layout>
-          <Component {...props} />
+          <Component {...pageProps} />
         </Layout>
-      </JotaiProvider>
-    </SelfIDProvider>
+      </RelayProvider>
+    </JotaiProvider>
   )
 }

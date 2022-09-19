@@ -1,8 +1,16 @@
 import { atom } from 'jotai'
-import { atomWithReset } from 'jotai/utils'
+import type { Environment as RelayEnvironment } from 'react-relay'
 
-import type { EditionState, NoteForm } from './types'
+import { defaultRelayEnvironment } from './environment'
+import type { Environment } from './environment'
 
-export const draftNoteAtom = atomWithReset<NoteForm>({ text: '', title: '' })
+export const environmentAtom = atom<Environment | null>(null)
 
-export const editionStateAtom = atom<EditionState>({ status: 'pending' })
+export const relayEnvironmentAtom = atom<RelayEnvironment>((get) => {
+  return get(environmentAtom)?.relay ?? defaultRelayEnvironment
+})
+
+export const authenticatedIDAtom = atom<string | null>((get) => {
+  const env = get(environmentAtom)
+  return env?.did.authenticated ? env.did.id : null
+})

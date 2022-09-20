@@ -12,5 +12,5 @@ export const relayEnvironmentAtom = atom<RelayEnvironment>((get) => {
 
 export const authenticatedIDAtom = atom<string | null>((get) => {
   const env = get(environmentAtom)
-  return env?.did.authenticated ? env.did.id : null
+  return env?.session.isAuthorized ? env.session.id : null
 })

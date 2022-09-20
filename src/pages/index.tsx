@@ -1,10 +1,11 @@
 import { Anchor, Box, Heading, Paragraph } from 'grommet'
 import { useRouter } from 'next/router'
 import { useAuthenticatedID } from '../hooks'
-import { useEffect } from 'react'
-import Link from "next/link";
+import dynamic from "next/dynamic";
 
-import ConnectButton from '../components/ConnectButton'
+const ConnectButton = dynamic(() => import('../components/ConnectButton'), {
+    ssr: false,
+})
 
 export default function HomePage() {
     const id = useAuthenticatedID()

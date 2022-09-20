@@ -24,7 +24,7 @@ export default function Layout({ children }: Props) {
   return (
     <Grommet theme={theme}>
       <Box direction="column" flex>
-        <Box direction="row" elevation="medium" pad="small">
+        <Box direction="row" elevation="medium" pad="small" justify="center">
           <Heading>Regen League</Heading>
         </Box>
         <Box flex>{children}</Box>

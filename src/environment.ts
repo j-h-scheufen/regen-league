@@ -1,7 +1,5 @@
 import { ComposeClient } from '@composedb/client'
-import { DID } from 'dids'
-import { Ed25519Provider } from 'key-did-provider-ed25519'
-import { getResolver } from 'key-did-resolver'
+import { DIDSession } from 'did-session'
 import { Environment as RelayEnvironment, Network, RecordSource, Store } from 'relay-runtime'
 import type { GraphQLResponse } from 'relay-runtime'
 
@@ -10,7 +8,7 @@ import { definition } from './__generated__/definition'
 const CERAMIC_URL = process.env.NEXT_PUBLIC_CERAMIC_URL ?? 'http://localhost:7007'
 
 export type Environment = {
-  did: DID
+  session: DIDSession
   relay: RelayEnvironment
 }
 
@@ -26,15 +24,8 @@ export function createRelayEnvironment(): RelayEnvironment {
   return new RelayEnvironment({ network, store: new Store(new RecordSource()) })
 }
 
-export async function createEnvironment(seed: Uint8Array): Promise<Environment> {
-  const did = new DID({
-    provider: new Ed25519Provider(seed),
-    resolver: getResolver(),
-  })
-  await did.authenticate()
-  client.setDID(did)
-
-  return { did, relay: createRelayEnvironment() }
+export async function createEnvironment(session: DIDSession): Promise<Environment> {
+  return { session, relay: createRelayEnvironment() }
 }
 
 export const defaultRelayEnvironment: RelayEnvironment = createRelayEnvironment()

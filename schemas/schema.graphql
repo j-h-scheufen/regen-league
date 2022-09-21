@@ -1,0 +1,10 @@
+type Profile @createModel(accountRelation: SINGLE, description: "User profile info") {
+  name: String! @string(maxLength: 100)
+  description: String @string(maxLength: 2000)
+  entityType: EntityType!
+}
+
+enum EntityType {
+  PERSON
+  ENTITY
+}

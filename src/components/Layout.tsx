@@ -1,10 +1,5 @@
 import { Box, Button, Grommet, Heading, type ThemeType } from 'grommet'
-import dynamic from 'next/dynamic'
 import type { ReactNode } from 'react'
-
-// const AccountButton = dynamic(() => import('./AccountButton'), {
-//   ssr: false,
-// })
 
 const theme: ThemeType = {
   global: {

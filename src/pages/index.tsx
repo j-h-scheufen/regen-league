@@ -1,5 +1,6 @@
-import { Anchor, Box, Heading, Paragraph } from 'grommet'
+import { Box, Paragraph } from 'grommet'
 import { useRouter } from 'next/router'
+import Link from "next/link"
 import { useAuthenticatedID } from '../hooks'
 import dynamic from "next/dynamic";
 
@@ -13,7 +14,8 @@ export default function HomePage() {
 
     const content = id ? (
         <Box align="center" direction="column" pad="medium">
-            <Paragraph>Connected as {id}</Paragraph>
+            <Paragraph>Connected as <Link href={`/${id}`} passHref>
+                {id}</Link></Paragraph>
         </Box>
     ) : (
         <Box align="center" direction="column" pad="medium">

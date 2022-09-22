@@ -17,6 +17,8 @@
     "@composedb/client": "^0.2.2",
     "@composedb/types": "^0.2.2",
     "did-session": "^0.1.1",
+    "key-did-provider-ed25519": "^2.0.1",
+    "key-did-resolver": "^2.1.1",
     "graphql": "16.6.0",
     "grommet": "^2.22.0",
     "jotai": "^1.6.2",

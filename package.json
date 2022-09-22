@@ -1,6 +1,10 @@
 {
   "name": "regen-league",
   "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/j-h-scheufen/regen-league"
+  },
   "scripts": {
     "relay": "relay-compiler",
     "dev": "NODE_OPTIONS='--inspect' next dev",
@@ -10,8 +14,8 @@
   },
   "dependencies": {
     "@ceramicnetwork/http-client": "^2.3.4",
-    "@composedb/client": "^0.2.0",
-    "@composedb/types": "^0.2.0",
+    "@composedb/client": "^0.2.2",
+    "@composedb/types": "^0.2.2",
     "did-session": "^0.1.1",
     "graphql": "16.6.0",
     "grommet": "^2.22.0",
@@ -36,5 +40,10 @@
     "eslint-config-next": "^12.3.0",
     "relay-compiler": "^14.1.0",
     "typescript": "^4.8.3"
+  },
+  "overrides": {
+    "express-graphql@0.12.0": {
+      "graphql": "16.6.0"
+    }
   }
 }

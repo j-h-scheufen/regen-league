@@ -2,6 +2,6 @@
   "src": "./src",
   "language": "typescript",
   "artifactDirectory": "./src/__generated__/relay",
-  "schema": "./schemas/schema.graphql",
+  "schema": "./schemas/relay-schema.graphql",
   "exclude": ["**/node_modules/**", "**/__generated__/**"]
 }

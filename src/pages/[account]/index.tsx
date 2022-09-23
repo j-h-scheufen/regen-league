@@ -4,6 +4,7 @@ import { Suspense, useEffect } from 'react'
 import { type PreloadedQuery, graphql, useQueryLoader, usePreloadedQuery } from 'react-relay'
 
 import { AccountProfileQuery } from '../../__generated__/relay/AccountProfileQuery.graphql'
+import Link from "next/link";
 
 const query = graphql`
   query AccountProfileQuery($did: ID!) {
@@ -24,7 +25,12 @@ type ListProps = {
 
 function AccountContent({ queryRef }: ListProps) {
   const data = usePreloadedQuery<AccountProfileQuery>(query, queryRef)
-  return data.account ? <Box><Paragraph>{data.account.profile?.name}</Paragraph></Box> : null
+  if (data.account?.profile) {
+    return <Box><Paragraph>{data.account.profile.name}</Paragraph></Box>
+  }
+  else {
+    return <Box><Paragraph>No profile detected. <Link href={"/newProfile"} passHref={true}>Create one.</Link></Paragraph></Box>
+  }
 }
 
 type Props = {

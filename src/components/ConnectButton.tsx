@@ -34,7 +34,7 @@ export default function ConnectButton() {
     const connect = useCallback(async () => {
         // @ts-ignore
         const ethProvider = window.ethereum;
-        const addresses = await ethProvider.enable()
+        const addresses = await ethProvider.request({ method: 'eth_requestAccounts', })
         const authProvider = new EthereumAuthProvider(ethProvider, addresses[0])
         const session = await loadSession(authProvider)
 

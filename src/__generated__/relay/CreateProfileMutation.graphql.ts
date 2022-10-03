@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<6ff5e2bf5bffd4d8eadd298243da6059>>
+ * @generated SignedSource<<6fe99b90213593ba63ba8ac9bf90f6fc>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -9,14 +9,12 @@
 // @ts-nocheck
 
 import { ConcreteRequest, Mutation } from 'relay-runtime';
-export type ProfileEntityType = "ENTITY" | "PERSON" | "%future added value";
 export type CreateProfileInput = {
   clientMutationId?: string | null;
   content: ProfileInput;
 };
 export type ProfileInput = {
   description?: string | null;
-  entityType?: ProfileEntityType | null;
   name: string;
 };
 export type CreateProfileMutation$variables = {

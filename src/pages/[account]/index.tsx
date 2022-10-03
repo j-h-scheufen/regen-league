@@ -12,7 +12,7 @@ const query = graphql`
       ... on CeramicAccount {
         profile {
           name
-          entityType
+          description
         }
       }
     }

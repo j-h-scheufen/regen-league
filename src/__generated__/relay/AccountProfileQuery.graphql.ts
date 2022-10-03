@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<aa331385f26a3f43db85106193cff670>>
+ * @generated SignedSource<<576c3d30f9406258f75e30080b250f82>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -9,14 +9,13 @@
 // @ts-nocheck
 
 import { ConcreteRequest, Query } from 'relay-runtime';
-export type ProfileEntityType = "ENTITY" | "PERSON" | "%future added value";
 export type AccountProfileQuery$variables = {
   did: string;
 };
 export type AccountProfileQuery$data = {
   readonly account: {
     readonly profile?: {
-      readonly entityType: ProfileEntityType | null;
+      readonly description: string | null;
       readonly name: string;
     } | null;
   } | null;
@@ -52,7 +51,7 @@ v3 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
-  "name": "entityType",
+  "name": "description",
   "storageKey": null
 },
 v4 = {
@@ -153,16 +152,16 @@ return {
     ]
   },
   "params": {
-    "cacheID": "a46f763f81a197a7356675228c3f4131",
+    "cacheID": "96280a74b67fb4e46cd0f64709573555",
     "id": null,
     "metadata": {},
     "name": "AccountProfileQuery",
     "operationKind": "query",
-    "text": "query AccountProfileQuery(\n  $did: ID!\n) {\n  account: node(id: $did) {\n    __typename\n    ... on CeramicAccount {\n      profile {\n        name\n        entityType\n        id\n      }\n    }\n    id\n  }\n}\n"
+    "text": "query AccountProfileQuery(\n  $did: ID!\n) {\n  account: node(id: $did) {\n    __typename\n    ... on CeramicAccount {\n      profile {\n        name\n        description\n        id\n      }\n    }\n    id\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "e7a634f7251e64caeb908e5a0e10d79e";
+(node as any).hash = "1510809cd715770f0282d8221bc4fd97";
 
 export default node;

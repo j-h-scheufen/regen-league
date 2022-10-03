@@ -35,13 +35,7 @@ type CeramicAccount implements Node {
 type Profile implements Node {
   id: ID!
   name: String!
-  entityType: ProfileEntityType
   description: String
-}
-
-enum ProfileEntityType {
-  PERSON
-  ENTITY
 }
 
 """A connection to a list of items."""
@@ -100,7 +94,6 @@ input CreateProfileInput {
 
 input ProfileInput {
   name: String!
-  entityType: ProfileEntityType
   description: String
 }
 
@@ -124,7 +117,6 @@ input UpdateProfileInput {
 
 input PartialProfileInput {
   name: String
-  entityType: ProfileEntityType
   description: String
 }
 

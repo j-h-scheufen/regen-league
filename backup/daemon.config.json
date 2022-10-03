@@ -1,0 +1,32 @@
+{
+  "anchor": {},
+  "http-api": {
+    "cors-allowed-origins": [
+      ".*"
+    ]
+  },
+  "ipfs": {
+    "mode": "bundled"
+  },
+  "logger": {
+    "log-level": 2,
+    "log-to-files": false
+  },
+  "metrics": {
+    "metrics-exporter-enabled": false,
+    "metrics-port": 9090
+  },
+  "network": {
+    "name": "testnet-clay"
+  },
+  "node": {},
+  "state-store": {
+    "mode": "fs",
+    "local-directory": "/Users/jan/.ceramic/statestore/"
+  },
+  "indexing": {
+    "db": "sqlite:///Users/jan/.ceramic/indexing.sqlite",
+    "allow-queries-before-historical-sync": true,
+    "models": ["kjzl6hvfrbw6c82knlga8nvrgze6l8rkns851fps0rbvs3dtxx7yh5ed30h6ys0"]
+  }
+}

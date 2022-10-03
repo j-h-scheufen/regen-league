@@ -5,7 +5,7 @@ import type { GraphQLResponse } from 'relay-runtime'
 
 import { definition } from './__generated__/definition'
 
-const CERAMIC_URL = process.env.NEXT_PUBLIC_CERAMIC_URL ?? 'http://localhost:7007'
+const CERAMIC_URL = process.env.NEXT_PUBLIC_CERAMIC_URL ?? 'http://0.0.0.0:7007'
 
 export type Environment = {
   session: DIDSession
@@ -25,6 +25,7 @@ export function createRelayEnvironment(): RelayEnvironment {
 }
 
 export async function createEnvironment(session: DIDSession): Promise<Environment> {
+  client.setDID(session.did)
   return { session, relay: createRelayEnvironment() }
 }
 

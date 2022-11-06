@@ -1,3 +1,0 @@
-// This is an auto-generated file, do not edit manually
-import type { RuntimeCompositeDefinition } from '@composedb/types'
-export const definition: RuntimeCompositeDefinition = {"models":{"Profile":{"id":"kjzl6hvfrbw6c6o40du1tq9ddjeaimrbf1oruetfzbujv89cib275zphrlufi4v","accountRelation":"single"}},"objects":{"Profile":{"name":{"type":"string","required":true},"description":{"type":"string","required":false}}},"enums":{},"accountData":{"profile":{"type":"node","name":"Profile"}}}

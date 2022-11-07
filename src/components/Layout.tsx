@@ -1,4 +1,4 @@
-import { Box, Button, Grommet, Heading, type ThemeType } from 'grommet'
+import { Box, Grommet, Heading, type ThemeType } from 'grommet'
 import type { ReactNode } from 'react'
 
 const theme: ThemeType = {

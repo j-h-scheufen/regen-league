@@ -1,25 +1,19 @@
-import { Box, Paragraph } from 'grommet'
-import { useRouter } from 'next/router'
-import Link from "next/link"
-import { useAuthenticatedID } from '../hooks'
-import dynamic from "next/dynamic";
-
-const ConnectButton = dynamic(() => import('../components/ConnectButton'), {
-    ssr: false,
-})
+import { Box } from 'grommet'
+import { Auth, ThemeSupa } from '@supabase/auth-ui-react'
+import { useSession, useSupabaseClient } from '@supabase/auth-helpers-react'
+import Link from 'next/link';
 
 export default function HomePage() {
-    const id = useAuthenticatedID()
-    const router = useRouter()
+    const session = useSession()
+    const supabase = useSupabaseClient()
 
-    const content = id ? (
+    const content = session ? (
         <Box align="center" direction="column" pad="medium">
-            <Paragraph>Connected as <Link href={`/${id}`} passHref>
-                {id}</Link></Paragraph>
+            <Link href={'/profile'}>My Profile</Link>
         </Box>
     ) : (
         <Box align="center" direction="column" pad="medium">
-            <ConnectButton></ConnectButton>
+            <Auth supabaseClient={supabase} appearance={{ theme: ThemeSupa }} theme="dark" />
         </Box>
     )
 

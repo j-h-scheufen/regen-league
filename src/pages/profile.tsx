@@ -1,22 +1,19 @@
-import {Box, Paragraph} from "grommet";
-import Account from '../components/Account'
-import { User, createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'
+import { Box, Paragraph } from "grommet";
 import { GetServerSidePropsContext } from 'next'
-import type { Profile } from '../components/Account'
-import {Session} from "@supabase/auth-helpers-react";
+import { User } from '@supabase/auth-helpers-nextjs'
+import { Session } from "@supabase/auth-helpers-react";
 
-type Props = {
+import { getServerClient, Profile } from "../hooks/supabase";
+import Account from '../components/Account'
+
+type PageProps = {
     initialSession: Session
     user: User
     profile: Profile
 }
 
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
-    const supabase = createServerSupabaseClient(ctx)
-    const {
-        data: {session},
-    } = await supabase.auth.getSession()
-
+    const {client, session} = await getServerClient(ctx)
     if (!session) {
         return {
             redirect: {
@@ -26,9 +23,9 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
         }
     }
 
-    // Run queries with RLS on the server
-    const {data} = await supabase.from('profiles').select('*')
-    console.log('DATA: '+JSON.stringify(data))
+    const {data, error} = await client.from('profiles').select('*')
+
+    if (error) alert('Unable to retrieve profile data for user ID '+session.user?.id+'. Error: '+error.message);
 
     return {
         props: {
@@ -39,7 +36,7 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
     }
 }
 
-export default function Profile({ profile }: Props) {
+export default function ProfileDetails({ profile }: PageProps) {
 
         return (<Box><Account {...profile}/></Box>)
 }

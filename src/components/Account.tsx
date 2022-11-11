@@ -1,20 +1,21 @@
 import { useState, useEffect } from 'react'
+import {Box, Button, Form, FormField, TextInput} from 'grommet';
 import { useUser, useSupabaseClient, User } from '@supabase/auth-helpers-react'
+
 import { Database } from '../utils/database.types'
-import {Box, Button, Form, FormField, Paragraph, TextInput} from "grommet";
+import { Profile } from '../hooks/supabase'
+
 import Avatar from './Avatar'
-
-export type Profile = {
-    username: string
-    website: string
-    avatar_url: string
-}
-
+// type Props = {
+//     user: User,
+//     profile: Profile
+// }
 
 export default function Account(profile: Profile) {
-    const emptyProfile = { username: '', website: '', avatar_url: '' }
     const supabase = useSupabaseClient<Database>()
     const user = useUser()
+    // it's expected a logged-in user is present when this component is used to insert user.id as profile.id
+    const emptyProfile = { id: user?.id ?? '', username: '', website: '', avatar_url: '', updated_at: '' }
     const [currentProfile, setProfile] = useState<Profile>(profile)
     const [loading, setLoading] = useState(false)
 
@@ -24,7 +25,6 @@ export default function Account(profile: Profile) {
             if (!user) throw new Error('No user')
 
             const updates = {
-                id: user.id,
                 ...currentProfile,
                 updated_at: new Date().toISOString(),
             }
@@ -42,7 +42,7 @@ export default function Account(profile: Profile) {
 
     return (
         <Box align="center" direction="column" pad="medium">
-            <Form
+            <Form<Profile>
                 value={currentProfile}
                 onChange={nextValue => setProfile(nextValue)}
                 onReset={() => setProfile(emptyProfile)}

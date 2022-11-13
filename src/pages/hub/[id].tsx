@@ -1,8 +1,8 @@
 import {GetServerSidePropsContext} from "next";
 import {Session} from "@supabase/auth-helpers-react";
 import {User} from "@supabase/auth-helpers-nextjs";
-import {Avatar, Box} from "grommet";
-import {User as UserIcon} from "grommet-icons";
+import {Avatar, Box, Heading, Text} from "grommet";
+import {User as UserIcon, Cluster as ClusterIcon} from "grommet-icons";
 
 import HubForm from "../../components/HubForm";
 import {getServerClient, Hub} from "../../utils/supabase";
@@ -75,11 +75,14 @@ export default function HubDetails({ hub, members }: PageProps) {
 
   return (
       <Box>
-        <Box direction="row">
-          Members:
+        <Box direction="row" alignSelf="center">
+          <Heading size="medium" margin="small" alignSelf="center">{hub.name}</Heading>
+        </Box>
+        <Box direction="row" gap="small">
+          <Text size="large" margin="medium">Members:</Text>
           {members.map((member) => {
             if (member.avatarURL)
-              return (<Avatar key={member.userId} src={member.avatarURL} size="medium"/>)
+              return (<Avatar key={member.userId} src={member.avatarURL} size="medium" margin="small"/>)
             else
               return (<Avatar ><UserIcon/></Avatar>)
           })}

@@ -59,11 +59,6 @@ export default function HubForm(hub: Hub) {
                         <TextInput id="websiteId" name="website" type="url" />
                     </FormField>
                 </FormSection>
-                <FormSection>
-                    <Box direction="column" width="100%">
-                        <Heading size='medium'>Links</Heading>
-                    </Box>
-                </FormSection>
                 <Box direction="row" gap="medium" width="50%" margin={{ horizontal: 'auto', top: 'large' }}>
                     <Button type="submit" primary label={loading ? 'Loading ...' : 'Update'} disabled={loading} />
                 </Box>

@@ -37,17 +37,19 @@ export default function Layout({ title = 'Regen League', children }: LayoutProps
         <Grommet theme={theme}>
             <Box direction="column" flex>
                 <Header justify="stretch">
+                    <Box pad="medium">
                         <Menu
                           label="Menu"
                           items={menuItems}>
                           <MenuIcon size="large"/>
                         </Menu>
-                        <Heading size="medium">Regen League</Heading>
+                    </Box>
+                    <Heading size="medium">Regen League</Heading>
                 </Header>
 
                 <Main
                     // flex
-                    pad="large"
+                    pad="medium"
                     fill={false}
                     align="center"
                     overflow="auto"

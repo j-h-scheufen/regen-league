@@ -1,7 +1,6 @@
-import { Box } from 'grommet'
+import {Box, Heading, Paragraph} from 'grommet'
 import { Auth, ThemeSupa } from '@supabase/auth-ui-react'
 import { useSession, useSupabaseClient } from '@supabase/auth-helpers-react'
-import Link from 'next/link';
 
 export default function HomePage() {
     const session = useSession()
@@ -9,7 +8,8 @@ export default function HomePage() {
 
     const content = session ? (
         <Box align="center" direction="column" pad="medium">
-            <Link href={'/profile'}>My Profile</Link>
+            <Heading size="small">Welcome</Heading>
+            <Paragraph>Regen League is the registration app to get an overview of the global Regen movement. Its main target audience are the DOers, the ones who go out and connect with projects on the ground or lead communities.</Paragraph>
         </Box>
     ) : (
         <Box align="center" direction="column" pad="medium">

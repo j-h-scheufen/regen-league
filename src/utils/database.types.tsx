@@ -9,6 +9,77 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      "bioregens2020-catalogue": {
+        Row: {
+          id: number
+          created_at: string | null
+        }
+        Insert: {
+          id?: number
+          created_at?: string | null
+        }
+        Update: {
+          id?: number
+          created_at?: string | null
+        }
+      }
+      hub_members: {
+        Row: {
+          role_id: number
+          hub_id: string
+          profile_id: string
+        }
+        Insert: {
+          role_id: number
+          hub_id: string
+          profile_id: string
+        }
+        Update: {
+          role_id?: number
+          hub_id?: string
+          profile_id?: string
+        }
+      }
+      hub_roles: {
+        Row: {
+          name: string
+          id: number
+          description: string | null
+        }
+        Insert: {
+          name: string
+          id?: number
+          description?: string | null
+        }
+        Update: {
+          name?: string
+          id?: number
+          description?: string | null
+        }
+      }
+      hubs: {
+        Row: {
+          id: string
+          created_at: string | null
+          description: string | null
+          website: string | null
+          name: string
+        }
+        Insert: {
+          id?: string
+          created_at?: string | null
+          description?: string | null
+          website?: string | null
+          name: string
+        }
+        Update: {
+          id?: string
+          created_at?: string | null
+          description?: string | null
+          website?: string | null
+          name?: string
+        }
+      }
       link_types: {
         Row: {
           id: number
@@ -26,87 +97,24 @@ export interface Database {
           name?: string
         }
       }
-      organization_members: {
-        Row: {
-          role_id: number
-          id: number
-          created_at: string | null
-          organization_id: string
-          user_id: string
-        }
-        Insert: {
-          role_id: number
-          id?: number
-          created_at?: string | null
-          organization_id: string
-          user_id: string
-        }
-        Update: {
-          role_id?: number
-          id?: number
-          created_at?: string | null
-          organization_id?: string
-          user_id?: string
-        }
-      }
-      organization_roles: {
-        Row: {
-          id: number
-          name: string | null
-          description: string | null
-        }
-        Insert: {
-          id?: number
-          name?: string | null
-          description?: string | null
-        }
-        Update: {
-          id?: number
-          name?: string | null
-          description?: string | null
-        }
-      }
-      organizations: {
-        Row: {
-          id: string
-          created_at: string | null
-          description: string | null
-          website: string | null
-          name: string
-        }
-        Insert: {
-          id: string
-          created_at?: string | null
-          description?: string | null
-          website?: string | null
-          name: string
-        }
-        Update: {
-          id?: string
-          created_at?: string | null
-          description?: string | null
-          website?: string | null
-          name?: string
-        }
-      }
       profiles: {
         Row: {
-          id: string
           updated_at: string | null
+          id: string
           username: string | null
           avatar_url: string | null
           website: string | null
         }
         Insert: {
-          id: string
           updated_at?: string | null
+          id: string
           username?: string | null
           avatar_url?: string | null
           website?: string | null
         }
         Update: {
-          id?: string
           updated_at?: string | null
+          id?: string
           username?: string | null
           avatar_url?: string | null
           website?: string | null
@@ -137,25 +145,19 @@ export interface Database {
       }
       project_members: {
         Row: {
-          project_id: string | null
-          id: number
-          user_id: string
+          project_id: string
           role_id: number
-          created_at: string | null
+          profile_id: string
         }
         Insert: {
-          project_id?: string | null
-          id?: number
-          user_id: string
+          project_id: string
           role_id: number
-          created_at?: string | null
+          profile_id: string
         }
         Update: {
-          project_id?: string | null
-          id?: number
-          user_id?: string
+          project_id?: string
           role_id?: number
-          created_at?: string | null
+          profile_id?: string
         }
       }
       project_roles: {
@@ -180,19 +182,19 @@ export interface Database {
           created_at: string | null
           name: string
           description: string | null
-          id: string | null
+          id: string
         }
         Insert: {
           created_at?: string | null
           name: string
           description?: string | null
-          id?: string | null
+          id?: string
         }
         Update: {
           created_at?: string | null
           name?: string
           description?: string | null
-          id?: string | null
+          id?: string
         }
       }
     }
@@ -200,7 +202,18 @@ export interface Database {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      add_hub: {
+        Args: { name: string; description: string; firstadmin: string }
+        Returns: string
+      }
+      add_project: {
+        Args: { name: string; description: string; firstadmin: string }
+        Returns: string
+      }
+      get_hub_members: {
+        Args: { hub_id: string }
+        Returns: Record<string, unknown>[]
+      }
     }
     Enums: {
       [_ in never]: never

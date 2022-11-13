@@ -10,7 +10,7 @@ import { PropsWithChildren, useState } from 'react'
 import {useSupabaseClient, useUser} from "@supabase/auth-helpers-react";
 
 import { Database } from "../utils/database.types";
-import {Hub} from "../hooks/supabase";
+import {Hub} from "../utils/supabase";
 
 const FormSection = ({ children, ...rest }: PropsWithChildren<BoxProps>) => (
     <Box direction="row" gap="medium" justify="center" margin={{ bottom: 'medium' }} {...rest}>
@@ -25,20 +25,14 @@ export default function HubForm(hub: Hub) {
     const [currentValue, setValue] = useState<Hub>(hub)
     const [loading, setLoading] = useState(false)
 
-    async function updateHub(hub: Hub) {
+    async function updateHub(freshHub: Hub) {
         try {
             setLoading(true)
-
-            const updates = {
-                ...hub,
-                updated_at: new Date().toISOString(),
-            }
-
-            let {error} = await supabase.from('organizations').upsert(updates)
+            let {error} = await supabase.from('hubs').upsert(freshHub)
             if (error) throw error
             alert('Hub updated!')
         } catch (error) {
-            alert('Error updating the data!')
+            alert('Error updating the hub! Error: '+JSON.stringify(error))
             console.log(error)
         } finally {
             setLoading(false)

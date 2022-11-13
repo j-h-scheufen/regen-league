@@ -3,7 +3,7 @@ import { GetServerSidePropsContext } from 'next'
 import { User } from '@supabase/auth-helpers-nextjs'
 import { Session } from "@supabase/auth-helpers-react";
 
-import { getServerClient, Profile } from "../hooks/supabase";
+import { getServerClient, Profile } from "../utils/supabase";
 import Account from '../components/Account'
 
 type PageProps = {

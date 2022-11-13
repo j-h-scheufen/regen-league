@@ -3,10 +3,10 @@ import {createServerSupabaseClient} from "@supabase/auth-helpers-nextjs";
 import {SupabaseClient} from "@supabase/supabase-js";
 import {Session} from "@supabase/auth-helpers-react";
 
-import { Database } from "../utils/database.types";
+import { Database } from "./database.types";
 
 export type Profile = Database['public']['Tables']['profiles']['Row']
-export type Hub = Database['public']['Tables']['organizations']['Row']
+export type Hub = Database['public']['Tables']['hubs']['Row']
 
 export type DbContenxt = {
     client: SupabaseClient

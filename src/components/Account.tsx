@@ -1,23 +1,20 @@
 import { useState, useEffect } from 'react'
-import {Box, Button, Form, FormField, TextInput} from 'grommet';
+import {Box, Button, Form, FormField, Paragraph, TextInput} from 'grommet';
 import { useUser, useSupabaseClient, User } from '@supabase/auth-helpers-react'
 
 import { Database } from '../utils/database.types'
-import { Profile } from '../hooks/supabase'
+import { Profile } from '../utils/supabase'
 
-import Avatar from './Avatar'
-// type Props = {
-//     user: User,
-//     profile: Profile
-// }
+import ProfileAvatar from './ProfileAvatar'
 
 export default function Account(profile: Profile) {
     const supabase = useSupabaseClient<Database>()
     const user = useUser()
-    // it's expected a logged-in user is present when this component is used to insert user.id as profile.id
-    const emptyProfile = { id: user?.id ?? '', username: '', website: '', avatar_url: '', updated_at: '' }
     const [currentProfile, setProfile] = useState<Profile>(profile)
     const [loading, setLoading] = useState(false)
+
+    if (!user) return <Paragraph>Unauthorized</Paragraph>
+    const emptyProfile = { id: user.id, username: '', website: '', avatar_url: '', updated_at: '' }
 
     async function updateProfile() {
         try {
@@ -47,15 +44,15 @@ export default function Account(profile: Profile) {
                 onChange={nextValue => setProfile(nextValue)}
                 onReset={() => setProfile(emptyProfile)}
                 onSubmit={() => { updateProfile() } }>
-                    {/*<Avatar*/}
-                    {/*    uid={user.id}*/}
-                    {/*    url={profile.avatar_url}*/}
-                    {/*    size={150}*/}
-                    {/*    onUpload={(url) => {*/}
-                    {/*        setAvatarUrl(url)*/}
-                    {/*        updateProfile({ username, website, avatar_url: url })*/}
-                    {/*    }}*/}
-                    {/*/>*/}
+                <ProfileAvatar
+                    uid={user?.id}
+                    url={profile.avatar_url}
+                    size={150}
+                    onUpload={(url) => {
+                        currentProfile.avatar_url = url
+                        setProfile(currentProfile)
+                    }}
+                />
                 <FormField name="email" htmlFor="emailId" label="Email" disabled>
                     <TextInput id="emailId" name="email" value={user?.email}/>
                 </FormField>

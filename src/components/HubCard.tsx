@@ -1,5 +1,5 @@
 import {Card, CardBody, CardHeader, Paragraph, Text} from 'grommet'
-import { Hub } from "../hooks/supabase";
+import { Hub } from "../utils/supabase";
 
 export default function HubCard(hub: Hub) {
 

@@ -31,7 +31,6 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
 }
 
 export default function Hubs({ session, hubs }: PageProps) {
-        const router = useRouter()
         return (
             <Page>
                 <Box direction="row" pad="small">

@@ -62,39 +62,53 @@ export interface Database {
           id: string
           created_at: string | null
           description: string | null
-          website: string | null
           name: string
         }
         Insert: {
           id?: string
           created_at?: string | null
           description?: string | null
-          website?: string | null
           name: string
         }
         Update: {
           id?: string
           created_at?: string | null
           description?: string | null
-          website?: string | null
           name?: string
         }
       }
       link_types: {
         Row: {
           id: number
-          created_at: string | null
           name: string
         }
         Insert: {
           id?: number
-          created_at?: string | null
           name: string
         }
         Update: {
           id?: number
-          created_at?: string | null
           name?: string
+        }
+      }
+      links: {
+        Row: {
+          type_id: number
+          owner_id: string
+          id: number
+          url: string
+        }
+        Insert: {
+          type_id: number
+          owner_id: string
+          id?: number
+          url: string
+        }
+        Update: {
+          type_id?: number
+          owner_id?: string
+          id?: number
+          url?: string
         }
       }
       profiles: {
@@ -118,29 +132,6 @@ export interface Database {
           username?: string | null
           avatar_url?: string | null
           website?: string | null
-        }
-      }
-      project_links: {
-        Row: {
-          type_id: number
-          project_id: string | null
-          id: number
-          created_at: string | null
-          url: string
-        }
-        Insert: {
-          type_id: number
-          project_id?: string | null
-          id?: number
-          created_at?: string | null
-          url: string
-        }
-        Update: {
-          type_id?: number
-          project_id?: string | null
-          id?: number
-          created_at?: string | null
-          url?: string
         }
       }
       project_members: {

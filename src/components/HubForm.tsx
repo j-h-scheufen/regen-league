@@ -6,10 +6,10 @@ import {
     FormField, Heading,
     TextInput,
 } from 'grommet'
-import { PropsWithChildren, useState } from 'react'
+import {PropsWithChildren, useState} from 'react'
 import {useSupabaseClient, useUser} from "@supabase/auth-helpers-react";
 
-import { Database } from "../utils/database.types";
+import {Database} from "../utils/database.types";
 import {Hub} from "../utils/supabase";
 
 const FormSection = ({ children, ...rest }: PropsWithChildren<BoxProps>) => (
@@ -54,9 +54,6 @@ export default function HubForm(hub: Hub) {
                     </FormField>
                     <FormField width="100%" name="description" htmlFor="descriptionId" label="Description" required>
                         <TextInput id="descriptionId" name="description" type="text" />
-                    </FormField>
-                    <FormField width="100%" name="website" htmlFor="websiteId" label="Website" required>
-                        <TextInput id="websiteId" name="website" type="url" />
                     </FormField>
                 </FormSection>
                 <Box direction="row" gap="medium" width="50%" margin={{ horizontal: 'auto', top: 'large' }}>

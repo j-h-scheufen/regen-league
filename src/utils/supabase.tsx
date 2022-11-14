@@ -7,6 +7,7 @@ import { Database } from "./database.types";
 
 export type Profile = Database['public']['Tables']['profiles']['Row']
 export type Hub = Database['public']['Tables']['hubs']['Row']
+export type Link = Database['public']['Tables']['links']['Row']
 
 export type DbContenxt = {
     client: SupabaseClient

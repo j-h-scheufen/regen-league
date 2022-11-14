@@ -1,8 +1,8 @@
-import Head from "next/head";
 import React from "react";
-import Link from "next/link";
-import {Github, Home, View} from "grommet-icons";
-import {Box, Button, Grommet, Header, Heading, Main, type ThemeType} from 'grommet'
+import {Menu as MenuIcon} from "grommet-icons";
+import {Box, Button, Grommet, Header, Heading, Main, Menu, type ThemeType} from 'grommet'
+import {useRouter} from "next/router";
+import {useSession, useSupabaseClient, useUser} from "@supabase/auth-helpers-react";
 
 const theme: ThemeType = {
   global: {
@@ -19,41 +19,45 @@ type LayoutProps = React.PropsWithChildren<{
 }>
 
 export default function Layout({ title = 'Regen League', children }: LayoutProps) {
-  return (
-    <Grommet theme={theme}>
-      <Box direction="column" flex>
+    const router = useRouter()
+    const session = useSession()
+    const supabase = useSupabaseClient()
 
-        <Box direction="row" elevation="medium" pad="small" justify="center">
-          <Heading>Regen League</Heading>
-        </Box>
-        {/*<Header elevation="medium" background="brand" justify="center" pad="small">*/}
-        {/*  <Link href={"/home"}>*/}
-        {/*    <Button icon={<Home />} hoverIndicator label="Home" />*/}
-        {/*  </Link>*/}
-        {/*  <Link href={"/profile"}>*/}
-        {/*    <Button icon={<View />} hoverIndicator label="Profile" />*/}
-        {/*  </Link>*/}
-        {/*  <Button*/}
-        {/*      label="Github"*/}
-        {/*      target="_blank"*/}
-        {/*      hoverIndicator*/}
-        {/*      icon={<Github />}*/}
-        {/*      href="https://github.com/j-h-scheufen/regen-league"*/}
-        {/*  />*/}
-        {/*</Header>*/}
 
-        <Main
-            // flex
-            pad="large"
-            fill={false}
-            align="center"
-            overflow="auto"
-            justify="center"
-            direction="column">
-          {children}
-        </Main>
 
-      </Box>
-    </Grommet>
+    const menuItems = session ? ([
+        { label: 'My Profile', onClick: () => {router.push("/profile")} },
+        { label: 'Hubs', onClick: () => {router.push("/hubs")} },
+        { label: 'Logout', onClick: () => {supabase.auth.signOut()} },
+    ]) : ([
+        { label: 'Hubs', onClick: () => {router.push("/hubs")} },
+    ])
+
+    return (
+        <Grommet theme={theme}>
+            <Box direction="column" flex>
+                <Header justify="stretch">
+                    <Box pad="medium">
+                        <Menu
+                          label="Menu"
+                          items={menuItems}>
+                          <MenuIcon size="large"/>
+                        </Menu>
+                    </Box>
+                    <Heading size="medium">Regen League</Heading>
+                </Header>
+
+                <Main
+                    // flex
+                    pad="medium"
+                    fill={false}
+                    align="center"
+                    overflow="auto"
+                    justify="center"
+                    direction="column">
+                  {children}
+                </Main>
+            </Box>
+        </Grommet>
   )
 }

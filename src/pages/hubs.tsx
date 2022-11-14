@@ -1,52 +1,46 @@
-import {Box, Heading, List, Text} from 'grommet'
-import { More } from 'grommet-icons'
+import {Box, Button, Heading, List, Page, Text} from 'grommet'
+import {Add as AddIcon, More} from 'grommet-icons'
 import { GetServerSidePropsContext } from 'next'
 import { User, createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'
 import { Session } from "@supabase/auth-helpers-react"
 
-import { getServerClient, Hub } from '../hooks/supabase'
+import { getServerClient, Hub } from '../utils/supabase'
 import Link from "next/link";
 import {useRouter} from "next/router";
 import HubsList from "../components/HubsList";
 
 type PageProps = {
-    initialSession: Session
-    user: User
+    session: Session
     hubs: Array<Hub>
 }
 
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
     const {client, session} = await getServerClient(ctx)
-    if (!session) {
-        return {
-            redirect: {
-                destination: '/',
-                permanent: false,
-            },
-        }
-    }
 
     // Run queries with RLS on the server
-    const {data, error} = await client.from('organizations').select('*')
+    const {data, error} = await client.from('hubs').select('*')
     console.log('DATA: '+JSON.stringify(data))
-    if (error) alert('Unable to retrieve organizations data. Error: '+error.message);
+    if (error) alert('Unable to retrieve hubs data. Error: '+error.message);
 
     return {
         props: {
-            initialSession: session,
-            user: session.user,
+            session: session,
             hubs: data ?? [],
         },
     }
 }
 
-export default function Hubs({ user, hubs }: PageProps) {
-        const router = useRouter()
-
+export default function Hubs({ session, hubs }: PageProps) {
         return (
-            <Box>
-                <Heading>Organizations</Heading>
+            <Page>
+                <Box direction="row" pad="small">
+                    <Heading>Hubs</Heading>
+                    {session ? <Link href={"/newHub"} passHref>
+                        <Button><AddIcon size="large"/></Button>
+                    </Link>: <Box/>}
+                </Box>
                 <HubsList hubs={hubs}/>
-            </Box>)
+            </Page>
+)
 }
 

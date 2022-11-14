@@ -1,21 +1,24 @@
 import React, { useEffect, useState } from 'react'
 import { useSupabaseClient } from '@supabase/auth-helpers-react'
 import { Database } from '../utils/database.types'
-type Profiles = Database['public']['Tables']['profiles']['Row']
+import {Avatar} from "grommet"
+import {User} from "grommet-icons";
 
-export default function Avatar({
+import type {Profile} from '../utils/supabase'
+
+export default function ProfileAvatar({
                                    uid,
                                    url,
                                    size,
                                    onUpload,
                                }: {
     uid: string
-    url: Profiles['avatar_url']
+    url: Profile['avatar_url']
     size: number
     onUpload: (url: string) => void
 }) {
     const supabase = useSupabaseClient<Database>()
-    const [avatarUrl, setAvatarUrl] = useState<Profiles['avatar_url']>(null)
+    const [avatarUrl, setAvatarUrl] = useState<Profile['avatar_url']>(null)
     const [uploading, setUploading] = useState(false)
 
     useEffect(() => {
@@ -58,7 +61,7 @@ export default function Avatar({
 
             onUpload(filePath)
         } catch (error) {
-            alert('Error uploading avatar!')
+            alert('Error uploading avatar! Error: '+JSON.stringify(error))
             console.log(error)
         } finally {
             setUploading(false)
@@ -67,18 +70,10 @@ export default function Avatar({
 
     return (
         <div>
-            {avatarUrl ? (
-                <img
-                    src={avatarUrl}
-                    alt="Avatar"
-                    className="avatar image"
-                    style={{ height: size, width: size }}
-                />
-            ) : (
-                <div className="avatar no-image" style={{ height: size, width: size }} />
-            )}
+            {avatarUrl ? (<Avatar src={avatarUrl} size="large"/>) :
+                (<Avatar size="large" background="light-3"><User /></Avatar>)}
             <div style={{ width: size }}>
-                <label className="button primary block" htmlFor="single">
+                <label htmlFor="single">
                     {uploading ? 'Uploading ...' : 'Upload'}
                 </label>
                 <input

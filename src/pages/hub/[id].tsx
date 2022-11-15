@@ -2,7 +2,6 @@ import {GetServerSidePropsContext} from "next";
 import {Avatar, Box, Heading, Text} from "grommet";
 import {User as UserIcon, Cluster as ClusterIcon} from "grommet-icons";
 
-import HubForm from "../../components/HubForm";
 import {getServerClient, Hub} from "../../utils/supabase";
 import LinksCard, {LinkDetails} from "../../components/LinksCard";
 import MembersCard, {MemberDetails} from "../../components/MembersCard";
@@ -16,15 +15,7 @@ type PageProps = {
 
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
   const hubId = ctx.params?.id
-  const {client, session} = await getServerClient(ctx)
-  if (!hubId || !session) {
-    return {
-      redirect: {
-        destination: '/',
-        permanent: false,
-      },
-    }
-  }
+  const {client} = await getServerClient(ctx)
 
   const hubsResult = await client.from('hubs').select('*').eq('id', hubId)
   if (hubsResult.error) console.error('Unable to retrieve data for hub ID '+hubId+'. Error: '+hubsResult.error.message);

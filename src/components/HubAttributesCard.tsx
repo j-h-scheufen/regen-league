@@ -14,7 +14,7 @@ export default function HubAttributesCard({hub}: Props) {
             <CardHeader pad="small">Details</CardHeader>
             <CardBody>
                 <Box>
-                    <TextArea value={hub.description || ''} disabled/>
+                    <TextArea value={hub.description || ''} rows={5} disabled/>
                 </Box>
             </CardBody>
         </Card>

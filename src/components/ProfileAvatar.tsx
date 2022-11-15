@@ -25,7 +25,7 @@ export default function ProfileAvatar({
     useEffect(() => {
         if (url)
             downloadAvatarImage(supabase, url, setAvatarUrl)
-    }, [url])
+    }, [url, supabase])
 
     const uploadAvatar: React.ChangeEventHandler<HTMLInputElement> = async (event) => {
         try {

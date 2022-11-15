@@ -12,7 +12,7 @@ In order for the code to work, the types need to be exported from the Supabase t
 
 ## Postgres Changes
 
-1. In order to modify a user's avatar image (bucket 'avatars'), public access had to be granted
+1. In order to modify a user's avatar image (bucket 'avatars'), public access had to be granted. The bucket was made public to allow invocation of 'getPublicUrl'.
 ```
 create policy "Public Access"
 on storage.objects for select
@@ -30,7 +30,8 @@ GRANT EXECUTE ON FUNCTION add_project TO authenticated;
 GRANT EXECUTE ON FUNCTION add_project TO service_role;
 ```
 
-3. A trigger and function are being used to create hubs and projects, to ensure a user is automatically added as admin
+3. Function handle_new_user
+A trigger and function are being used to ensure a new user automatically gets a profile
 ```
 create or replace function public.handle_new_user() 
 returns trigger as $$
@@ -46,15 +47,25 @@ create trigger on_auth_user_created
   for each row execute procedure public.handle_new_user();
 ```
 
-4. Custom functions are being used to perform JOIN queries which are not possible via the supabase-js functionality
+4. Function get_hub_members and get_project_members
+Custom functions are being used to perform JOIN queries which are not possible via the supabase-js functionality
 ```
-create or replace function public.get_hub_members(hub_id uuid)
+create or replace function public.get_project_members(project_id uuid)
 returns setof record
 language sql
 as $$
-  SELECT p.id AS user_id, p.username, p.avatar_url AS avatar_image, hr.name as role_name FROM hub_members hm
-  JOIN profiles p ON (hm.profile_id = p.id)
-  JOIN hub_roles hr ON (hm.role_id = hr.id)
-  WHERE hm.hub_id = hub_id;
+  SELECT p.id AS user_id, p.username, p.avatar_url AS avatar_image, hr.name as role_name FROM project_members pm
+  JOIN profiles p ON (pm.user_id = p.id)
+  JOIN project_roles pr ON (pm.role_id = pr.id)
+  WHERE pm.project_id = project_id;
 $$;
-```
+
+create or replace function public.get_project_members(project_id uuid)
+returns setof record
+language sql
+as $$
+  SELECT p.id AS user_id, p.username, p.avatar_url AS avatar_image, hr.name as role_name FROM project_members pm
+  JOIN profiles p ON (pm.user_id = p.id)
+  JOIN project_roles pr ON (pm.role_id = pr.id)
+  WHERE pm.project_id = project_id;
+$$;```

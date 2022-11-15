@@ -27,17 +27,17 @@ export interface Database {
         Row: {
           role_id: number
           hub_id: string
-          profile_id: string
+          user_id: string
         }
         Insert: {
           role_id: number
           hub_id: string
-          profile_id: string
+          user_id: string
         }
         Update: {
           role_id?: number
           hub_id?: string
-          profile_id?: string
+          user_id?: string
         }
       }
       hub_roles: {
@@ -138,17 +138,17 @@ export interface Database {
         Row: {
           project_id: string
           role_id: number
-          profile_id: string
+          user_id: string
         }
         Insert: {
           project_id: string
           role_id: number
-          profile_id: string
+          user_id: string
         }
         Update: {
           project_id?: string
           role_id?: number
-          profile_id?: string
+          user_id?: string
         }
       }
       project_roles: {
@@ -188,6 +188,20 @@ export interface Database {
           id?: string
         }
       }
+      projects_to_hubs: {
+        Row: {
+          project_id: string
+          hub_id: string
+        }
+        Insert: {
+          project_id: string
+          hub_id: string
+        }
+        Update: {
+          project_id?: string
+          hub_id?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
@@ -203,6 +217,10 @@ export interface Database {
       }
       get_hub_members: {
         Args: { hub_id: string }
+        Returns: Record<string, unknown>[]
+      }
+      get_project_members: {
+        Args: { project_id: string }
         Returns: Record<string, unknown>[]
       }
     }

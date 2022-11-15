@@ -50,9 +50,11 @@ export default function Layout({ title = 'Regen League', children }: LayoutProps
     const menuItems = session ? ([
         { label: 'My Profile', onClick: () => {router.push("/profile")} },
         { label: 'Hubs', onClick: () => {router.push("/hubs")} },
+        { label: 'Projects', onClick: () => {router.push("/projects")} },
         { label: 'Logout', onClick: () => {supabase.auth.signOut(); router.push("/")} },
     ]) : ([
         { label: 'Hubs', onClick: () => {router.push("/hubs")} },
+        { label: 'Projects', onClick: () => {router.push("/projects")} },
     ])
 
     return (

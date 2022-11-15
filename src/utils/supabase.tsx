@@ -1,20 +1,21 @@
 import {GetServerSidePropsContext} from "next";
 import {createServerSupabaseClient} from "@supabase/auth-helpers-nextjs";
 import {SupabaseClient} from "@supabase/supabase-js";
-import {Session, useSession, useSupabaseClient} from "@supabase/auth-helpers-react";
+import {Session} from "@supabase/auth-helpers-react";
 
 import { Database } from "./database.types";
 
 export type Profile = Database['public']['Tables']['profiles']['Row']
 export type Hub = Database['public']['Tables']['hubs']['Row']
 export type Link = Database['public']['Tables']['links']['Row']
+export type Project = Database['public']['Tables']['projects']['Row']
 
-export type DbContenxt = {
+export type DbContext = {
     client: SupabaseClient
     session: Session | null
 }
 
-export const getServerClient = async (ctx: GetServerSidePropsContext): Promise<DbContenxt> => {
+export const getServerClient = async (ctx: GetServerSidePropsContext): Promise<DbContext> => {
     const supabase = createServerSupabaseClient<Database>(ctx)
     const {
         data: {session},

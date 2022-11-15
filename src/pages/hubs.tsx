@@ -31,16 +31,16 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
 }
 
 export default function Hubs({ session, hubs }: PageProps) {
-        return (
-            <Page>
-                <Box direction="row" pad="small">
-                    <Heading>Hubs</Heading>
-                    {session ? <Link href={"/newHub"} passHref>
-                        <Button><AddIcon size="large"/></Button>
-                    </Link>: <Box/>}
-                </Box>
-                <HubsList hubs={hubs}/>
-            </Page>
-)
+    return (
+        <Page>
+            <Box direction="row" justify="between">
+                <Heading >Hubs</Heading>
+                {session ? <Link href={"/newHub"} passHref>
+                    <Button><AddIcon size="large"/></Button>
+                </Link>: <Box/>}
+            </Box>
+            <HubsList hubs={hubs}/>
+        </Page>
+    )
 }
 

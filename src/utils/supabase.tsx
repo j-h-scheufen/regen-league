@@ -1,7 +1,7 @@
 import {GetServerSidePropsContext} from "next";
 import {createServerSupabaseClient} from "@supabase/auth-helpers-nextjs";
 import {SupabaseClient} from "@supabase/supabase-js";
-import {Session} from "@supabase/auth-helpers-react";
+import {Session, useSession, useSupabaseClient} from "@supabase/auth-helpers-react";
 
 import { Database } from "./database.types";
 
@@ -22,3 +22,27 @@ export const getServerClient = async (ctx: GetServerSidePropsContext): Promise<D
 
     return { client: supabase, session }
 }
+
+export async function downloadAvatarImage(client: SupabaseClient, filename: string, setUrl: Function) {
+    try {
+        const { data, error } = await client.storage.from('avatars').download(filename)
+        if (error) {
+            throw error
+        }
+        const url = URL.createObjectURL(data)
+        setUrl(url)
+    } catch (error) {
+        console.log('Error downloading image: ', error)
+    }
+}
+
+export async function getAvatarFilename(session: Session, client: SupabaseClient) {
+    if (session) { // make sure we have a logged-in user for RLS
+        const {data, error} = await client.from('profiles').select('avatar_url')
+        if (error)
+            throw error
+        return data[0].avatar_url
+    }
+    return null
+}
+

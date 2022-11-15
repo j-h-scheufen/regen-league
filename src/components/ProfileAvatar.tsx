@@ -5,6 +5,7 @@ import {Avatar} from "grommet"
 import {User} from "grommet-icons";
 
 import type {Profile} from '../utils/supabase'
+import {downloadAvatarImage} from "../utils/supabase";
 
 export default function ProfileAvatar({
                                    uid,
@@ -18,25 +19,13 @@ export default function ProfileAvatar({
     onUpload: (url: string) => void
 }) {
     const supabase = useSupabaseClient<Database>()
-    const [avatarUrl, setAvatarUrl] = useState<Profile['avatar_url']>(null)
+    const [avatarUrl, setAvatarUrl] = useState<string>()
     const [uploading, setUploading] = useState(false)
 
     useEffect(() => {
-        if (url) downloadImage(url)
-    }, [url])
-
-    async function downloadImage(path: string) {
-        try {
-            const { data, error } = await supabase.storage.from('avatars').download(path)
-            if (error) {
-                throw error
-            }
-            const url = URL.createObjectURL(data)
-            setAvatarUrl(url)
-        } catch (error) {
-            console.log('Error downloading image: ', error)
-        }
-    }
+        if (url)
+            downloadAvatarImage(supabase, url, setAvatarUrl)
+    }, [url, supabase])
 
     const uploadAvatar: React.ChangeEventHandler<HTMLInputElement> = async (event) => {
         try {

@@ -1,36 +1,34 @@
 import {GetServerSidePropsContext} from "next";
-import {Avatar, Box, Heading, Text} from "grommet";
-import {User as UserIcon, Cluster as ClusterIcon} from "grommet-icons";
+import {Box, Heading} from "grommet";
 
-import {getServerClient, Hub} from "../../utils/supabase";
+import {getServerClient, Project} from "../../utils/supabase";
 import LinksCard, {LinkDetails} from "../../components/LinksCard";
 import MembersCard, {MemberDetails} from "../../components/MembersCard";
-import HubAttributesCard from "../../components/HubAttributesCard";
+import ProjectAttributesCard from "../../components/ProjectAttributesCard";
 
 type PageProps = {
-  hub: Hub
+  project: Project
   members: Array<MemberDetails>
   links: Array<LinkDetails>
 }
 
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
-  const hubId = ctx.params?.id
+  const projectId = ctx.params?.id
   const {client} = await getServerClient(ctx)
 
-  const hubsResult = await client.from('hubs').select('*').eq('id', hubId)
-  if (hubsResult.error) console.error('Unable to retrieve data for hub ID '+hubId+'. Error: '+hubsResult.error.message);
+  const projectsResult = await client.from('projects').select('*').eq('id', projectId)
+  if (projectsResult.error) console.error('Unable to retrieve data for hub ID '+projectId+'. Error: '+projectsResult.error.message);
 
-  const membersResult = await client.rpc('get_hub_members', {hub_id: hubId})
-  if (membersResult.error) console.error('Unable to retrieve members for hub '+hubId+'. Error: '+membersResult.error.message);
+  const membersResult = await client.rpc('get_project_members', {project_id: projectId})
+  if (membersResult.error) console.error('Unable to retrieve members for hub '+projectId+'. Error: '+membersResult.error.message);
 
-  const linksResult = await client.from('links').select('*, link_types(name)').eq('owner_id', hubId)
-  if (linksResult.error) console.error('Unable to retrieve links for hub '+hubId+'. Error: '+linksResult.error.message);
-  console.log('DB RESULT: '+JSON.stringify(linksResult.data))
+  const linksResult = await client.from('links').select('*, link_types(name)').eq('owner_id', projectId)
+  if (linksResult.error) console.error('Unable to retrieve links for hub '+projectId+'. Error: '+linksResult.error.message);
 
   // Reformat the DB result for members to add the avatar public URL
   let formattedMembers:Array<MemberDetails> = new Array<MemberDetails>()
   if (membersResult.data) {
-    //console.log('DB RESULT: '+JSON.stringify(membersResult.data))
+    console.log('DB RESULT: '+JSON.stringify(membersResult.data))
     // BUG: the Supabase function returns duplicates that must be removed (this is a workaround)
     const seen: Map<string, boolean> = new Map<string, boolean>()
     formattedMembers = membersResult.data.flatMap((dbMember) => {
@@ -60,26 +58,26 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
     })
   }
 
-  console.log('LINKS: '+JSON.stringify(formattedLinks))
+  // console.log('PROJECTS: '+JSON.stringify(projectsResult.data))
 
   return {
     props: {
-      hub: hubsResult.data ? hubsResult.data[0] : {},
+      project: projectsResult.data ? projectsResult.data[0] : {},
       members: formattedMembers,
       links: formattedLinks
     },
   }
 }
 
-export default function HubDetails({ hub, members, links }: PageProps) {
+export default function HubDetails({ project, members, links }: PageProps) {
 
   return (
       <Box width="large">
         <Box direction="row" alignSelf="center">
-          <Heading size="medium" margin="small" alignSelf="center">{hub.name}</Heading>
+          <Heading size="medium" margin="small" alignSelf="center">{project.name}</Heading>
         </Box>
         <MembersCard members={members}/>
-        <HubAttributesCard hub={hub}/>
+        <ProjectAttributesCard project={project}/>
         <LinksCard links={links}/>
       </Box>
   )

@@ -1,42 +1,42 @@
 import {Box, Button, Heading, Page} from 'grommet'
 import {Add as AddIcon} from 'grommet-icons'
 import {GetServerSidePropsContext} from 'next'
-import {Session } from "@supabase/auth-helpers-react"
+import {Session} from "@supabase/auth-helpers-react"
 
-import {getServerClient, Hub} from '../utils/supabase'
-import Link from "next/link";
-import HubsList from "../components/HubsList";
+import {getServerClient, Project} from '../utils/supabase'
+import ProjectsList from '../components/ProjectsList'
+import Link from 'next/link';
 
 type PageProps = {
     session: Session
-    hubs: Array<Hub>
+    projects: Array<Project>
 }
 
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
     const {client, session} = await getServerClient(ctx)
 
-    const {data, error} = await client.from('hubs').select('*')
+    const {data, error} = await client.from('projects').select('*')
     console.log('DATA: '+JSON.stringify(data))
     if (error) alert('Unable to retrieve hubs data. Error: '+error.message);
 
     return {
         props: {
             session: session,
-            hubs: data ?? [],
+            projects: data ?? [],
         },
     }
 }
 
-export default function Hubs({ session, hubs }: PageProps) {
+export default function Hubs({ session, projects }: PageProps) {
     return (
         <Page>
             <Box direction="row" justify="between">
-                <Heading >Hubs</Heading>
-                {session ? <Link href={"/newHub"} passHref>
+                <Heading >Projects</Heading>
+                {session ? <Link href={"/newProject"} passHref>
                     <Button><AddIcon size="large"/></Button>
                 </Link>: <Box/>}
             </Box>
-            <HubsList hubs={hubs}/>
+            <ProjectsList projects={projects}/>
         </Page>
     )
 }

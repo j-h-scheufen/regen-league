@@ -8,13 +8,14 @@ import { Database } from "./database.types";
 export type Profile = Database['public']['Tables']['profiles']['Row']
 export type Hub = Database['public']['Tables']['hubs']['Row']
 export type Link = Database['public']['Tables']['links']['Row']
+export type Project = Database['public']['Tables']['projects']['Row']
 
-export type DbContenxt = {
+export type DbContext = {
     client: SupabaseClient
     session: Session | null
 }
 
-export const getServerClient = async (ctx: GetServerSidePropsContext): Promise<DbContenxt> => {
+export const getServerClient = async (ctx: GetServerSidePropsContext): Promise<DbContext> => {
     const supabase = createServerSupabaseClient<Database>(ctx)
     const {
         data: {session},
@@ -22,3 +23,27 @@ export const getServerClient = async (ctx: GetServerSidePropsContext): Promise<D
 
     return { client: supabase, session }
 }
+
+export async function downloadAvatarImage(client: SupabaseClient, filename: string, setUrl: Function) {
+    try {
+        const { data, error } = await client.storage.from('avatars').download(filename)
+        if (error) {
+            throw error
+        }
+        const url = URL.createObjectURL(data)
+        setUrl(url)
+    } catch (error) {
+        console.log('Error downloading image: ', error)
+    }
+}
+
+export async function getAvatarFilename(session: Session, client: SupabaseClient) {
+    if (session) { // make sure we have a logged-in user for RLS
+        const {data, error} = await client.from('profiles').select('avatar_url')
+        if (error)
+            throw error
+        return data[0].avatar_url
+    }
+    return null
+}
+

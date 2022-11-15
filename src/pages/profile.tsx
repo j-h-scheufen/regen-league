@@ -24,7 +24,6 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
     }
 
     const {data, error} = await client.from('profiles').select('*')
-
     if (error) alert('Unable to retrieve profile data for user ID '+session.user?.id+'. Error: '+error.message);
 
     return {

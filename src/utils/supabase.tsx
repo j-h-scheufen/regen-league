@@ -3,9 +3,8 @@ import {createServerSupabaseClient} from "@supabase/auth-helpers-nextjs";
 import {SupabaseClient} from "@supabase/supabase-js";
 import {Session, useSupabaseClient, useUser} from "@supabase/auth-helpers-react";
 
-import { Database } from "./database.types";
-import {useAtom} from "jotai";
-import {fdatasync} from "fs";
+import {Database} from "./database.types";
+import {BioregionData, LinkDetails, MemberDetails, MembershipItem, Hub as HubData} from "./types";
 
 export type Profile = Database['public']['Tables']['profiles']['Row']
 export type Hub = Database['public']['Tables']['hubs']['Row']
@@ -15,6 +14,8 @@ export type ProjectRole = Database['public']['Tables']['project_roles']['Row']
 export type HubRole = Database['public']['Tables']['hub_roles']['Row']
 export type ProjectMember = Database['public']['Tables']['project_members']['Row']
 export type HubMember = Database['public']['Tables']['hub_members']['Row']
+export type Bioregion = Database['public']['Tables']['bioregions']['Row']
+export type Realm = Database['public']['Tables']['realms']['Row']
 
 export type DbContext = {
     client: SupabaseClient
@@ -33,9 +34,9 @@ export const getServerClient = async (ctx: GetServerSidePropsContext): Promise<D
 export async function downloadAvatarImage(client: SupabaseClient, filename: string, setUrl: Function) {
     try {
         const { data, error } = await client.storage.from('avatars').download(filename)
-        if (error) {
+        if (error)
             throw error
-        }
+
         const url = URL.createObjectURL(data)
         setUrl(url)
     } catch (error) {
@@ -73,19 +74,92 @@ export async function isUserProjectAdmin(client: SupabaseClient, userId: string,
     return result.project_roles.name.toUpperCase() == 'ADMIN'
 }
 
-// Custom types and functions
-export type MembershipItem = {id: string, name: string, description: string, role: string}
-
 export async function getProjectsForUser(supabase: SupabaseClient, userId: string): Promise<Array<MembershipItem | undefined>> {
     const {data, error} = await supabase.rpc('get_user_projects', {user_id: userId})
-    if (error)
-        console.error('Unable to retrieve projects for profile '+userId+'. Error: '+error);
+    if (error) {
+        console.error('Unable to retrieve projects for profile ' + userId + '. Error: ' + error)
+        throw error
+    }
     return data as Array<MembershipItem>
 }
 
 export async function getHubsForUser(supabase: SupabaseClient, userId: string): Promise<Array<MembershipItem>> {
     const {data, error} = await supabase.rpc('get_user_hubs', {user_id: userId})
-    if (error)
-        console.error('Unable to retrieve hubs for profile '+userId+'. Error: '+error);
+    if (error) {
+        console.error('Unable to retrieve hubs for profile ' + userId + '. Error: ' + error)
+        throw error
+    }
     return data as Array<MembershipItem>
+}
+
+export async function getBioregionData(supabase: SupabaseClient, bioregionId: number): Promise<BioregionData> {
+    console.log('BIOREG ID: '+bioregionId)
+
+    const {data, error} = await supabase.rpc('get_bioregion_data', {bioregion_id: bioregionId})
+    if (error) {
+        console.error('Unable to retrieve bioregion data ID ' + bioregionId + '. Error: ' + error)
+        throw error
+    }
+    console.log('BIOREG: '+JSON.stringify(data))
+    const result: BioregionData = {
+        bioregion: {id: 57, code: '', name: '', link: ''},
+        subrealm: {id: 33, name: ''},
+        realm: {id: 7, name: '', link: ''},
+    }
+    return result
+}
+
+export async function getHubMembersData(supabase: SupabaseClient, hubId: string): Promise<Array<MemberDetails>> {
+    const {data, error} = await supabase.rpc('get_hub_members', {hub_id: hubId})
+    if (error) {
+        console.error('Unable to retrieve members for hub '+hubId+'. Error: '+error)
+        throw error
+    }
+    return data ? data.map((dbMember) => {
+        const newItem: MemberDetails = {
+            userId: dbMember.user_id,
+            username: dbMember.username,
+            avatarImage: dbMember.avatar_image,
+            roleName: dbMember.role_name,
+            avatarURL: ''
+        }
+        if (newItem.avatarImage) {
+            const urlResult = supabase.storage.from('avatars').getPublicUrl(newItem.avatarImage)
+            newItem.avatarURL = urlResult.data.publicUrl
+        }
+        return newItem
+    }) : new Array<MemberDetails>()
+}
+
+export async function getLinksData(supabase: SupabaseClient, objectId: string): Promise<Array<LinkDetails>> {
+    const {data, error} = await supabase.from('links').select('*, link_types(name)').eq('owner_id', objectId)
+    if (error) {
+        console.error('Unable to retrieve links for object ID '+objectId+'. Error: '+error)
+        throw error
+    }
+    return data ? data.map((dbLink) => {
+        const newItem: LinkDetails = {
+            url: dbLink.url,
+            type: dbLink.link_types.name
+        }
+        return newItem
+    }) : new Array<LinkDetails>()
+}
+
+export async function getHubData(supabase: SupabaseClient, hubId: string): Promise<HubData | null> {
+    const {data, error} = await supabase.from('hubs').select('*').eq('id', hubId).single()
+    if (error) {
+        console.error('Unable to retrieve data for hub ID '+hubId+'. Error: '+error)
+        throw error
+    }
+    if (data) {
+        const newItem: HubData = {
+            id: data.id,
+            name: data.name,
+            description: data.description,
+            bioregionId: data.bioregion_id
+        }
+        return newItem
+    }
+    return null
 }

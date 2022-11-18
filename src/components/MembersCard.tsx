@@ -1,10 +1,8 @@
 import {Box, Card, CardBody, CardHeader, Paragraph, Text, List, Avatar} from 'grommet'
 import {User as UserIcon} from "grommet-icons/icons";
 import {useRouter} from "next/router";
+import {MemberDetails} from "../utils/types";
 
-export type MemberDetails = {
-    userId: string, username: string, avatarImage: string, roleName: string, avatarURL: string,
-}
 
 type Props = {
     members: Array<MemberDetails>

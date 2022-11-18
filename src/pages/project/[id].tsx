@@ -2,11 +2,11 @@ import {GetServerSidePropsContext} from "next";
 import {Box, Heading} from "grommet";
 
 import {getServerClient, Project} from "../../utils/supabase";
-import LinksCard, {LinkDetails} from "../../components/LinksCard";
-import MembersCard, {MemberDetails} from "../../components/MembersCard";
+import LinksCard from "../../components/LinksCard";
+import MembersCard from "../../components/MembersCard";
 import ProjectAttributesCard from "../../components/ProjectAttributesCard";
-import {bool} from "prop-types";
 import {atom} from "jotai";
+import {LinkDetails, MemberDetails} from "../../utils/types";
 
 type PageProps = {
   project: Project

@@ -5,9 +5,10 @@ import {useRouter} from "next/router";
 import {
     getHubsForUser,
     getProjectsForUser,
-    getServerClient, MembershipItem,
+    getServerClient,
     Profile,
 } from "../../utils/supabase";
+import {MembershipItem} from "../../utils/types";
 
 
 type PageProps = {

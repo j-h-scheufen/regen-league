@@ -3,9 +3,8 @@ import {Twitter, Instagram, Github, Facebook, Link as Generic, Linkedin, Youtube
 import {Router, useRouter} from "next/router";
 import Link from "next/link";
 
-export type LinkDetails = {
-    url: string, type: string,
-}
+import {LinkDetails} from "../utils/types";
+
 type IconDictionary = Record<string, JSX.Element>
 type Props = {
     links: Array<LinkDetails>

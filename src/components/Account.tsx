@@ -14,17 +14,14 @@ export default function Account(profile: Profile) {
     const [loading, setLoading] = useState(false)
 
     if (!user) return <Paragraph>Unauthorized</Paragraph>
-    const emptyProfile = { id: user.id, username: '', website: '', avatar_url: '', updated_at: '' }
+    const emptyProfile = { id: user.id, username: '', website: '', avatar_url: '', created_at: '' }
 
     async function updateProfile() {
         try {
             setLoading(true)
             if (!user) throw new Error('No user')
 
-            const updates = {
-                ...currentProfile,
-                updated_at: new Date().toISOString(),
-            }
+            const updates = {...currentProfile}
 
             let { error } = await supabase.from('profiles').upsert(updates)
             if (error) throw error

@@ -52,21 +52,33 @@ create trigger on_auth_user_created
 4. Function get_hub_members and get_project_members
 Custom functions are being used to perform JOIN queries which are not possible via the supabase-js functionality
 ```
-create or replace function public.get_project_members(project_id uuid)
-returns setof record
+create or replace function public.get_hub_members(hub_id uuid)
+returns table (
+  user_id uuid,
+  username varchar,
+  avatar_image varchar,
+  role_name varchar
+)
 language sql
 as $$
-  SELECT p.id AS user_id, p.username, p.avatar_url AS avatar_image, hr.name as role_name FROM project_members pm
-  JOIN profiles p ON (pm.user_id = p.id)
-  JOIN project_roles pr ON (pm.role_id = pr.id)
-  WHERE pm.project_id = project_id;
+  SELECT DISTINCT p.id, p.username, p.avatar_url, hr.name
+  FROM hub_members hm
+  JOIN profiles p ON (hm.user_id = p.id)
+  JOIN hub_roles hr ON (hm.role_id = hr.id)
+  WHERE hm.hub_id = hub_id;
 $$;
 
 create or replace function public.get_project_members(project_id uuid)
-returns setof record
+returns table (
+  user_id uuid,
+  username varchar,
+  avatar_image varchar,
+  role_name varchar
+)
 language sql
 as $$
-  SELECT p.id AS user_id, p.username, p.avatar_url AS avatar_image, hr.name as role_name FROM project_members pm
+  SELECT DISTINCT p.id, p.username, p.avatar_url, pr.name
+  FROM project_members pm
   JOIN profiles p ON (pm.user_id = p.id)
   JOIN project_roles pr ON (pm.role_id = pr.id)
   WHERE pm.project_id = project_id;
@@ -93,5 +105,30 @@ as $$
   join hubs h on (h.id = hm.hub_id)
   where hm.user_id = user_id
 $$;
+
+create or replace function public.get_bioregion_data(bioregion_id int)
+RETURNS TABLE (
+    br_id int,
+    br_code varchar,
+    br_name varchar,
+    br_link varchar,
+    sr_id int,
+    sr_name varchar,
+    r_id int,
+    r_name varchar,
+    r_link varchar
+)
+language sql
+as $$
+  SELECT 
+    br.id AS br_id, br.code AS br_code, br.name AS br_name, br.link AS br_link,
+    sr.id AS sr_id, sr.name AS sr_name,
+    r.id AS r_id, r.name AS r_name, r.link AS r_link
+  FROM bioregions br
+  JOIN subrealms sr ON (br.subrealm_id = sr.id)
+  JOIN realms r ON (sr.realm_id = r.id)
+  WHERE br.id = bioregion_id;
+$$;
+
 
 ```

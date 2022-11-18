@@ -2,6 +2,8 @@
 
 Created in service of bioregionalism: https://utopia.org/guide/what-is-a-bioregion-and-which-ones-are-there/
 
+Using bioregions as defined by the One Earth Bioregions 2020 framework: https://www.oneearth.org/bioregions/
+
 ## Requirements
 
 ### Generating types for Supabase
@@ -68,4 +70,28 @@ as $$
   JOIN profiles p ON (pm.user_id = p.id)
   JOIN project_roles pr ON (pm.role_id = pr.id)
   WHERE pm.project_id = project_id;
-$$;```
+$$;
+
+create or replace function public.get_user_projects(user_id uuid)
+returns setof record
+language sql
+as $$
+  select p.id, p.name, p.description, pr.name as role
+  from project_members pm
+  join project_roles pr on (pm.role_id = pr.id)
+  join projects p on (p.id = pm.project_id)
+  where pm.user_id = user_id
+$$;
+
+create or replace function public.get_user_hubs(user_id uuid)
+returns setof record
+language sql
+as $$
+  select h.id, h.name, h.description, hr.name as role
+  from hub_members hm
+  join hub_roles hr on (hm.role_id = hr.id)
+  join hubs h on (h.id = hm.hub_id)
+  where hm.user_id = user_id
+$$;
+
+```

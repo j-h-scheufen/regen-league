@@ -1,11 +1,14 @@
 import {GetServerSidePropsContext} from "next";
-import {Avatar, Box, Heading, Text} from "grommet";
-import {User as UserIcon, Cluster as ClusterIcon} from "grommet-icons";
+import {Box, Heading, Text} from "grommet";
+import {atom, useAtom} from "jotai";
+import {useCallback, useEffect} from "react";
 
-import {getServerClient, Hub} from "../../utils/supabase";
+import {getServerClient, Hub, isUserHubAdmin} from "../../utils/supabase";
 import LinksCard, {LinkDetails} from "../../components/LinksCard";
 import MembersCard, {MemberDetails} from "../../components/MembersCard";
 import HubAttributesCard from "../../components/HubAttributesCard";
+import {useSupabaseClient, useUser} from "@supabase/auth-helpers-react";
+import {isHubAdminAtom} from "../../hooks/state";
 
 type PageProps = {
   hub: Hub
@@ -14,10 +17,10 @@ type PageProps = {
 }
 
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
-  const hubId = ctx.params?.id
-  const {client} = await getServerClient(ctx)
+  const hubId = ctx.params?.id as string
+  const {client, session} = await getServerClient(ctx)
 
-  const hubsResult = await client.from('hubs').select('*').eq('id', hubId)
+  const hubsResult = await client.from('hubs').select('*').eq('id', hubId).single()
   if (hubsResult.error) console.error('Unable to retrieve data for hub ID '+hubId+'. Error: '+hubsResult.error.message);
 
   const membersResult = await client.rpc('get_hub_members', {hub_id: hubId})
@@ -60,11 +63,11 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
     })
   }
 
-  console.log('LINKS: '+JSON.stringify(formattedLinks))
+  // console.log('LINKS: '+JSON.stringify(formattedLinks))
 
   return {
     props: {
-      hub: hubsResult.data ? hubsResult.data[0] : {},
+      hub: hubsResult.data,
       members: formattedMembers,
       links: formattedLinks
     },
@@ -72,12 +75,27 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
 }
 
 export default function HubDetails({ hub, members, links }: PageProps) {
+  const user = useUser()
+  const client = useSupabaseClient()
+  const [isHubAdmin, setIsHubAdmin] = useAtom(isHubAdminAtom)
+  const authorizeHubAdmin = useCallback(async () => {
+    let isAdmin = false
+    if (user) {
+      isAdmin = await isUserHubAdmin(client, user.id, hub.id)
+    }
+    setIsHubAdmin(isAdmin)
+  }, [client, user, hub, setIsHubAdmin])
+
+  useEffect(() => {
+    authorizeHubAdmin()
+  }, [authorizeHubAdmin])
 
   return (
       <Box width="large">
         <Box direction="row" alignSelf="center">
           <Heading size="medium" margin="small" alignSelf="center">{hub.name}</Heading>
         </Box>
+        <Text>{isHubAdmin ? 'ADMIN' : 'NOPE'}</Text>
         <MembersCard members={members}/>
         <HubAttributesCard hub={hub}/>
         <LinksCard links={links}/>

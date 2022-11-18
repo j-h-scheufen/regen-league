@@ -9,18 +9,81 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
-      "bioregens2020-catalogue": {
+      bioregens2020_bioregions: {
+        Row: {
+          name: string
+          link: string | null
+          code: string
+          id: number
+          subrealm_id: number
+        }
+        Insert: {
+          name: string
+          link?: string | null
+          code: string
+          id?: number
+          subrealm_id: number
+        }
+        Update: {
+          name?: string
+          link?: string | null
+          code?: string
+          id?: number
+          subrealm_id?: number
+        }
+      }
+      bioregens2020_ecoregions: {
+        Row: {
+          name: string
+          link: string | null
+          id: number
+          bioregion_id: number
+        }
+        Insert: {
+          name: string
+          link?: string | null
+          id?: number
+          bioregion_id: number
+        }
+        Update: {
+          name?: string
+          link?: string | null
+          id?: number
+          bioregion_id?: number
+        }
+      }
+      bioregions2020_realms: {
         Row: {
           id: number
-          created_at: string | null
+          name: string
+          link: string | null
         }
         Insert: {
           id?: number
-          created_at?: string | null
+          name: string
+          link?: string | null
         }
         Update: {
           id?: number
-          created_at?: string | null
+          name?: string
+          link?: string | null
+        }
+      }
+      bioregions2020_subrealms: {
+        Row: {
+          realm_id: number | null
+          id: number
+          name: string
+        }
+        Insert: {
+          realm_id?: number | null
+          id?: number
+          name: string
+        }
+        Update: {
+          realm_id?: number | null
+          id?: number
+          name?: string
         }
       }
       hub_members: {
@@ -221,6 +284,14 @@ export interface Database {
       }
       get_project_members: {
         Args: { project_id: string }
+        Returns: Record<string, unknown>[]
+      }
+      get_user_hubs: {
+        Args: { user_id: string }
+        Returns: Record<string, unknown>[]
+      }
+      get_user_projects: {
+        Args: { user_id: string }
         Returns: Record<string, unknown>[]
       }
     }

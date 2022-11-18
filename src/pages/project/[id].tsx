@@ -5,6 +5,8 @@ import {getServerClient, Project} from "../../utils/supabase";
 import LinksCard, {LinkDetails} from "../../components/LinksCard";
 import MembersCard, {MemberDetails} from "../../components/MembersCard";
 import ProjectAttributesCard from "../../components/ProjectAttributesCard";
+import {bool} from "prop-types";
+import {atom} from "jotai";
 
 type PageProps = {
   project: Project
@@ -12,11 +14,13 @@ type PageProps = {
   links: Array<LinkDetails>
 }
 
+const isAdminAtom = atom<boolean>(false)
+
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
-  const projectId = ctx.params?.id
+  const projectId = ctx.params?.id as string
   const {client} = await getServerClient(ctx)
 
-  const projectsResult = await client.from('projects').select('*').eq('id', projectId)
+  const projectsResult = await client.from('projects').select('*').eq('id', projectId).single()
   if (projectsResult.error) console.error('Unable to retrieve data for hub ID '+projectId+'. Error: '+projectsResult.error.message);
 
   const membersResult = await client.rpc('get_project_members', {project_id: projectId})
@@ -28,7 +32,7 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
   // Reformat the DB result for members to add the avatar public URL
   let formattedMembers:Array<MemberDetails> = new Array<MemberDetails>()
   if (membersResult.data) {
-    console.log('DB RESULT: '+JSON.stringify(membersResult.data))
+    // console.log('DB RESULT: '+JSON.stringify(membersResult.data))
     // BUG: the Supabase function returns duplicates that must be removed (this is a workaround)
     const seen: Map<string, boolean> = new Map<string, boolean>()
     formattedMembers = membersResult.data.flatMap((dbMember) => {
@@ -62,7 +66,7 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
 
   return {
     props: {
-      project: projectsResult.data ? projectsResult.data[0] : {},
+      project: projectsResult.data,
       members: formattedMembers,
       links: formattedLinks
     },

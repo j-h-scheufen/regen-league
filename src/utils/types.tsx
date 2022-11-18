@@ -2,7 +2,7 @@
 export type Hub = {
     id: string,
     name: string,
-    description: string
+    description: string,
     bioregionId: number
 }
 
@@ -22,12 +22,12 @@ export type Bioregion = {
     id: number,
     code: string,
     name: string,
-    link: string
+    link: string,
 }
 
 export type Subrealm = {
     id: number,
-    name: string
+    name: string,
 }
 
 export type Realm = {
@@ -39,10 +39,10 @@ export type Realm = {
 export type Ecoregion = {
     id: number,
     name: string,
-    link: string
+    link: string,
 }
 
-export type BioregionData = {
+export type BioregionInfo = {
     ecoregion?: Ecoregion, // ecoregion is optional for now
     bioregion: Bioregion,
     subrealm: Subrealm,
@@ -54,7 +54,7 @@ export type MemberDetails = {
     username: string,
     avatarImage: string,
     roleName: string,
-    avatarURL: string,
+    avatarURL: string
 }
 
 export type MembershipItem = {

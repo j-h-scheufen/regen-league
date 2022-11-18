@@ -85,10 +85,15 @@ as $$
 $$;
 
 create or replace function public.get_user_projects(user_id uuid)
-returns setof record
+returns table (
+  id uuid,
+  name varchar,
+  description text,
+  role varchar
+)
 language sql
 as $$
-  select p.id, p.name, p.description, pr.name as role
+  select DISTINCT p.id, p.name, p.description, pr.name as role
   from project_members pm
   join project_roles pr on (pm.role_id = pr.id)
   join projects p on (p.id = pm.project_id)
@@ -96,10 +101,15 @@ as $$
 $$;
 
 create or replace function public.get_user_hubs(user_id uuid)
-returns setof record
+returns table (
+  id uuid,
+  name varchar,
+  description text,
+  role varchar
+)
 language sql
 as $$
-  select h.id, h.name, h.description, hr.name as role
+  select DISTINCT h.id, h.name, h.description, hr.name as role
   from hub_members hm
   join hub_roles hr on (hm.role_id = hr.id)
   join hubs h on (h.id = hm.hub_id)

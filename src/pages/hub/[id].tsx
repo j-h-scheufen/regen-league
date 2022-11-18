@@ -67,6 +67,7 @@ export default function HubDetails({ hub, members, links, regionInfo }: PageProp
         <Box direction="row" alignSelf="center">
           <Heading size="medium" margin="small" alignSelf="center">{hub.name}</Heading>
         </Box>
+        <Text>{isHubAdmin ? 'ADMIN' : 'NOPE'}</Text>
         <MembersCard members={members}/>
         <RegionInfoCard info={regionInfo}/>
         <HubAttributesCard hub={hub}/>

@@ -12,17 +12,17 @@ import {
 } from "../../utils/supabase";
 import {useSupabaseClient, useUser} from "@supabase/auth-helpers-react";
 import {isHubAdminAtom} from "../../utils/state";
-import {Bioregion, Hub, LinkDetails, MemberDetails, Realm} from "../../utils/types"
+import {Bioregion, BioregionInfo, Hub, LinkDetails, MemberDetails, Realm} from "../../utils/types"
 import LinksCard from "../../components/LinksCard";
 import HubAttributesCard from "../../components/HubAttributesCard";
 import MembersCard from "../../components/MembersCard";
+import RegionInfoCard from "../../components/RegionInfoCard";
 
 type PageProps = {
-  hub: Hub
-  members: Array<MemberDetails>
-  links: Array<LinkDetails>
-  bioregion: Bioregion
-  realm: Realm
+  hub: Hub,
+  members: Array<MemberDetails>,
+  links: Array<LinkDetails>,
+  regionInfo: BioregionInfo,
 }
 
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
@@ -34,20 +34,19 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
   const membersData = await getHubMembersData(client, hubId);
   const linksData = await getLinksData(client, hubId)
 
-  // console.log('LINKS: '+JSON.stringify(formattedLinks))
+  console.log('REGION: '+JSON.stringify(bioregionData))
 
   return {
     props: {
       hub: hubData,
       members: membersData,
       links: linksData,
-      bioregion: bioregionData?.bioregion || null,
-      realm: bioregionData?.realm || null
-    },
+      regionInfo: bioregionData,
+    }
   }
 }
 
-export default function HubDetails({ hub, members, links }: PageProps) {
+export default function HubDetails({ hub, members, links, regionInfo }: PageProps) {
   const user = useUser()
   const client = useSupabaseClient()
   const [isHubAdmin, setIsHubAdmin] = useAtom(isHubAdminAtom)
@@ -70,6 +69,7 @@ export default function HubDetails({ hub, members, links }: PageProps) {
         </Box>
         <Text>{isHubAdmin ? 'ADMIN' : 'NOPE'}</Text>
         <MembersCard members={members}/>
+        <RegionInfoCard info={regionInfo}/>
         <HubAttributesCard hub={hub}/>
         <LinksCard links={links}/>
       </Box>

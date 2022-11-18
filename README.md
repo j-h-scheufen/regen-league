@@ -52,6 +52,7 @@ create trigger on_auth_user_created
 4. Function get_hub_members and get_project_members
 Custom functions are being used to perform JOIN queries which are not possible via the supabase-js functionality
 ```
+
 create or replace function public.get_hub_members(hub_id uuid)
 returns table (
   user_id uuid,

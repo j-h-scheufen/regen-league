@@ -40,7 +40,7 @@ export async function downloadAvatarImage(client: SupabaseClient, filename: stri
         const url = URL.createObjectURL(data)
         setUrl(url)
     } catch (error) {
-        console.error('Error downloading image: ', error.message)
+        console.log('Error downloading image: ', error)
     }
 }
 

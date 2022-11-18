@@ -14,7 +14,7 @@ export default function Login() {
 
   return (
       <Box align="center" direction="column" pad="medium">
-        <Auth supabaseClient={supabase} appearance={{ theme: ThemeSupa }} theme="dark"/>
+          <Auth supabaseClient={supabase} appearance={{ theme: ThemeSupa }} theme="dark"/>
       </Box>
   )
 

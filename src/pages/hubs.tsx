@@ -16,7 +16,6 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
     const {client, session} = await getServerClient(ctx)
 
     const {data, error} = await client.from('hubs').select('*')
-    console.log('DATA: '+JSON.stringify(data))
     if (error) alert('Unable to retrieve hubs data. Error: '+error.message);
 
     return {

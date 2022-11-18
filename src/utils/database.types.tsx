@@ -9,18 +9,47 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
-      "bioregens2020-catalogue": {
+      bioregions: {
         Row: {
+          name: string
+          link: string | null
+          code: string
           id: number
-          created_at: string | null
+          subrealm_id: number
         }
         Insert: {
+          name: string
+          link?: string | null
+          code: string
           id?: number
-          created_at?: string | null
+          subrealm_id: number
         }
         Update: {
+          name?: string
+          link?: string | null
+          code?: string
           id?: number
-          created_at?: string | null
+          subrealm_id?: number
+        }
+      }
+      ecoregions: {
+        Row: {
+          name: string
+          link: string | null
+          id: number
+          bioregion_id: number
+        }
+        Insert: {
+          name: string
+          link?: string | null
+          id?: number
+          bioregion_id: number
+        }
+        Update: {
+          name?: string
+          link?: string | null
+          id?: number
+          bioregion_id?: number
         }
       }
       hub_members: {
@@ -63,18 +92,21 @@ export interface Database {
           created_at: string | null
           description: string | null
           name: string
+          bioregion_id: number | null
         }
         Insert: {
           id?: string
           created_at?: string | null
           description?: string | null
           name: string
+          bioregion_id?: number | null
         }
         Update: {
           id?: string
           created_at?: string | null
           description?: string | null
           name?: string
+          bioregion_id?: number | null
         }
       }
       link_types: {
@@ -113,25 +145,22 @@ export interface Database {
       }
       profiles: {
         Row: {
-          updated_at: string | null
+          created_at: string
           id: string
           username: string | null
           avatar_url: string | null
-          website: string | null
         }
         Insert: {
-          updated_at?: string | null
+          created_at?: string
           id: string
           username?: string | null
           avatar_url?: string | null
-          website?: string | null
         }
         Update: {
-          updated_at?: string | null
+          created_at?: string
           id?: string
           username?: string | null
           avatar_url?: string | null
-          website?: string | null
         }
       }
       project_members: {
@@ -202,6 +231,40 @@ export interface Database {
           hub_id?: string
         }
       }
+      realms: {
+        Row: {
+          id: number
+          name: string
+          link: string | null
+        }
+        Insert: {
+          id?: number
+          name: string
+          link?: string | null
+        }
+        Update: {
+          id?: number
+          name?: string
+          link?: string | null
+        }
+      }
+      subrealms: {
+        Row: {
+          realm_id: number | null
+          id: number
+          name: string
+        }
+        Insert: {
+          realm_id?: number | null
+          id?: number
+          name: string
+        }
+        Update: {
+          realm_id?: number | null
+          id?: number
+          name?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
@@ -215,12 +278,24 @@ export interface Database {
         Args: { name: string; description: string; firstadmin: string }
         Returns: string
       }
+      get_bioregion_data: {
+        Args: { bioregion_id: number }
+        Returns: Record<string, unknown>[]
+      }
       get_hub_members: {
         Args: { hub_id: string }
         Returns: Record<string, unknown>[]
       }
       get_project_members: {
         Args: { project_id: string }
+        Returns: Record<string, unknown>[]
+      }
+      get_user_hubs: {
+        Args: { user_id: string }
+        Returns: Record<string, unknown>[]
+      }
+      get_user_projects: {
+        Args: { user_id: string }
         Returns: Record<string, unknown>[]
       }
     }

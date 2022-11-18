@@ -1,84 +1,75 @@
 import {GetServerSidePropsContext} from "next";
-import {Avatar, Box, Heading, Text} from "grommet";
-import {User as UserIcon, Cluster as ClusterIcon} from "grommet-icons";
+import {Box, Heading, Text} from "grommet";
+import {atom, useAtom} from "jotai";
+import {useCallback, useEffect} from "react";
 
-import {getServerClient, Hub} from "../../utils/supabase";
-import LinksCard, {LinkDetails} from "../../components/LinksCard";
-import MembersCard, {MemberDetails} from "../../components/MembersCard";
+import {
+  getBioregionData, getHubData,
+  getHubMembersData,
+  getLinksData,
+  getServerClient,
+  isUserHubAdmin
+} from "../../utils/supabase";
+import {useSupabaseClient, useUser} from "@supabase/auth-helpers-react";
+import {isHubAdminAtom} from "../../utils/state";
+import {Bioregion, BioregionInfo, Hub, LinkDetails, MemberDetails, Realm} from "../../utils/types"
+import LinksCard from "../../components/LinksCard";
 import HubAttributesCard from "../../components/HubAttributesCard";
+import MembersCard from "../../components/MembersCard";
+import RegionInfoCard from "../../components/RegionInfoCard";
 
 type PageProps = {
-  hub: Hub
-  members: Array<MemberDetails>
-  links: Array<LinkDetails>
+  hub: Hub,
+  members: Array<MemberDetails>,
+  links: Array<LinkDetails>,
+  regionInfo: BioregionInfo,
 }
 
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
-  const hubId = ctx.params?.id
-  const {client} = await getServerClient(ctx)
+  const hubId = ctx.params?.id as string
+  const {client, session} = await getServerClient(ctx)
 
-  const hubsResult = await client.from('hubs').select('*').eq('id', hubId)
-  if (hubsResult.error) console.error('Unable to retrieve data for hub ID '+hubId+'. Error: '+hubsResult.error.message);
+  const hubData = await getHubData(client, hubId)
+  const bioregionData = hubData ? await getBioregionData(client, hubData.bioregionId) : null
+  const membersData = await getHubMembersData(client, hubId);
+  const linksData = await getLinksData(client, hubId)
 
-  const membersResult = await client.rpc('get_hub_members', {hub_id: hubId})
-  if (membersResult.error) console.error('Unable to retrieve members for hub '+hubId+'. Error: '+membersResult.error.message);
-
-  const linksResult = await client.from('links').select('*, link_types(name)').eq('owner_id', hubId)
-  if (linksResult.error) console.error('Unable to retrieve links for hub '+hubId+'. Error: '+linksResult.error.message);
-  console.log('DB RESULT: '+JSON.stringify(linksResult.data))
-
-  // Reformat the DB result for members to add the avatar public URL
-  let formattedMembers:Array<MemberDetails> = new Array<MemberDetails>()
-  if (membersResult.data) {
-    //console.log('DB RESULT: '+JSON.stringify(membersResult.data))
-    // BUG: the Supabase function returns duplicates that must be removed (this is a workaround)
-    const seen: Map<string, boolean> = new Map<string, boolean>()
-    formattedMembers = membersResult.data.flatMap((dbMember) => {
-      if (!seen.get(dbMember.user_id)) {
-        const newItem: MemberDetails = {
-          userId: dbMember.user_id,
-          username: dbMember.username,
-          avatarImage: dbMember.avatar_image,
-          roleName: dbMember.role_name,
-          avatarURL: ''
-        }
-        if (dbMember.avatar_image) {
-          const urlResult = client.storage.from('avatars').getPublicUrl(dbMember.avatar_image)
-          newItem.avatarURL = urlResult.data.publicUrl
-        }
-        seen.set(dbMember.user_id, true)
-        return [newItem]
-      }
-      return []
-    })
-  }
-
-  let formattedLinks: Array<LinkDetails> = new Array<LinkDetails>()
-  if (linksResult.data) {
-    formattedLinks = linksResult.data.map((dbLink) => {
-      return {url: dbLink.url, type: dbLink.link_types.name}
-    })
-  }
-
-  console.log('LINKS: '+JSON.stringify(formattedLinks))
+  console.log('REGION: '+JSON.stringify(bioregionData))
 
   return {
     props: {
-      hub: hubsResult.data ? hubsResult.data[0] : {},
-      members: formattedMembers,
-      links: formattedLinks
-    },
+      hub: hubData,
+      members: membersData,
+      links: linksData,
+      regionInfo: bioregionData,
+    }
   }
 }
 
-export default function HubDetails({ hub, members, links }: PageProps) {
+export default function HubDetails({ hub, members, links, regionInfo }: PageProps) {
+  const user = useUser()
+  const client = useSupabaseClient()
+  const [isHubAdmin, setIsHubAdmin] = useAtom(isHubAdminAtom)
+  const authorizeHubAdmin = useCallback(async () => {
+    let isAdmin = false
+    if (user) {
+      isAdmin = await isUserHubAdmin(client, user.id, hub.id)
+    }
+    setIsHubAdmin(isAdmin)
+  }, [client, user, hub, isUserHubAdmin])
+
+  useEffect(() => {
+    authorizeHubAdmin()
+  }, [user, hub])
 
   return (
       <Box width="large">
         <Box direction="row" alignSelf="center">
           <Heading size="medium" margin="small" alignSelf="center">{hub.name}</Heading>
         </Box>
+        <Text>{isHubAdmin ? 'ADMIN' : 'NOPE'}</Text>
         <MembersCard members={members}/>
+        <RegionInfoCard info={regionInfo}/>
         <HubAttributesCard hub={hub}/>
         <LinksCard links={links}/>
       </Box>

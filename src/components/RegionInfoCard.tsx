@@ -13,7 +13,7 @@ export default function RegionInfoCard({info}: Props) {
         <Card pad="medium">
             {/*<CardHeader pad="small">Region Info</CardHeader>*/}
             <CardBody direction={"row"}>
-                <Box basis="1/2" border={true}>
+                <Box basis="1/2">
                     <Text>Realm: <Link href={info.realm.link}>{info.realm.name}</Link></Text>
                 </Box>
                 <Box basis="1/2">

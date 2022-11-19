@@ -62,11 +62,11 @@ returns table (
 )
 language sql
 as $$
-  SELECT DISTINCT p.id, p.username, p.avatar_url, hr.name
+  SELECT p.id, p.username, p.avatar_url, hr.name
   FROM hub_members hm
   JOIN profiles p ON (hm.user_id = p.id)
   JOIN hub_roles hr ON (hm.role_id = hr.id)
-  WHERE hm.hub_id = hub_id;
+  WHERE hm.hub_id = $1;
 $$;
 
 create or replace function public.get_project_members(project_id uuid)
@@ -78,11 +78,11 @@ returns table (
 )
 language sql
 as $$
-  SELECT DISTINCT p.id, p.username, p.avatar_url, pr.name
+  SELECT p.id, p.username, p.avatar_url, pr.name
   FROM project_members pm
   JOIN profiles p ON (pm.user_id = p.id)
   JOIN project_roles pr ON (pm.role_id = pr.id)
-  WHERE pm.project_id = project_id;
+  WHERE pm.project_id = $1;
 $$;
 
 create or replace function public.get_user_projects(user_id uuid)
@@ -94,11 +94,11 @@ returns table (
 )
 language sql
 as $$
-  select DISTINCT p.id, p.name, p.description, pr.name as role
+  select p.id, p.name, p.description, pr.name as role
   from project_members pm
   join project_roles pr on (pm.role_id = pr.id)
   join projects p on (p.id = pm.project_id)
-  where pm.user_id = user_id
+  where pm.user_id = $1
 $$;
 
 create or replace function public.get_user_hubs(user_id uuid)
@@ -110,11 +110,11 @@ returns table (
 )
 language sql
 as $$
-  select DISTINCT h.id, h.name, h.description, hr.name as role
+  select h.id, h.name, h.description, hr.name as role
   from hub_members hm
   join hub_roles hr on (hm.role_id = hr.id)
   join hubs h on (h.id = hm.hub_id)
-  where hm.user_id = user_id
+  where hm.user_id = $1
 $$;
 
 create or replace function public.get_bioregion_data(bioregion_id int)
@@ -138,7 +138,7 @@ as $$
   FROM bioregions br
   JOIN subrealms sr ON (br.subrealm_id = sr.id)
   JOIN realms r ON (sr.realm_id = r.id)
-  WHERE br.id = bioregion_id;
+  WHERE br.id = $1;
 $$;
 
 

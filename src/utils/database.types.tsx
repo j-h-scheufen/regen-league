@@ -199,18 +199,21 @@ export interface Database {
       }
       projects: {
         Row: {
+          bioregion_id: number | null
           created_at: string | null
           name: string
           description: string | null
           id: string
         }
         Insert: {
+          bioregion_id?: number | null
           created_at?: string | null
           name: string
           description?: string | null
           id?: string
         }
         Update: {
+          bioregion_id?: number | null
           created_at?: string | null
           name?: string
           description?: string | null

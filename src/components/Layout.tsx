@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, {useCallback, useEffect} from "react";
 import {Github, Menu as MenuIcon, Twitter, Login, User as UserIcon} from "grommet-icons";
 import {
     Anchor,
@@ -14,9 +14,11 @@ import {
     Tip
 } from 'grommet'
 import {useRouter} from "next/router";
-import {useSession, useSupabaseClient} from "@supabase/auth-helpers-react";
+import {useAtom} from "jotai";
+import {Session, useSession, useSupabaseClient} from "@supabase/auth-helpers-react";
 
-import {downloadAvatarImage, getAvatarFilename} from "../utils/supabase";
+import {getUserProfile} from "../utils/supabase";
+import {currentUserProfile} from "../utils/state";
 
 const theme: ThemeType = {
   global: {
@@ -32,30 +34,40 @@ type LayoutProps = React.PropsWithChildren<{
   title?: string
 }>
 
+const UserAvatar = ({session}: {session: Session | null}) => {
+    const [currentProfile] = useAtom(currentUserProfile)
+    if (!session)
+        return <Tip content="Login / Signup"><Anchor href="/login"><Login size="medium"/></Anchor></Tip>
+    if (currentProfile?.avatarURL)
+        return <Anchor href="/profile"><Avatar src={currentProfile.avatarURL}/></Anchor>
+    else
+        return <Anchor href="/profile"><Avatar><UserIcon/></Avatar></Anchor>
+}
+
 export default function Layout({ title = 'Regen League', children }: LayoutProps) {
     const router = useRouter()
     const session = useSession()
     const supabase = useSupabaseClient()
-    const [avatarUrl, setAvatarUrl] = useState<string>()
+    const [currentProfile, setCurrentProfile] = useAtom(currentUserProfile)
+
+    const populateProfile = useCallback(async () => {
+        if (session && !currentProfile) {
+            const profile = await getUserProfile(supabase, session!.user.id)
+            setCurrentProfile(profile)
+        }
+    }, [session, supabase, setCurrentProfile])
 
     useEffect(() => {
-        if (session) {
-            getAvatarFilename(session, supabase).then((filename) => {
-                if (filename)
-                    downloadAvatarImage(supabase, filename, setAvatarUrl)
-            })
-        }
-    })
+        populateProfile()
+    }, [session])
 
-    const menuItems = session ? ([
-        { label: 'My Profile', onClick: () => {router.push("/profile")} },
+    const menuItems = [
         { label: 'Hubs', onClick: () => {router.push("/hubs")} },
-        { label: 'Projects', onClick: () => {router.push("/projects")} },
-        { label: 'Logout', onClick: () => {supabase.auth.signOut(); router.push("/")} },
-    ]) : ([
-        { label: 'Hubs', onClick: () => {router.push("/hubs")} },
-        { label: 'Projects', onClick: () => {router.push("/projects")} },
-    ])
+        { label: 'Projects', onClick: () => {router.push("/projects")} }
+    ]
+    if (session) {
+        menuItems.push({ label: 'Logout', onClick: () => {supabase.auth.signOut(); setCurrentProfile(null); router.push("/")} })
+    }
 
     return (
         <Grommet theme={theme}>
@@ -74,9 +86,7 @@ export default function Layout({ title = 'Regen League', children }: LayoutProps
                         <Anchor icon={<Twitter color="black"/>} href="https://twitter.com/regen_league" />
                     </Nav>
                     <Box pad="medium">
-                        {!session ? <Tip content="Login / Signup"><Anchor href="/login"><Login size="medium"/></Anchor></Tip> :
-                            <Avatar><UserIcon/></Avatar>
-                        }
+                        <UserAvatar session={session}/>
                     </Box>
                 </Header>
 

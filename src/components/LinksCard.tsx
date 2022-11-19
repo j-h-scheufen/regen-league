@@ -1,6 +1,6 @@
 import {Box, Card, CardBody, CardHeader, Paragraph, Text, List, Avatar} from 'grommet'
 import {Twitter, Instagram, Github, Facebook, Link as Generic, Linkedin, Youtube, Icon} from "grommet-icons";
-import {Router, useRouter} from "next/router";
+import {useRouter} from "next/router";
 import Link from "next/link";
 
 import {LinkDetails} from "../utils/types";

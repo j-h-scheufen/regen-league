@@ -1,6 +1,6 @@
 import {GetServerSidePropsContext} from "next";
-import {Box, Heading, Text} from "grommet";
-import {atom, useAtom} from "jotai";
+import {Box, Heading} from "grommet";
+import {useAtom} from "jotai";
 import {useCallback, useEffect} from "react";
 
 import {
@@ -12,9 +12,9 @@ import {
 } from "../../utils/supabase";
 import {useSupabaseClient, useUser} from "@supabase/auth-helpers-react";
 import {isHubAdminAtom} from "../../utils/state";
-import {Bioregion, BioregionInfo, Hub, LinkDetails, MemberDetails, Realm} from "../../utils/types"
+import {BioregionInfo, Hub, LinkDetails, MemberDetails} from "../../utils/types"
 import LinksCard from "../../components/LinksCard";
-import HubAttributesCard from "../../components/HubAttributesCard";
+import HubAttributesCard from "../../components/hub/HubAttributesCard";
 import MembersCard from "../../components/MembersCard";
 import RegionInfoCard from "../../components/RegionInfoCard";
 
@@ -30,11 +30,9 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
   const {client, session} = await getServerClient(ctx)
 
   const hubData = await getHubData(client, hubId)
-  const bioregionData = hubData ? await getBioregionData(client, hubData.bioregionId) : null
+  const bioregionData = hubData?.bioregionId ? await getBioregionData(client, hubData.bioregionId) : null
   const membersData = await getHubMembersData(client, hubId);
   const linksData = await getLinksData(client, hubId)
-
-  console.log('REGION: '+JSON.stringify(bioregionData))
 
   return {
     props: {
@@ -67,7 +65,6 @@ export default function HubDetails({ hub, members, links, regionInfo }: PageProp
         <Box direction="row" alignSelf="center">
           <Heading size="medium" margin="small" alignSelf="center">{hub.name}</Heading>
         </Box>
-        <Text>{isHubAdmin ? 'ADMIN' : 'NOPE'}</Text>
         <MembersCard members={members}/>
         <RegionInfoCard info={regionInfo}/>
         <HubAttributesCard hub={hub}/>

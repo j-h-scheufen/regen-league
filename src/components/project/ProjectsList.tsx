@@ -1,7 +1,7 @@
 import {List} from "grommet";
 import {useRouter} from "next/router";
 
-import {Project} from "../utils/supabase";
+import {Project} from "../../utils/types";
 
 type Props = {
     projects: Array<Project>

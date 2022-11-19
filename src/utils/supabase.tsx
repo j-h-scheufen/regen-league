@@ -4,18 +4,29 @@ import {SupabaseClient} from "@supabase/supabase-js";
 import {Session, useSupabaseClient, useUser} from "@supabase/auth-helpers-react";
 
 import {Database} from "./database.types";
-import {BioregionInfo, LinkDetails, MemberDetails, MembershipItem, Hub as HubData, Subrealm, Bioregion as BioregionData, Realm as RealmData} from "./types";
+import {
+    BioregionInfo,
+    LinkDetails,
+    MemberDetails,
+    MembershipItem,
+    Hub,
+    Subrealm,
+    Bioregion,
+    Realm,
+    Profile,
+    Project
+} from "./types";
 
-export type Profile = Database['public']['Tables']['profiles']['Row']
-export type Hub = Database['public']['Tables']['hubs']['Row']
-export type Link = Database['public']['Tables']['links']['Row']
-export type Project = Database['public']['Tables']['projects']['Row']
-export type ProjectRole = Database['public']['Tables']['project_roles']['Row']
-export type HubRole = Database['public']['Tables']['hub_roles']['Row']
-export type ProjectMember = Database['public']['Tables']['project_members']['Row']
-export type HubMember = Database['public']['Tables']['hub_members']['Row']
-export type Bioregion = Database['public']['Tables']['bioregions']['Row']
-export type Realm = Database['public']['Tables']['realms']['Row']
+type DbProfile = Database['public']['Tables']['profiles']['Row']
+type DbHub = Database['public']['Tables']['hubs']['Row']
+type DbLink = Database['public']['Tables']['links']['Row']
+type DbProject = Database['public']['Tables']['projects']['Row']
+type DbProjectRole = Database['public']['Tables']['project_roles']['Row']
+type DbHubRole = Database['public']['Tables']['hub_roles']['Row']
+type DbProjectMember = Database['public']['Tables']['project_members']['Row']
+type DbHubMember = Database['public']['Tables']['hub_members']['Row']
+type DbBioregion = Database['public']['Tables']['bioregions']['Row']
+type DbRealm = Database['public']['Tables']['realms']['Row']
 
 export type DbContext = {
     client: SupabaseClient
@@ -44,14 +55,14 @@ export async function downloadAvatarImage(client: SupabaseClient, filename: stri
     }
 }
 
-export async function getAvatarFilename(session: Session, client: SupabaseClient) {
+export async function getAvatarFilename(session: Session, client: SupabaseClient): Promise<String> {
     if (session) { // make sure we have a logged-in user for RLS
         const {data, error} = await client.from('profiles').select('avatar_url').single()
         if (error)
             throw error
         return data ? data.avatar_url : ''
     }
-    return null
+    return ''
 }
 
 export async function isUserHubAdmin(client: SupabaseClient, userId: string, hubId: string) {
@@ -99,7 +110,7 @@ export async function getBioregionData(supabase: SupabaseClient, bioregionId: nu
         throw error
     }
     if (data) {
-        const bioregion: BioregionData = {
+        const bioregion: Bioregion = {
             id: data.br_id,
             code: data.br_code,
             name: data.br_name,
@@ -109,7 +120,7 @@ export async function getBioregionData(supabase: SupabaseClient, bioregionId: nu
             id: data.sr_id,
             name: data.sr_name,
         }
-        const realm: RealmData = {
+        const realm: Realm = {
             id: data.r_id,
             name: data.r_name,
             link: data.r_link
@@ -146,6 +157,28 @@ export async function getHubMembersData(supabase: SupabaseClient, hubId: string)
     }) : new Array<MemberDetails>()
 }
 
+export async function getProjectMembersData(supabase: SupabaseClient, projectId: string): Promise<Array<MemberDetails>> {
+    const {data, error} = await supabase.rpc('get_project_members', {project_id: projectId})
+    if (error) {
+        console.error('Unable to retrieve members for project '+projectId+'. Error: '+error.message)
+        throw error
+    }
+    return data ? data.map((dbMember) => {
+        const newItem: MemberDetails = {
+            userId: dbMember.user_id,
+            username: dbMember.username,
+            avatarImage: dbMember.avatar_image,
+            roleName: dbMember.role_name,
+            avatarURL: ''
+        }
+        if (newItem.avatarImage) {
+            const urlResult = supabase.storage.from('avatars').getPublicUrl(newItem.avatarImage)
+            newItem.avatarURL = urlResult.data.publicUrl
+        }
+        return newItem
+    }) : new Array<MemberDetails>()
+}
+
 export async function getLinksData(supabase: SupabaseClient, objectId: string): Promise<Array<LinkDetails>> {
     const {data, error} = await supabase.from('links').select('*, link_types(name)').eq('owner_id', objectId)
     if (error) {
@@ -161,14 +194,14 @@ export async function getLinksData(supabase: SupabaseClient, objectId: string): 
     }) : new Array<LinkDetails>()
 }
 
-export async function getHubData(supabase: SupabaseClient, hubId: string): Promise<HubData | null> {
+export async function getHubData(supabase: SupabaseClient, hubId: string): Promise<Hub | null> {
     const {data, error} = await supabase.from('hubs').select('*').eq('id', hubId).single()
     if (error) {
         console.error('Unable to retrieve data for hub ID '+hubId+'. Error: '+error.message)
         throw error
     }
     if (data) {
-        const newItem: HubData = {
+        const newItem: Hub = {
             id: data.id,
             name: data.name,
             description: data.description,
@@ -177,4 +210,83 @@ export async function getHubData(supabase: SupabaseClient, hubId: string): Promi
         return newItem
     }
     return null
+}
+
+export async function getProjectData(supabase: SupabaseClient, projectId: string): Promise<Project | null> {
+    const {data, error} = await supabase.from('projects').select('*').eq('id', projectId).single()
+    if (error) {
+        console.error('Unable to retrieve data for project ID '+projectId+'. Error: '+error.message)
+        throw error
+    }
+    if (data) {
+        const newItem: Project = {
+            id: data.id,
+            name: data.name,
+            description: data.description,
+            bioregionId: data.bioregion_id
+        }
+        return newItem
+    }
+    return null
+}
+
+export async function getUserProfile(supabase: SupabaseClient, userId: string): Promise<Profile | null> {
+    const {data, error} = await supabase.from('profiles').select('*').eq('id', userId).single() // uses policy
+    if (error) {
+        console.error('Unable to retrieve profile data for user ID '+userId+'. Error: '+error.message)
+        throw error
+    }
+    if (data) {
+        const newItem: Profile = {
+            id: data.id,
+            avatarURL: '',
+            username: data.username
+        }
+        if (data.avatar_url) {
+            const urlResult = supabase.storage.from('avatars').getPublicUrl(data.avatar_url)
+            newItem.avatarURL = urlResult.data.publicUrl
+        }
+        return newItem
+    }
+    return null
+}
+
+export async function getHubs(supabase: SupabaseClient): Promise<Array<Hub>> {
+    const {data, error} = await supabase.from('hubs').select('*')
+    if (error) {
+        console.error('Unable to retrieve hubs. Error: '+error.message)
+        throw error
+    }
+    if (data) {
+        return data.map((item:DbHub) => {
+            const hub: Hub = {
+                id: item.id,
+                name: item.name,
+                description: item.description || '',
+                bioregionId: item.bioregion_id
+            }
+            return hub
+        })
+    }
+    return new Array<Hub>()
+}
+
+export async function getProjects(supabase: SupabaseClient): Promise<Array<Project>> {
+    const {data, error} = await supabase.from('projects').select('*')
+    if (error) {
+        console.error('Unable to retrieve projects. Error: '+error.message)
+        throw error
+    }
+    if (data) {
+        return data.map((item:DbProject) => {
+            const project: Project = {
+                id: item.id,
+                name: item.name,
+                description: item.description || '',
+                bioregionId: item.bioregion_id
+            }
+            return project
+        })
+    }
+    return new Array<Project>()
 }

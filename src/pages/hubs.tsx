@@ -3,9 +3,10 @@ import {Add as AddIcon} from 'grommet-icons'
 import {GetServerSidePropsContext} from 'next'
 import {Session } from "@supabase/auth-helpers-react"
 
-import {getServerClient, Hub} from '../utils/supabase'
+import {getHubs, getServerClient} from '../utils/supabase'
 import Link from "next/link";
-import HubsList from "../components/HubsList";
+import HubsList from "../components/hub/HubsList";
+import {Hub} from "../utils/types";
 
 type PageProps = {
     session: Session
@@ -15,13 +16,12 @@ type PageProps = {
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
     const {client, session} = await getServerClient(ctx)
 
-    const {data, error} = await client.from('hubs').select('*')
-    if (error) alert('Unable to retrieve hubs data. Error: '+error.message);
+    const hubs = await getHubs(client)
 
     return {
         props: {
             session: session,
-            hubs: data ?? [],
+            hubs: hubs,
         },
     }
 }
@@ -31,7 +31,7 @@ export default function Hubs({ session, hubs }: PageProps) {
         <Page>
             <Box direction="row" justify="between">
                 <Heading >Hubs</Heading>
-                {session ? <Link href={"/newHub"} passHref>
+                {session ? <Link href={"/hub/new"} passHref>
                     <Button><AddIcon size="large"/></Button>
                 </Link>: <Box/>}
             </Box>

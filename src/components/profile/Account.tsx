@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import {useState} from 'react'
 import {Box, Button, Form, FormField, Paragraph, TextInput} from 'grommet';
-import { useUser, useSupabaseClient, User } from '@supabase/auth-helpers-react'
+import {useUser, useSupabaseClient} from '@supabase/auth-helpers-react'
 
 import { Database } from '../../utils/database.types'
 import { Profile } from '../../utils/types'
@@ -42,9 +42,9 @@ export default function Account(profile: Profile) {
                 onReset={() => setProfile(emptyProfile)}
                 onSubmit={() => { updateProfile() } }>
                 <ProfileAvatar
-                    uid={user?.id}
+                    id={user?.id}
                     url={profile.avatarURL}
-                    size={150}
+                    size="large"
                     onUpload={(url) => {
                         currentProfile.avatarURL= url
                         setProfile(currentProfile)

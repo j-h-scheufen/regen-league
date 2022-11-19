@@ -1,31 +1,31 @@
 import React, { useEffect, useState } from 'react'
 import { useSupabaseClient } from '@supabase/auth-helpers-react'
-import { Database } from '../../utils/database.types'
 import {Avatar} from "grommet"
 import {User} from "grommet-icons";
 
+import { Database } from '../../utils/database.types'
 import type {Profile} from '../../utils/types'
 import {downloadAvatarImage} from "../../utils/supabase";
+import {atom} from "jotai";
+import {useAtom} from "jotai/esm";
 
-export default function ProfileAvatar({
-                                   uid,
-                                   url,
-                                   size,
-                                   onUpload,
-                               }: {
-    uid: string
+type Props = {
+    id: string
     url: Profile['avatarURL']
-    size: number
+    size: string
     onUpload: (url: string) => void
-}) {
-    const supabase = useSupabaseClient<Database>()
-    const [avatarUrl, setAvatarUrl] = useState<string>()
-    const [uploading, setUploading] = useState(false)
+}
 
-    useEffect(() => {
-        if (url)
-            downloadAvatarImage(supabase, url, setAvatarUrl)
-    }, [url, supabase])
+const urlAtom = atom<string>('')
+const isUploadingAtom = atom<boolean>(false)
+
+export default function ProfileAvatar({id, url, size, onUpload}: Props) {
+    const supabase = useSupabaseClient<Database>()
+    const [avatarUrl, setAvatarUrl] = useAtom(urlAtom)
+    const [uploading, setUploading] = useAtom(isUploadingAtom)
+
+    if (url)
+        setAvatarUrl(url)
 
     const uploadAvatar: React.ChangeEventHandler<HTMLInputElement> = async (event) => {
         try {
@@ -37,7 +37,7 @@ export default function ProfileAvatar({
 
             const file = event.target.files[0]
             const fileExt = file.name.split('.').pop()
-            const fileName = `${uid}.${fileExt}`
+            const fileName = `${id}.${fileExt}`
             const filePath = `${fileName}`
 
             let { error: uploadError } = await supabase.storage
@@ -50,8 +50,7 @@ export default function ProfileAvatar({
 
             onUpload(filePath)
         } catch (error) {
-            alert('Error uploading avatar! Error: '+JSON.stringify(error))
-            console.log(error)
+            console.error('Error uploading avatar! Error: '+JSON.stringify(error))
         } finally {
             setUploading(false)
         }
@@ -61,7 +60,7 @@ export default function ProfileAvatar({
         <div>
             {avatarUrl ? (<Avatar src={avatarUrl} size="large"/>) :
                 (<Avatar size="large" background="light-3"><User /></Avatar>)}
-            <div style={{ width: size }}>
+            <div>
                 <label htmlFor="single">
                     {uploading ? 'Uploading ...' : 'Upload'}
                 </label>

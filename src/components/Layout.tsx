@@ -61,15 +61,13 @@ export default function Layout({ title = 'Regen League', children }: LayoutProps
         populateProfile()
     }, [session])
 
-    const menuItems = session ? ([
-        { label: 'My Profile', onClick: () => {router.push("/profile")} },
+    const menuItems = [
         { label: 'Hubs', onClick: () => {router.push("/hubs")} },
-        { label: 'Projects', onClick: () => {router.push("/projects")} },
-        { label: 'Logout', onClick: () => {supabase.auth.signOut(); router.push("/")} },
-    ]) : ([
-        { label: 'Hubs', onClick: () => {router.push("/hubs")} },
-        { label: 'Projects', onClick: () => {router.push("/projects")} },
-    ])
+        { label: 'Projects', onClick: () => {router.push("/projects")} }
+    ]
+    if (session) {
+        menuItems.push({ label: 'Logout', onClick: () => {supabase.auth.signOut(); setCurrentProfile(null); router.push("/")} })
+    }
 
     return (
         <Grommet theme={theme}>

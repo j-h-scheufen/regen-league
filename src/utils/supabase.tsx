@@ -157,6 +157,28 @@ export async function getHubMembersData(supabase: SupabaseClient, hubId: string)
     }) : new Array<MemberDetails>()
 }
 
+export async function getProjectMembersData(supabase: SupabaseClient, projectId: string): Promise<Array<MemberDetails>> {
+    const {data, error} = await supabase.rpc('get_project_members', {project_id: projectId})
+    if (error) {
+        console.error('Unable to retrieve members for project '+projectId+'. Error: '+error.message)
+        throw error
+    }
+    return data ? data.map((dbMember) => {
+        const newItem: MemberDetails = {
+            userId: dbMember.user_id,
+            username: dbMember.username,
+            avatarImage: dbMember.avatar_image,
+            roleName: dbMember.role_name,
+            avatarURL: ''
+        }
+        if (newItem.avatarImage) {
+            const urlResult = supabase.storage.from('avatars').getPublicUrl(newItem.avatarImage)
+            newItem.avatarURL = urlResult.data.publicUrl
+        }
+        return newItem
+    }) : new Array<MemberDetails>()
+}
+
 export async function getLinksData(supabase: SupabaseClient, objectId: string): Promise<Array<LinkDetails>> {
     const {data, error} = await supabase.from('links').select('*, link_types(name)').eq('owner_id', objectId)
     if (error) {
@@ -180,6 +202,24 @@ export async function getHubData(supabase: SupabaseClient, hubId: string): Promi
     }
     if (data) {
         const newItem: Hub = {
+            id: data.id,
+            name: data.name,
+            description: data.description,
+            bioregionId: data.bioregion_id
+        }
+        return newItem
+    }
+    return null
+}
+
+export async function getProjectData(supabase: SupabaseClient, projectId: string): Promise<Project | null> {
+    const {data, error} = await supabase.from('projects').select('*').eq('id', projectId).single()
+    if (error) {
+        console.error('Unable to retrieve data for project ID '+projectId+'. Error: '+error.message)
+        throw error
+    }
+    if (data) {
+        const newItem: Project = {
             id: data.id,
             name: data.name,
             description: data.description,

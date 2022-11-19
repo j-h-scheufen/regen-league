@@ -1,5 +1,6 @@
 import {useSession} from "@supabase/auth-helpers-react";
 import {Paragraph} from "grommet";
+
 import NewProjectStep1 from "../../components/project/NewProjectStep1";
 
 export default function NewProject() {

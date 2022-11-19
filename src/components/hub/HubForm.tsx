@@ -9,8 +9,8 @@ import {
 import {PropsWithChildren, useState} from 'react'
 import {useSupabaseClient, useUser} from "@supabase/auth-helpers-react";
 
-import {Database} from "../utils/database.types";
-import {Hub} from "../utils/types";
+import {Database} from "../../utils/database.types";
+import {Hub} from "../../utils/types";
 
 const FormSection = ({ children, ...rest }: PropsWithChildren<BoxProps>) => (
     <Box direction="row" gap="medium" justify="center" margin={{ bottom: 'medium' }} {...rest}>

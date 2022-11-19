@@ -94,11 +94,11 @@ returns table (
 )
 language sql
 as $$
-  select DISTINCT p.id, p.name, p.description, pr.name as role
+  select p.id, p.name, p.description, pr.name as role
   from project_members pm
   join project_roles pr on (pm.role_id = pr.id)
   join projects p on (p.id = pm.project_id)
-  where pm.user_id = user_id
+  where pm.user_id = $1
 $$;
 
 create or replace function public.get_user_hubs(user_id uuid)
@@ -110,11 +110,11 @@ returns table (
 )
 language sql
 as $$
-  select DISTINCT h.id, h.name, h.description, hr.name as role
+  select h.id, h.name, h.description, hr.name as role
   from hub_members hm
   join hub_roles hr on (hm.role_id = hr.id)
   join hubs h on (h.id = hm.hub_id)
-  where hm.user_id = user_id
+  where hm.user_id = $1
 $$;
 
 create or replace function public.get_bioregion_data(bioregion_id int)
@@ -138,7 +138,7 @@ as $$
   FROM bioregions br
   JOIN subrealms sr ON (br.subrealm_id = sr.id)
   JOIN realms r ON (sr.realm_id = r.id)
-  WHERE br.id = bioregion_id;
+  WHERE br.id = $1;
 $$;
 
 

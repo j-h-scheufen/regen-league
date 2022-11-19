@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { useSupabaseClient } from '@supabase/auth-helpers-react'
-import { Database } from '../utils/database.types'
+import { Database } from '../../utils/database.types'
 import {Avatar} from "grommet"
 import {User} from "grommet-icons";
 
-import type {Profile} from '../utils/types'
-import {downloadAvatarImage} from "../utils/supabase";
+import type {Profile} from '../../utils/types'
+import {downloadAvatarImage} from "../../utils/supabase";
 
 export default function ProfileAvatar({
                                    uid,

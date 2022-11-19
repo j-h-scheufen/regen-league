@@ -1,5 +1,5 @@
 import {Box, Card, CardBody, CardHeader, TextArea} from 'grommet'
-import {Hub} from "../utils/types";
+import {Hub} from "../../utils/types";
 
 type Props = {
     hub: Hub

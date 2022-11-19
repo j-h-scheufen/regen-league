@@ -1,21 +1,20 @@
-import { Box, Paragraph } from "grommet";
+import {Box, Page, Paragraph} from "grommet";
 import { GetServerSidePropsContext } from 'next'
 import { User } from '@supabase/auth-helpers-nextjs'
 import { Session } from "@supabase/auth-helpers-react";
 
-import {getServerClient, getUserProfile} from "../utils/supabase";
-import Account from '../components/Account'
-import {Profile} from "../utils/types";
+import {getServerClient, getUserProfile} from "../../utils/supabase";
+import Account from '../../components/profile/Account'
+import {Profile} from "../../utils/types";
 
 type PageProps = {
-    initialSession: Session
     user: User
     profile: Profile
 }
 
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
     const {client, session} = await getServerClient(ctx)
-    if (!session) {
+    if (!session?.user) {
         return {
             redirect: {
                 destination: '/',
@@ -28,15 +27,19 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
 
     return {
         props: {
-            initialSession: session,
             user: session.user,
             profile: profile,
-        },
+        }
     }
 }
 
-export default function ProfileDetails({ profile }: PageProps) {
+export default function ProfilePage({ profile }: PageProps) {
 
-        return (<Box><Account {...profile}/></Box>)
+        return (
+            <Page direction="column">
+
+                <Account {...profile}/>
+            </Page>
+        )
 }
 

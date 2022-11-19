@@ -5,7 +5,7 @@ import {Session } from "@supabase/auth-helpers-react"
 
 import {getHubs, getServerClient} from '../utils/supabase'
 import Link from "next/link";
-import HubsList from "../components/HubsList";
+import HubsList from "../components/hub/HubsList";
 import {Hub} from "../utils/types";
 
 type PageProps = {

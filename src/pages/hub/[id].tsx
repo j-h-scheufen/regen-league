@@ -14,7 +14,7 @@ import {useSupabaseClient, useUser} from "@supabase/auth-helpers-react";
 import {isHubAdminAtom} from "../../utils/state";
 import {BioregionInfo, Hub, LinkDetails, MemberDetails} from "../../utils/types"
 import LinksCard from "../../components/LinksCard";
-import HubAttributesCard from "../../components/HubAttributesCard";
+import HubAttributesCard from "../../components/hub/HubAttributesCard";
 import MembersCard from "../../components/MembersCard";
 import RegionInfoCard from "../../components/RegionInfoCard";
 

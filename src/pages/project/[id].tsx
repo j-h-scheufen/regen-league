@@ -5,7 +5,7 @@ import {Box, Heading} from "grommet";
 import {getServerClient} from "../../utils/supabase";
 import LinksCard from "../../components/LinksCard";
 import MembersCard from "../../components/MembersCard";
-import ProjectAttributesCard from "../../components/ProjectAttributesCard";
+import ProjectAttributesCard from "../../components/project/ProjectAttributesCard";
 import {LinkDetails, MemberDetails, Project} from "../../utils/types";
 
 type PageProps = {

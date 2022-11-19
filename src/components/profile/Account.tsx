@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react'
 import {Box, Button, Form, FormField, Paragraph, TextInput} from 'grommet';
 import { useUser, useSupabaseClient, User } from '@supabase/auth-helpers-react'
 
-import { Database } from '../utils/database.types'
-import { Profile } from '../utils/types'
+import { Database } from '../../utils/database.types'
+import { Profile } from '../../utils/types'
 
 import ProfileAvatar from './ProfileAvatar'
 

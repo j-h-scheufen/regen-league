@@ -4,7 +4,7 @@ import {SupabaseClient} from "@supabase/supabase-js";
 import {Session, useSupabaseClient, useUser} from "@supabase/auth-helpers-react";
 
 import {Database} from "./database.types";
-import {BioregionInfo, LinkDetails, MemberDetails, MembershipItem, Hub as HubData, Subrealm, Bioregion as BioregionData, Realm as RealmData} from "./types";
+import {BioregionInfo, LinkDetails, MemberDetails, MembershipItem, Hub as HubData, Subrealm, Bioregion as BioregionData, Realm as RealmData, Profile as ProfileData} from "./types";
 
 export type Profile = Database['public']['Tables']['profiles']['Row']
 export type Hub = Database['public']['Tables']['hubs']['Row']
@@ -44,7 +44,7 @@ export async function downloadAvatarImage(client: SupabaseClient, filename: stri
     }
 }
 
-export async function getAvatarFilename(session: Session, client: SupabaseClient) {
+export async function getAvatarFilename(session: Session, client: SupabaseClient): Promise<String> {
     if (session) { // make sure we have a logged-in user for RLS
         const {data, error} = await client.from('profiles').select('avatar_url').single()
         if (error)
@@ -173,6 +173,27 @@ export async function getHubData(supabase: SupabaseClient, hubId: string): Promi
             name: data.name,
             description: data.description,
             bioregionId: data.bioregion_id
+        }
+        return newItem
+    }
+    return null
+}
+
+export async function getUserProfile(supabase: SupabaseClient, userId: string): Promise<ProfileData | null> {
+    const {data, error} = await supabase.from('profiles').select('*').eq('id', userId).single() // uses policy
+    if (error) {
+        console.error('Unable to retrieve profile data for user ID '+userId+'. Error: '+error.message)
+        throw error
+    }
+    if (data) {
+        const newItem: ProfileData = {
+            id: data.id,
+            avatarURL: '',
+            username: data.username
+        }
+        if (data.avatar_url) {
+            const urlResult = supabase.storage.from('avatars').getPublicUrl(data.avatar_url)
+            newItem.avatarURL = urlResult.data.publicUrl
         }
         return newItem
     }

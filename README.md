@@ -62,11 +62,11 @@ returns table (
 )
 language sql
 as $$
-  SELECT DISTINCT p.id, p.username, p.avatar_url, hr.name
+  SELECT p.id, p.username, p.avatar_url, hr.name
   FROM hub_members hm
   JOIN profiles p ON (hm.user_id = p.id)
   JOIN hub_roles hr ON (hm.role_id = hr.id)
-  WHERE hm.hub_id = hub_id;
+  WHERE hm.hub_id = $1;
 $$;
 
 create or replace function public.get_project_members(project_id uuid)
@@ -78,11 +78,11 @@ returns table (
 )
 language sql
 as $$
-  SELECT DISTINCT p.id, p.username, p.avatar_url, pr.name
+  SELECT p.id, p.username, p.avatar_url, pr.name
   FROM project_members pm
   JOIN profiles p ON (pm.user_id = p.id)
   JOIN project_roles pr ON (pm.role_id = pr.id)
-  WHERE pm.project_id = project_id;
+  WHERE pm.project_id = $1;
 $$;
 
 create or replace function public.get_user_projects(user_id uuid)

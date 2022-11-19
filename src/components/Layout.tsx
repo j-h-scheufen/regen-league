@@ -14,9 +14,11 @@ import {
     Tip
 } from 'grommet'
 import {useRouter} from "next/router";
-import {useSession, useSupabaseClient} from "@supabase/auth-helpers-react";
+import {Session, useSession, useSupabaseClient} from "@supabase/auth-helpers-react";
 
-import {downloadAvatarImage, getAvatarFilename} from "../utils/supabase";
+import {downloadAvatarImage, getAvatarFilename, getUserProfile} from "../utils/supabase";
+import {useAtom} from "jotai";
+import {currentUserProfile} from "../utils/state";
 
 const theme: ThemeType = {
   global: {
@@ -32,20 +34,25 @@ type LayoutProps = React.PropsWithChildren<{
   title?: string
 }>
 
+const UserAvatar = (session: Session) => {
+    const [currentProfile] = useAtom(currentUserProfile)
+    if (!session)
+        return <Tip content="Login / Signup"><Anchor href="/login"><Login size="medium"/></Anchor></Tip>
+    return currentProfile ? <Avatar src={currentProfile.avatarURL}/> : <Avatar><UserIcon/></Avatar>
+}
+
 export default function Layout({ title = 'Regen League', children }: LayoutProps) {
     const router = useRouter()
     const session = useSession()
     const supabase = useSupabaseClient()
-    const [avatarUrl, setAvatarUrl] = useState<string>()
+    const [currentProfile, setCurrentProfile] = useAtom(currentUserProfile)
 
     useEffect(() => {
-        if (session) {
-            getAvatarFilename(session, supabase).then((filename) => {
-                if (filename)
-                    downloadAvatarImage(supabase, filename, setAvatarUrl)
-            })
+        if (session && !currentProfile) {
+            const profile = getUserProfile(supabase, session!.user.id)
+            setCurrentProfile(profile)
         }
-    })
+    }, [session])
 
     const menuItems = session ? ([
         { label: 'My Profile', onClick: () => {router.push("/profile")} },
@@ -74,9 +81,7 @@ export default function Layout({ title = 'Regen League', children }: LayoutProps
                         <Anchor icon={<Twitter color="black"/>} href="https://twitter.com/regen_league" />
                     </Nav>
                     <Box pad="medium">
-                        {!session ? <Tip content="Login / Signup"><Anchor href="/login"><Login size="medium"/></Anchor></Tip> :
-                            <Avatar><UserIcon/></Avatar>
-                        }
+                        <UserAvatar session={session}/>
                     </Box>
                 </Header>
 

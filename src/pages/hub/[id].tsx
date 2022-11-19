@@ -34,8 +34,6 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
   const membersData = await getHubMembersData(client, hubId);
   const linksData = await getLinksData(client, hubId)
 
-  console.log('REGION: '+JSON.stringify(bioregionData))
-
   return {
     props: {
       hub: hubData,
@@ -67,7 +65,6 @@ export default function HubDetails({ hub, members, links, regionInfo }: PageProp
         <Box direction="row" alignSelf="center">
           <Heading size="medium" margin="small" alignSelf="center">{hub.name}</Heading>
         </Box>
-        <Text>{isHubAdmin ? 'ADMIN' : 'NOPE'}</Text>
         <MembersCard members={members}/>
         <RegionInfoCard info={regionInfo}/>
         <HubAttributesCard hub={hub}/>

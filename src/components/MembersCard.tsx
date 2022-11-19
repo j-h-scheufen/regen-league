@@ -29,7 +29,7 @@ export default function MembersCard({members}: Props) {
 
     return (
         <Card pad="small">
-            <CardHeader pad="small">Members</CardHeader>
+            <CardHeader pad="small"><Text>{members.length} Member{members.length != 1?'s':''}</Text></CardHeader>
             <CardBody>
                 <Box direction="row">
                     {members.map((member, index) =>

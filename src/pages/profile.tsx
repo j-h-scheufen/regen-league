@@ -23,14 +23,15 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
         }
     }
 
-    const {data, error} = await client.from('profiles').select('*')
-    if (error) alert('Unable to retrieve profile data for user ID '+session.user?.id+'. Error: '+error.message);
+    const {data, error} = await client.from('profiles').select('*').single() // uses policy
+    if (error)
+        console.error('Unable to retrieve profile data for user ID '+session.user?.id+'. Error: '+error.message);
 
     return {
         props: {
             initialSession: session,
             user: session.user,
-            profile: data ? data[0] : {},
+            profile: data || {},
         },
     }
 }

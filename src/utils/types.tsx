@@ -3,17 +3,18 @@ export type Hub = {
     id: string,
     name: string,
     description: string,
-    bioregionId: number
+    bioregionId: number | null
 }
 
 export type Project = {
     id: string,
     name: string,
     description: string,
-    bioregionId: number
+    bioregionId: number | null
 }
 
 export type Profile = {
+    id: string,
     username: string,
     avatarURL: string
 }

@@ -17,12 +17,12 @@ export default function MembersCard({members}: Props) {
                             size="medium"
                             margin="small"
                             round="medium"
-                            onClick={() => router.push('/regen/'+member.userId)}/>)
+                            onClick={() => router.push('/profile/'+member.userId)}/>)
         else
             return (<Avatar size="medium"
                             margin="small"
                             round="medium"
-                            onClick={() => router.push('/regen/'+member.userId)}>
+                            onClick={() => router.push('/profile/'+member.userId)}>
                 <UserIcon/>
             </Avatar>)
     }

@@ -9,7 +9,7 @@ import {useState} from 'react'
 import {Session, useSession, useSupabaseClient} from "@supabase/auth-helpers-react";
 
 import {Database} from "../utils/database.types";
-import {Hub} from "../utils/supabase";
+import {Hub} from "../utils/types";
 import {useRouter} from "next/router";
 
 export default function NewHubStep1() {

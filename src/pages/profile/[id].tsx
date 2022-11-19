@@ -2,13 +2,8 @@ import {GetServerSidePropsContext} from "next";
 import {Box, Card, CardHeader, Heading, List} from "grommet";
 import {useRouter} from "next/router";
 
-import {
-    getHubsForUser,
-    getProjectsForUser,
-    getServerClient,
-    Profile,
-} from "../../utils/supabase";
-import {MembershipItem} from "../../utils/types";
+import {getHubsForUser, getProjectsForUser, getServerClient} from "../../utils/supabase";
+import {MembershipItem, Profile} from "../../utils/types";
 
 
 type PageProps = {

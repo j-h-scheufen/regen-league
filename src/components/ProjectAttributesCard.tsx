@@ -1,6 +1,6 @@
 import {Box, Card, CardBody, CardHeader, TextArea} from 'grommet'
 
-import {Project} from "../utils/supabase";
+import {Project} from "../utils/types";
 
 type Props = {
     project: Project

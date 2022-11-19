@@ -9,7 +9,7 @@ import { useState } from 'react'
 import {Session, useSession, useSupabaseClient, useUser} from "@supabase/auth-helpers-react";
 
 import { Database } from "../utils/database.types";
-import {Project} from "../utils/supabase";
+import {Project} from "../utils/types";
 import {useRouter} from "next/router";
 
 export default function NewProjectStep1() {

@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, {useCallback, useEffect} from "react";
 import {Github, Menu as MenuIcon, Twitter, Login, User as UserIcon} from "grommet-icons";
 import {
     Anchor,
@@ -14,10 +14,10 @@ import {
     Tip
 } from 'grommet'
 import {useRouter} from "next/router";
+import {useAtom} from "jotai";
 import {Session, useSession, useSupabaseClient} from "@supabase/auth-helpers-react";
 
-import {downloadAvatarImage, getAvatarFilename, getUserProfile} from "../utils/supabase";
-import {useAtom} from "jotai";
+import {getUserProfile} from "../utils/supabase";
 import {currentUserProfile} from "../utils/state";
 
 const theme: ThemeType = {
@@ -34,11 +34,14 @@ type LayoutProps = React.PropsWithChildren<{
   title?: string
 }>
 
-const UserAvatar = (session: Session) => {
+const UserAvatar = ({session}: {session: Session | null}) => {
     const [currentProfile] = useAtom(currentUserProfile)
     if (!session)
         return <Tip content="Login / Signup"><Anchor href="/login"><Login size="medium"/></Anchor></Tip>
-    return currentProfile ? <Avatar src={currentProfile.avatarURL}/> : <Avatar><UserIcon/></Avatar>
+    if (currentProfile?.avatarURL)
+        return <Anchor href="/profile"><Avatar src={currentProfile.avatarURL}/></Anchor>
+    else
+        return <Anchor href="/profile"><Avatar><UserIcon/></Avatar></Anchor>
 }
 
 export default function Layout({ title = 'Regen League', children }: LayoutProps) {
@@ -47,11 +50,15 @@ export default function Layout({ title = 'Regen League', children }: LayoutProps
     const supabase = useSupabaseClient()
     const [currentProfile, setCurrentProfile] = useAtom(currentUserProfile)
 
-    useEffect(() => {
+    const populateProfile = useCallback(async () => {
         if (session && !currentProfile) {
-            const profile = getUserProfile(supabase, session!.user.id)
+            const profile = await getUserProfile(supabase, session!.user.id)
             setCurrentProfile(profile)
         }
+    }, [session, supabase, setCurrentProfile])
+
+    useEffect(() => {
+        populateProfile()
     }, [session])
 
     const menuItems = session ? ([

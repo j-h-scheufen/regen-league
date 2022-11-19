@@ -3,7 +3,7 @@ import {Box, Button, Form, FormField, Paragraph, TextInput} from 'grommet';
 import { useUser, useSupabaseClient, User } from '@supabase/auth-helpers-react'
 
 import { Database } from '../utils/database.types'
-import { Profile } from '../utils/supabase'
+import { Profile } from '../utils/types'
 
 import ProfileAvatar from './ProfileAvatar'
 
@@ -14,7 +14,7 @@ export default function Account(profile: Profile) {
     const [loading, setLoading] = useState(false)
 
     if (!user) return <Paragraph>Unauthorized</Paragraph>
-    const emptyProfile = { id: user.id, username: '', website: '', avatar_url: '', created_at: '' }
+    const emptyProfile: Profile = { id: user.id, username: '', avatarURL: ''}
 
     async function updateProfile() {
         try {
@@ -43,10 +43,10 @@ export default function Account(profile: Profile) {
                 onSubmit={() => { updateProfile() } }>
                 <ProfileAvatar
                     uid={user?.id}
-                    url={profile.avatar_url}
+                    url={profile.avatarURL}
                     size={150}
                     onUpload={(url) => {
-                        currentProfile.avatar_url = url
+                        currentProfile.avatarURL= url
                         setProfile(currentProfile)
                     }}
                 />

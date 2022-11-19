@@ -3,8 +3,9 @@ import { GetServerSidePropsContext } from 'next'
 import { User } from '@supabase/auth-helpers-nextjs'
 import { Session } from "@supabase/auth-helpers-react";
 
-import { getServerClient, Profile } from "../utils/supabase";
+import {getServerClient, getUserProfile} from "../utils/supabase";
 import Account from '../components/Account'
+import {Profile} from "../utils/types";
 
 type PageProps = {
     initialSession: Session
@@ -23,15 +24,13 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
         }
     }
 
-    const {data, error} = await client.from('profiles').select('*').single() // uses policy
-    if (error)
-        console.error('Unable to retrieve profile data for user ID '+session.user?.id+'. Error: '+error.message);
+    const profile = await getUserProfile(client, session.user.id)
 
     return {
         props: {
             initialSession: session,
             user: session.user,
-            profile: data || {},
+            profile: profile,
         },
     }
 }

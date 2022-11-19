@@ -4,7 +4,7 @@ import { Database } from '../utils/database.types'
 import {Avatar} from "grommet"
 import {User} from "grommet-icons";
 
-import type {Profile} from '../utils/supabase'
+import type {Profile} from '../utils/types'
 import {downloadAvatarImage} from "../utils/supabase";
 
 export default function ProfileAvatar({
@@ -14,7 +14,7 @@ export default function ProfileAvatar({
                                    onUpload,
                                }: {
     uid: string
-    url: Profile['avatar_url']
+    url: Profile['avatarURL']
     size: number
     onUpload: (url: string) => void
 }) {

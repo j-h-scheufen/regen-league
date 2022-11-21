@@ -2,6 +2,7 @@ import {Box, Card, CardBody, CardHeader, Paragraph, Text, List, Avatar} from 'gr
 import {User as UserIcon} from "grommet-icons/icons";
 import {useRouter} from "next/router";
 import {MemberDetails} from "../utils/types";
+import ProfileAvatar from "./profile/ProfileAvatar";
 
 
 type Props = {
@@ -9,23 +10,6 @@ type Props = {
 }
 
 export default function MembersCard({members}: Props) {
-    const router = useRouter()
-
-    const createAvatar = (member: MemberDetails) => {
-        if (member.avatarURL)
-            return (<Avatar src={member.avatarURL}
-                            size="medium"
-                            margin="small"
-                            round="medium"
-                            onClick={() => router.push('/profile/'+member.userId)}/>)
-        else
-            return (<Avatar size="medium"
-                            margin="small"
-                            round="medium"
-                            onClick={() => router.push('/profile/'+member.userId)}>
-                <UserIcon/>
-            </Avatar>)
-    }
 
     return (
         <Card pad="small">
@@ -33,10 +17,11 @@ export default function MembersCard({members}: Props) {
             <CardBody>
                 <Box direction="row">
                     {members.map((member, index) =>
-                        <Box key={index} direction="column" align="center">
-                            {createAvatar(member)}
-                            <Text size="small">{member.username}</Text>
-                        </Box>
+                        <ProfileAvatar key={index}
+                            profileId={member.userId}
+                            name={member.username}
+                            avatarURL={member.avatarURL}
+                            linkTo={'/profile/'+member.userId}/>
                     )}
                 </Box>
             </CardBody>

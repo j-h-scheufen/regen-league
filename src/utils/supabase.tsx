@@ -16,6 +16,7 @@ import {
     Profile,
     Project
 } from "./types";
+import {printLocation} from "graphql/language";
 
 type DbProfile = Database['public']['Tables']['profiles']['Row']
 type DbHub = Database['public']['Tables']['hubs']['Row']
@@ -25,8 +26,8 @@ type DbProjectRole = Database['public']['Tables']['project_roles']['Row']
 type DbHubRole = Database['public']['Tables']['hub_roles']['Row']
 type DbProjectMember = Database['public']['Tables']['project_members']['Row']
 type DbHubMember = Database['public']['Tables']['hub_members']['Row']
-type DbBioregion = Database['public']['Tables']['bioregions']['Row']
-type DbRealm = Database['public']['Tables']['realms']['Row']
+type DbBioregion = Database['public']['Tables']['oe_bioregions']['Row']
+type DbRealm = Database['public']['Tables']['oe_realms']['Row']
 
 export type DbContext = {
     client: SupabaseClient
@@ -42,25 +43,12 @@ export const getServerClient = async (ctx: GetServerSidePropsContext): Promise<D
     return { client: supabase, session }
 }
 
-export async function downloadAvatarImage(client: SupabaseClient, filename: string, setUrl: Function) {
-    try {
-        const { data, error } = await client.storage.from('avatars').download(filename)
-        if (error)
-            throw error
-
-        const url = URL.createObjectURL(data)
-        setUrl(url)
-    } catch (error) {
-        console.log('Error downloading image: ', error)
-    }
-}
-
 export async function getAvatarFilename(session: Session, client: SupabaseClient): Promise<String> {
     if (session) { // make sure we have a logged-in user for RLS
-        const {data, error} = await client.from('profiles').select('avatar_url').single()
+        const {data, error} = await client.from('profiles').select('avatar_filename').single()
         if (error)
             throw error
-        return data ? data.avatar_url : ''
+        return data ? data.avatar_filename : ''
     }
     return ''
 }
@@ -145,7 +133,7 @@ export async function getHubMembersData(supabase: SupabaseClient, hubId: string)
         const newItem: MemberDetails = {
             userId: dbMember.user_id,
             username: dbMember.username,
-            avatarImage: dbMember.avatar_image,
+            avatarImage: dbMember.avatar_filename,
             roleName: dbMember.role_name,
             avatarURL: ''
         }
@@ -167,7 +155,7 @@ export async function getProjectMembersData(supabase: SupabaseClient, projectId:
         const newItem: MemberDetails = {
             userId: dbMember.user_id,
             username: dbMember.username,
-            avatarImage: dbMember.avatar_image,
+            avatarImage: dbMember.avatar_filename,
             roleName: dbMember.role_name,
             avatarURL: ''
         }
@@ -239,11 +227,12 @@ export async function getUserProfile(supabase: SupabaseClient, userId: string): 
     if (data) {
         const newItem: Profile = {
             id: data.id,
+            avatarFilename: data.avatar_filename,
             avatarURL: '',
             username: data.username
         }
-        if (data.avatar_url) {
-            const urlResult = supabase.storage.from('avatars').getPublicUrl(data.avatar_url)
+        if (data.avatar_filename) {
+            const urlResult = supabase.storage.from('avatars').getPublicUrl(data.avatar_filename)
             newItem.avatarURL = urlResult.data.publicUrl
         }
         return newItem
@@ -289,4 +278,25 @@ export async function getProjects(supabase: SupabaseClient): Promise<Array<Proje
         })
     }
     return new Array<Project>()
+}
+
+export async function updateAvatarFile(supabase: SupabaseClient, profileId: string, filename: string, file: any): Promise<{filename: string, url: string}> {
+    const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filename, file, { upsert: true })
+    if (uploadError) {
+        console.log('Error uploading the file to storage: '+uploadError.message)
+        throw uploadError
+    }
+
+    const updates = {avatar_filename: filename}
+    const {error: updateError} = await supabase.from('profiles').update(updates).eq('id', profileId)
+    if (updateError) {
+        console.log('Error updating avatar filename for user ID ' + profileId+'. Error: '+updateError.message)
+        throw updateError
+    }
+
+    const {data} = supabase.storage.from('avatars').getPublicUrl(filename)
+
+    return {filename: filename, url: data?.publicUrl || ''}
 }

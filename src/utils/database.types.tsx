@@ -9,47 +9,90 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
-      bioregions: {
+      custom_regions: {
         Row: {
+          id: string
+          created_by: string
           name: string
+          description: string | null
           link: string | null
-          code: string
-          id: number
-          subrealm_id: number
         }
         Insert: {
+          id?: string
+          created_by: string
           name: string
+          description?: string | null
           link?: string | null
-          code: string
-          id?: number
-          subrealm_id: number
         }
         Update: {
+          id?: string
+          created_by?: string
           name?: string
+          description?: string | null
           link?: string | null
-          code?: string
-          id?: number
-          subrealm_id?: number
         }
       }
-      ecoregions: {
+      epa_regions_1: {
+        Row: {
+          code: string
+          name: string
+          link: string | null
+          id: number
+        }
+        Insert: {
+          code: string
+          name: string
+          link?: string | null
+          id?: number
+        }
+        Update: {
+          code?: string
+          name?: string
+          link?: string | null
+          id?: number
+        }
+      }
+      epa_regions_2: {
+        Row: {
+          level1_id: number
+          code: string
+          name: string
+          link: string | null
+          id: number
+        }
+        Insert: {
+          level1_id: number
+          code: string
+          name: string
+          link?: string | null
+          id?: number
+        }
+        Update: {
+          level1_id?: number
+          code?: string
+          name?: string
+          link?: string | null
+          id?: number
+        }
+      }
+      epa_regions_3: {
         Row: {
           name: string
           link: string | null
           id: number
-          bioregion_id: number
+          level2_id: number
         }
         Insert: {
           name: string
           link?: string | null
           id?: number
-          bioregion_id: number
+          level2_id: number
         }
         Update: {
           name?: string
           link?: string | null
           id?: number
-          bioregion_id?: number
+          level2_id?: number
         }
       }
       hub_members: {
@@ -143,24 +186,101 @@ export interface Database {
           url?: string
         }
       }
+      oe_bioregions: {
+        Row: {
+          name: string
+          link: string | null
+          code: string
+          id: number
+          subrealm_id: number
+        }
+        Insert: {
+          name: string
+          link?: string | null
+          code: string
+          id?: number
+          subrealm_id: number
+        }
+        Update: {
+          name?: string
+          link?: string | null
+          code?: string
+          id?: number
+          subrealm_id?: number
+        }
+      }
+      oe_ecoregions: {
+        Row: {
+          name: string
+          link: string | null
+          id: number
+          bioregion_id: number
+        }
+        Insert: {
+          name: string
+          link?: string | null
+          id?: number
+          bioregion_id: number
+        }
+        Update: {
+          name?: string
+          link?: string | null
+          id?: number
+          bioregion_id?: number
+        }
+      }
+      oe_realms: {
+        Row: {
+          id: number
+          name: string
+          link: string | null
+        }
+        Insert: {
+          id?: number
+          name: string
+          link?: string | null
+        }
+        Update: {
+          id?: number
+          name?: string
+          link?: string | null
+        }
+      }
+      oe_subrealms: {
+        Row: {
+          realm_id: number | null
+          id: number
+          name: string
+        }
+        Insert: {
+          realm_id?: number | null
+          id?: number
+          name: string
+        }
+        Update: {
+          realm_id?: number | null
+          id?: number
+          name?: string
+        }
+      }
       profiles: {
         Row: {
           created_at: string
           id: string
           username: string | null
-          avatar_url: string | null
+          avatar_filename: string | null
         }
         Insert: {
           created_at?: string
           id: string
           username?: string | null
-          avatar_url?: string | null
+          avatar_filename?: string | null
         }
         Update: {
           created_at?: string
           id?: string
           username?: string | null
-          avatar_url?: string | null
+          avatar_filename?: string | null
         }
       }
       project_members: {
@@ -232,40 +352,6 @@ export interface Database {
         Update: {
           project_id?: string
           hub_id?: string
-        }
-      }
-      realms: {
-        Row: {
-          id: number
-          name: string
-          link: string | null
-        }
-        Insert: {
-          id?: number
-          name: string
-          link?: string | null
-        }
-        Update: {
-          id?: number
-          name?: string
-          link?: string | null
-        }
-      }
-      subrealms: {
-        Row: {
-          realm_id: number | null
-          id: number
-          name: string
-        }
-        Insert: {
-          realm_id?: number | null
-          id?: number
-          name: string
-        }
-        Update: {
-          realm_id?: number | null
-          id?: number
-          name?: string
         }
       }
     }

@@ -1,3 +1,11 @@
+import {tSStringKeyword} from "@babel/types";
+
+export type Profile = {
+    id: string,
+    username: string,
+    avatarFilename: string,
+    avatarURL: string
+}
 
 export type Hub = {
     id: string,
@@ -11,12 +19,6 @@ export type Project = {
     name: string,
     description: string,
     bioregionId: number | null
-}
-
-export type Profile = {
-    id: string,
-    username: string,
-    avatarURL: string
 }
 
 export type Bioregion = {

@@ -1,6 +1,6 @@
-import {Box, Button, Page, Text} from "grommet";
+import {Page, Text} from "grommet";
 import {GetServerSidePropsContext, InferGetServerSidePropsType} from 'next'
-import {useAtom, useAtomValue} from "jotai";
+import {useAtom} from "jotai";
 import {useHydrateAtoms} from "jotai/utils";
 
 import {
@@ -9,10 +9,9 @@ import {
     getServerClient,
     getUserProfile,
 } from "../../utils/supabase";
-import MembershipCard from "../../components/profile/MembershipCard";
-import ProfileAttributesCard from "../../components/profile/ProfileAttributesCard";
 import {currentUserProfile} from "../../utils/state";
-import ProfileAvatar from "../../components/profile/ProfileAvatar";
+import AvatarUpload from "../../components/profile/AvatarUpload";
+import ProfileForm from "../../components/profile/ProfileForm";
 
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
     const {client, session} = await getServerClient(ctx)
@@ -39,21 +38,24 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
     }
 }
 
-export default function CurrentUserProfile({ profile, hubs, projects }: InferGetServerSidePropsType<typeof getServerSideProps>) {
+export default function UserProfileEdit({ profile, hubs, projects }: InferGetServerSidePropsType<typeof getServerSideProps>) {
     if(!profile)
         throw Error('This component requires a profile')
     useHydrateAtoms([[currentUserProfile, profile]] as const)
-    const currentProfile = useAtomValue(currentUserProfile)
+    const [currentProfile, setCurrentProfile] = useAtom(currentUserProfile)
+
+    const refreshAfterAvatarChange = (filename: string, url: string) => {
+        if (currentProfile) {
+            currentProfile.avatarFilename = filename
+            currentProfile.avatarURL = url
+            setCurrentProfile(currentProfile)
+        }
+    }
 
     return (
-        <Page direction="column">
-            <ProfileAvatar profileId={currentProfile?.id} avatarURL={currentProfile?.avatarURL} size="large"/>
-            <Box>
-                <ProfileAttributesCard profile={currentProfile!}/>
-                <MembershipCard title="My Hubs" subpage="hub" items={hubs}/>
-                <MembershipCard title="My Projects" subpage="project" items={projects}/>
-                <Button label="Edit" href="/profile/edit" style={{textAlign: 'center'}}/>
-            </Box>
+        <Page direction="column" align="center">
+            <AvatarUpload avatarURL={currentProfile?.avatarURL} onUpload={refreshAfterAvatarChange}/>
+            <ProfileForm profile={currentProfile!}/>
         </Page>
     )
 }

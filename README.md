@@ -2,7 +2,9 @@
 
 Created in service of bioregionalism: https://utopia.org/guide/what-is-a-bioregion-and-which-ones-are-there/
 
-Using bioregions as defined by the One Earth Bioregions 2020 framework: https://www.oneearth.org/bioregions/
+Using bioregion data from the following sources:
+- One Earth Bioregions 2020 framework: https://www.oneearth.org/bioregions/
+- EPA Ecoregions definition: https://www.epa.gov/eco-research/ecoregions-north-america
 
 ## Requirements
 
@@ -57,12 +59,12 @@ create or replace function public.get_hub_members(hub_id uuid)
 returns table (
   user_id uuid,
   username varchar,
-  avatar_image varchar,
+  avatar_filename varchar,
   role_name varchar
 )
 language sql
 as $$
-  SELECT p.id, p.username, p.avatar_url, hr.name
+  SELECT p.id, p.username, p.avatar_filename, hr.name
   FROM hub_members hm
   JOIN profiles p ON (hm.user_id = p.id)
   JOIN hub_roles hr ON (hm.role_id = hr.id)
@@ -73,12 +75,12 @@ create or replace function public.get_project_members(project_id uuid)
 returns table (
   user_id uuid,
   username varchar,
-  avatar_image varchar,
+  avatar_filename varchar,
   role_name varchar
 )
 language sql
 as $$
-  SELECT p.id, p.username, p.avatar_url, pr.name
+  SELECT p.id, p.username, p.avatar_filename, pr.name
   FROM project_members pm
   JOIN profiles p ON (pm.user_id = p.id)
   JOIN project_roles pr ON (pm.role_id = pr.id)
@@ -135,9 +137,9 @@ as $$
     br.id AS br_id, br.code AS br_code, br.name AS br_name, br.link AS br_link,
     sr.id AS sr_id, sr.name AS sr_name,
     r.id AS r_id, r.name AS r_name, r.link AS r_link
-  FROM bioregions br
-  JOIN subrealms sr ON (br.subrealm_id = sr.id)
-  JOIN realms r ON (sr.realm_id = r.id)
+  FROM oe_bioregions br
+  JOIN oe_subrealms sr ON (br.subrealm_id = sr.id)
+  JOIN oe_realms r ON (sr.realm_id = r.id)
   WHERE br.id = $1;
 $$;
 

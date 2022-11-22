@@ -2,7 +2,6 @@ import React, {useCallback, useEffect} from "react";
 import {Github, Menu as MenuIcon, Twitter, Login, User as UserIcon} from "grommet-icons";
 import {
     Anchor,
-    Avatar,
     Box,
     Grommet,
     Header,
@@ -11,14 +10,15 @@ import {
     Menu,
     Nav,
     type ThemeType,
-    Tip
+    Text
 } from 'grommet'
 import {useRouter} from "next/router";
-import {useAtom} from "jotai";
-import {Session, useSession, useSupabaseClient} from "@supabase/auth-helpers-react";
+import {useAtom, useAtomValue} from "jotai";
+import {useSession, useSupabaseClient, useUser} from "@supabase/auth-helpers-react";
 
 import {getUserProfile} from "../utils/supabase";
 import {currentUserProfile} from "../utils/state";
+import ProfileAvatar from "./profile/ProfileAvatar";
 
 const theme: ThemeType = {
   global: {
@@ -34,14 +34,13 @@ type LayoutProps = React.PropsWithChildren<{
   title?: string
 }>
 
-const UserAvatar = ({session}: {session: Session | null}) => {
-    const [currentProfile] = useAtom(currentUserProfile)
-    if (!session)
-        return <Tip content="Login / Signup"><Anchor href="/login"><Login size="medium"/></Anchor></Tip>
-    if (currentProfile?.avatarURL)
-        return <Anchor href="/profile"><Avatar src={currentProfile.avatarURL}/></Anchor>
+const UserAvatar = () => {
+    const profile = useAtomValue(currentUserProfile)
+    const user = useUser()
+    if (!user)
+        return <Anchor href="/login"><Login size="medium" color="black"/></Anchor>
     else
-        return <Anchor href="/profile"><Avatar><UserIcon/></Avatar></Anchor>
+        return <ProfileAvatar profileId={profile?.id} avatarURL={profile?.avatarURL} linkTo="/profile"/>
 }
 
 export default function Layout({ title = 'Regen League', children }: LayoutProps) {
@@ -53,7 +52,9 @@ export default function Layout({ title = 'Regen League', children }: LayoutProps
     const populateProfile = useCallback(async () => {
         if (session && !currentProfile) {
             const profile = await getUserProfile(supabase, session!.user.id)
-            setCurrentProfile(profile)
+            if (profile) {
+                setCurrentProfile(profile)
+            }
         }
     }, [session, supabase, setCurrentProfile])
 
@@ -86,7 +87,7 @@ export default function Layout({ title = 'Regen League', children }: LayoutProps
                         <Anchor icon={<Twitter color="black"/>} href="https://twitter.com/regen_league" />
                     </Nav>
                     <Box pad="medium">
-                        <UserAvatar session={session}/>
+                        <UserAvatar/>
                     </Box>
                 </Header>
 

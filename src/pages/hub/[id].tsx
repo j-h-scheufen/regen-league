@@ -1,6 +1,6 @@
-import {GetServerSidePropsContext} from "next";
-import {Box, Heading} from "grommet";
-import {useAtom} from "jotai";
+import {GetServerSidePropsContext, InferGetServerSidePropsType} from "next";
+import {Box, Button, Heading, Page} from "grommet";
+import {atom, useAtom, useAtomValue} from "jotai";
 import {useCallback, useEffect} from "react";
 
 import {
@@ -11,28 +11,23 @@ import {
   isUserHubAdmin
 } from "../../utils/supabase";
 import {useSupabaseClient, useUser} from "@supabase/auth-helpers-react";
-import {isHubAdminAtom} from "../../utils/state";
-import {BioregionInfo, Hub, LinkDetails, MemberDetails} from "../../utils/types"
 import LinksCard from "../../components/LinksCard";
 import HubAttributesCard from "../../components/hub/HubAttributesCard";
 import MembersCard from "../../components/MembersCard";
 import RegionInfoCard from "../../components/RegionInfoCard";
+import {useHydrateAtoms} from "jotai/utils";
+import {currentHubAtom, editAtom, isHubAdminAtom} from "../../state/hub";
+import HubForm from "../../components/hub/HubForm";
 
-type PageProps = {
-  hub: Hub,
-  members: Array<MemberDetails>,
-  links: Array<LinkDetails>,
-  regionInfo: BioregionInfo,
-}
 
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
   const hubId = ctx.params?.id as string
   const {client, session} = await getServerClient(ctx)
-
   const hubData = await getHubData(client, hubId)
   const bioregionData = hubData?.bioregionId ? await getBioregionData(client, hubData.bioregionId) : null
   const membersData = await getHubMembersData(client, hubId);
   const linksData = await getLinksData(client, hubId)
+  const isAdmin = session?.user ? await isUserHubAdmin(client, session.user.id, hubId) : false
 
   return {
     props: {
@@ -40,36 +35,49 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
       members: membersData,
       links: linksData,
       regionInfo: bioregionData,
+      isHubAdmin: isAdmin,
     }
   }
 }
 
-export default function HubDetails({ hub, members, links, regionInfo }: PageProps) {
-  const user = useUser()
-  const client = useSupabaseClient()
-  const [isHubAdmin, setIsHubAdmin] = useAtom(isHubAdminAtom)
-  const authorizeHubAdmin = useCallback(async () => {
-    let isAdmin = false
-    if (user) {
-      isAdmin = await isUserHubAdmin(client, user.id, hub.id)
-    }
-    setIsHubAdmin(isAdmin)
-  }, [client, user, hub, isUserHubAdmin])
-
-  useEffect(() => {
-    authorizeHubAdmin()
-  }, [user, hub])
+export default function HubDetails({ hub, members, links, regionInfo, isHubAdmin }: InferGetServerSidePropsType<typeof getServerSideProps>) {
+  if (!hub)
+    throw Error("A hub is required for this component")
+  useHydrateAtoms([[currentHubAtom, hub], [isHubAdminAtom, isHubAdmin]] as const)
+  const [currentHub, setCurrentHub] = useAtom(currentHubAtom)
+  const isAdmin = useAtomValue(isHubAdminAtom)
+  const [edit, setEdit] = useAtom(editAtom)
 
   return (
-      <Box width="large">
-        <Box direction="row" alignSelf="center">
-          <Heading size="medium" margin="small" alignSelf="center">{hub.name}</Heading>
-        </Box>
-        <MembersCard members={members}/>
-        <RegionInfoCard info={regionInfo}/>
-        <HubAttributesCard hub={hub}/>
-        <LinksCard links={links}/>
-      </Box>
+      <Page align="center">
+        {edit ? (
+            <Box width="large">
+              {/*Manage Members*/}
+              {/*Manage Regional Info*/}
+              <HubForm
+                  hub={hub}
+                  onSubmit={() => setEdit(false)}
+                  onCancel={() => setEdit(false)}/>
+              {/*Add Links*/}
+            </Box>
+        ) : (
+            <Box width="large">
+              <Box direction="row" alignSelf="center">
+                <Heading size="medium" margin="small" alignSelf="center">{currentHub!.name}</Heading>
+              </Box>
+              <MembersCard members={members}/>
+              {regionInfo && <RegionInfoCard info={regionInfo}/>}
+              <HubAttributesCard hub={currentHub!}/>
+              <LinksCard links={links}/>
+              {isAdmin && <Button
+                            label="Edit"
+                            style={{textAlign: 'center'}}
+                            onClick={() => setEdit(true)}
+                            margin={{top: "medium"}}/>}
+            </Box>
+
+        )}
+      </Page>
   )
 
 }

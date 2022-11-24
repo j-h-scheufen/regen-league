@@ -1,10 +1,11 @@
 import {GetServerSidePropsContext} from "next";
-import {Box, Card, CardHeader, Heading, List} from "grommet";
+import {Box, Card, CardHeader, Heading, List, Page} from "grommet";
 import {useRouter} from "next/router";
 
 import {getHubsForUser, getProjectsForUser, getServerClient, getUserProfile} from "../../utils/supabase";
 import {MembershipItem, Profile} from "../../utils/types";
 import MembershipCard from "../../components/profile/MembershipCard";
+import ProfileAvatar from "../../components/profile/ProfileAvatar";
 
 
 type PageProps = {
@@ -33,13 +34,14 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
 export default function ProfilePage({ profile, hubs, projects }: PageProps) {
     const router = useRouter()
   return (
-      <Box width="large">
-        <Box direction="row" alignSelf="center">
+      <Page direction="column">
+        <Box direction="column" alignSelf="center">
+            <ProfileAvatar avatarURL={profile.avatarURL} size="large"/>
           <Heading size="medium" margin="small" alignSelf="center">{profile.username || profile.id}</Heading>
         </Box>
         <MembershipCard title="Hub Membership" subpage="hub" items={hubs}/>
         <MembershipCard title="Project Membership" subpage="project" items={projects}/>
-      </Box>
+      </Page>
   )
 
 }

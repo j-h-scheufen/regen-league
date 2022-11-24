@@ -1,4 +1,4 @@
-import {Page, Text} from "grommet";
+import {Page} from "grommet";
 import {GetServerSidePropsContext, InferGetServerSidePropsType} from 'next'
 import {useAtom} from "jotai";
 import {useHydrateAtoms} from "jotai/utils";

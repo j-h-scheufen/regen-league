@@ -17,7 +17,7 @@ import {useAtom, useAtomValue} from "jotai";
 import {useSession, useSupabaseClient, useUser} from "@supabase/auth-helpers-react";
 
 import {getUserProfile} from "../utils/supabase";
-import {currentUserProfile} from "../utils/state";
+import {currentAvatarUrl, currentUserProfile} from "../utils/state";
 import ProfileAvatar from "./profile/ProfileAvatar";
 
 const theme: ThemeType = {
@@ -35,12 +35,12 @@ type LayoutProps = React.PropsWithChildren<{
 }>
 
 const UserAvatar = () => {
-    const profile = useAtomValue(currentUserProfile)
+    const url = useAtomValue(currentAvatarUrl)
     const user = useUser()
     if (!user)
         return <Anchor href="/login"><Login size="medium" color="black"/></Anchor>
     else
-        return <ProfileAvatar profileId={profile?.id} avatarURL={profile?.avatarURL} linkTo="/profile"/>
+        return <ProfileAvatar profileId={user.id} avatarURL={url} linkTo="/profile"/>
 }
 
 export default function Layout({ title = 'Regen League', children }: LayoutProps) {

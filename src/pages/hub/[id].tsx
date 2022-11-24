@@ -1,4 +1,4 @@
-import {GetServerSidePropsContext} from "next";
+import {GetServerSidePropsContext, InferGetServerSidePropsType} from "next";
 import {Box, Heading} from "grommet";
 import {useAtom} from "jotai";
 import {useCallback, useEffect} from "react";
@@ -12,18 +12,10 @@ import {
 } from "../../utils/supabase";
 import {useSupabaseClient, useUser} from "@supabase/auth-helpers-react";
 import {isHubAdminAtom} from "../../utils/state";
-import {BioregionInfo, Hub, LinkDetails, MemberDetails} from "../../utils/types"
 import LinksCard from "../../components/LinksCard";
 import HubAttributesCard from "../../components/hub/HubAttributesCard";
 import MembersCard from "../../components/MembersCard";
 import RegionInfoCard from "../../components/RegionInfoCard";
-
-type PageProps = {
-  hub: Hub,
-  members: Array<MemberDetails>,
-  links: Array<LinkDetails>,
-  regionInfo: BioregionInfo,
-}
 
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
   const hubId = ctx.params?.id as string
@@ -44,7 +36,7 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
   }
 }
 
-export default function HubDetails({ hub, members, links, regionInfo }: PageProps) {
+export default function HubDetails({ hub, members, links, regionInfo }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const user = useUser()
   const client = useSupabaseClient()
   const [isHubAdmin, setIsHubAdmin] = useAtom(isHubAdminAtom)

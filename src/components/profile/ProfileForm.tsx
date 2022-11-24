@@ -10,13 +10,17 @@ import { Profile } from '../../utils/types'
 import {currentUserProfile} from "../../utils/state";
 
 type Props = {
-    profile: Profile,
+    profile: Profile
+    onSubmit: () => void
+    onCancel: () => void
 }
 
 const emptyProfile: Profile = {avatarFilename: "", avatarURL: "", id: "", username: ""}
 const editProfileAtom = atom<Profile>(emptyProfile)
 
-export default function ProfileForm({profile}: Props) {
+export default function ProfileForm({profile, onSubmit, onCancel}: Props) {
+    if(!profile)
+        throw Error('This component requires a profile')
     useHydrateAtoms([[currentUserProfile, profile], [editProfileAtom, {...profile}]] as const)
     const supabase = useSupabaseClient<Database>()
     const router = useRouter()
@@ -53,14 +57,14 @@ export default function ProfileForm({profile}: Props) {
                 onChange={nextValue => setEditProfile(nextValue)}
                 onSubmit={() => {
                     updateProfile().then(() => {
-                        router.push('/profile')
+                        onSubmit()
                     })
                 }}>
                 <FormField name="username" htmlFor="usernameId" label="Username">
                     <TextInput id="usernameId" name="username" placeholder="Username (optional)"/>
                 </FormField>
                 <Box direction="row" gap="medium" margin={{top: "medium"}}>
-                    <Button secondary label={loading ? 'Loading ...' : 'Cancel'} disabled={loading} href="/profile"/>
+                    <Button secondary label={loading ? 'Loading ...' : 'Cancel'} disabled={loading} onClick={() => onCancel()}/>
                     <Button type="submit" primary label={loading ? 'Loading ...' : 'Update'} disabled={loading}/>
                 </Box>
             </Form>

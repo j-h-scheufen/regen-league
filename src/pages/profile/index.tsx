@@ -1,6 +1,6 @@
 import {Box, Button, Heading, Page} from "grommet";
 import {GetServerSidePropsContext, InferGetServerSidePropsType} from 'next'
-import {atom, useAtom, useAtomValue} from "jotai";
+import {useAtom} from "jotai";
 import {useHydrateAtoms} from "jotai/utils";
 
 import {
@@ -11,12 +11,11 @@ import {
 } from "../../utils/supabase";
 import MembershipCard from "../../components/profile/MembershipCard";
 import ProfileAttributesCard from "../../components/profile/ProfileAttributesCard";
-import {currentUserProfile} from "../../utils/state";
 import ProfileAvatar from "../../components/profile/ProfileAvatar";
 import AvatarUpload from "../../components/profile/AvatarUpload";
 import ProfileForm from "../../components/profile/ProfileForm";
-
-const editAtom = atom<boolean>(false)
+import {currentUserProfile} from "../../state/global";
+import {editAtom} from "../../state/profile";
 
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
     const editMode = ctx.query.hasOwnProperty('edit')
@@ -54,9 +53,7 @@ export default function CurrentUserProfile({ profile, hubs, projects, editMode }
 
     const refreshAfterAvatarChange = (filename: string, url: string) => {
         if (currentProfile) {
-            currentProfile.avatarFilename = filename
-            currentProfile.avatarURL = url
-            setCurrentProfile(currentProfile)
+            setCurrentProfile({...currentProfile, avatarFilename: filename, avatarURL: url})
         }
     }
 

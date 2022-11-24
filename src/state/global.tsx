@@ -1,7 +1,5 @@
 import { atom } from 'jotai'
-import {Profile} from "./types";
+import {Profile} from "../utils/types";
 
 export const currentUserProfile = atom<Profile | null>(null)
-export const isHubAdminAtom = atom<boolean>(false)
-export const isProjectAdminAtom = atom<boolean>(false)
 export const currentAvatarUrl = atom<string>((get) => get(currentUserProfile)?.avatarURL || '')

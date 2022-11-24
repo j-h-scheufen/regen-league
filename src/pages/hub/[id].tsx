@@ -11,19 +11,18 @@ import {
   isUserHubAdmin
 } from "../../utils/supabase";
 import {useSupabaseClient, useUser} from "@supabase/auth-helpers-react";
-import {isHubAdminAtom} from "../../utils/state";
 import LinksCard from "../../components/LinksCard";
 import HubAttributesCard from "../../components/hub/HubAttributesCard";
 import MembersCard from "../../components/MembersCard";
 import RegionInfoCard from "../../components/RegionInfoCard";
 import {useHydrateAtoms} from "jotai/utils";
+import {currentHubAtom, editAtom, isHubAdminAtom} from "../../state/hub";
+import HubForm from "../../components/hub/HubForm";
 
-const editAtom = atom<boolean>(false)
 
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
   const hubId = ctx.params?.id as string
   const {client, session} = await getServerClient(ctx)
-
   const hubData = await getHubData(client, hubId)
   const bioregionData = hubData?.bioregionId ? await getBioregionData(client, hubData.bioregionId) : null
   const membersData = await getHubMembersData(client, hubId);
@@ -44,7 +43,8 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
 export default function HubDetails({ hub, members, links, regionInfo, isHubAdmin }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   if (!hub)
     throw Error("A hub is required for this component")
-  useHydrateAtoms([[isHubAdminAtom, isHubAdmin]] as const)
+  useHydrateAtoms([[currentHubAtom, hub], [isHubAdminAtom, isHubAdmin]] as const)
+  const [currentHub, setCurrentHub] = useAtom(currentHubAtom)
   const isAdmin = useAtomValue(isHubAdminAtom)
   const [edit, setEdit] = useAtom(editAtom)
 
@@ -52,17 +52,22 @@ export default function HubDetails({ hub, members, links, regionInfo, isHubAdmin
       <Page align="center">
         {edit ? (
             <Box width="large">
-
-
+              {/*Manage Members*/}
+              {/*Manage Regional Info*/}
+              <HubForm
+                  hub={hub}
+                  onSubmit={() => setEdit(false)}
+                  onCancel={() => setEdit(false)}/>
+              {/*Add Links*/}
             </Box>
         ) : (
             <Box width="large">
               <Box direction="row" alignSelf="center">
-                <Heading size="medium" margin="small" alignSelf="center">{hub.name}</Heading>
+                <Heading size="medium" margin="small" alignSelf="center">{currentHub!.name}</Heading>
               </Box>
               <MembersCard members={members}/>
               {regionInfo && <RegionInfoCard info={regionInfo}/>}
-              <HubAttributesCard hub={hub}/>
+              <HubAttributesCard hub={currentHub!}/>
               <LinksCard links={links}/>
               {isAdmin && <Button
                             label="Edit"

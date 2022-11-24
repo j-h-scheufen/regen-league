@@ -16,7 +16,7 @@ import ProfileAvatar from "../../components/profile/ProfileAvatar";
 import AvatarUpload from "../../components/profile/AvatarUpload";
 import ProfileForm from "../../components/profile/ProfileForm";
 
-export const editAtom = atom<boolean>(false)
+const editAtom = atom<boolean>(false)
 
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
     const editMode = ctx.query.hasOwnProperty('edit')
@@ -61,9 +61,9 @@ export default function CurrentUserProfile({ profile, hubs, projects, editMode }
     }
 
     return (
-        <Page direction="column" align="center">
+        <Page align="center">
             {edit ? (
-                <Box>
+                <Box width="large">
                     <AvatarUpload avatarURL={currentProfile?.avatarURL} onUpload={refreshAfterAvatarChange}/>
                     <ProfileForm
                         profile={currentProfile!}
@@ -71,7 +71,7 @@ export default function CurrentUserProfile({ profile, hubs, projects, editMode }
                         onCancel={() => setEdit(false)}/>
                 </Box>
             ) : (
-                <Box>
+                <Box width="large">
                     <Box direction="column" alignSelf="center">
                         <ProfileAvatar profileId={currentProfile?.id} avatarURL={currentProfile?.avatarURL} size="large"/>
                         <Heading size="medium" margin="small" alignSelf="center">{profile.username || profile.id}</Heading>
@@ -80,7 +80,11 @@ export default function CurrentUserProfile({ profile, hubs, projects, editMode }
                         <ProfileAttributesCard profile={currentProfile!}/>
                         <MembershipCard title="My Hubs" subpage="hub" items={hubs}/>
                         <MembershipCard title="My Projects" subpage="project" items={projects}/>
-                        <Button label="Edit" style={{textAlign: 'center'}} onClick={() => setEdit(true)}/>
+                        <Button
+                            label="Edit"
+                            style={{textAlign: 'center'}}
+                            onClick={() => setEdit(true)}
+                            margin={{top: "medium"}}/>
                     </Box>
                 </Box>
             )}

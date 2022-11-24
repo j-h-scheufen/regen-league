@@ -1,7 +1,5 @@
-import {Box, Card, CardBody, CardHeader, Paragraph, Text, List, Avatar} from 'grommet'
-import {Twitter, Instagram, Github, Facebook, Link as Generic, Linkedin, Youtube, Icon} from "grommet-icons";
+import {Card, CardHeader, List} from 'grommet'
 import {useRouter} from "next/router";
-import Link from "next/link";
 
 import {MembershipItem} from "../../utils/types";
 
@@ -21,7 +19,7 @@ export default function MembershipCard({title, subpage, items}: Props) {
                   primaryKey="name"
                   secondaryKey="role"
                   onClickItem={(event: {item?: MembershipItem}) => {
-                      router.push("/"+{subpage}+"/"+event.item?.id)}}/>
+                      router.push("/"+subpage+"/"+event.item?.id)}}/>
         </Card>
     )
 }

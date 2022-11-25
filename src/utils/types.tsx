@@ -68,6 +68,7 @@ export type MembershipItem = {
 }
 
 export type LinkDetails = {
+    id: number,
     url: string,
     type: string
 }

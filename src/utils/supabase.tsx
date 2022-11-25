@@ -175,6 +175,7 @@ export async function getLinksData(supabase: SupabaseClient, objectId: string): 
     }
     return data ? data.map((dbLink) => {
         const newItem: LinkDetails = {
+            id: dbLink.id,
             url: dbLink.url,
             type: dbLink.link_types.name
         }

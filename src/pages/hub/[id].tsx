@@ -16,7 +16,7 @@ import HubAttributesCard from "../../components/hub/HubAttributesCard";
 import MembersCard from "../../components/MembersCard";
 import RegionInfoCard from "../../components/RegionInfoCard";
 import {useHydrateAtoms} from "jotai/utils";
-import {currentHubAtom, editAtom, isHubAdminAtom} from "../../state/hub";
+import {currentHubAtom, currentHubLinks, editAtom, isHubAdminAtom} from "../../state/hub";
 import HubForm from "../../components/hub/HubForm";
 
 
@@ -43,8 +43,9 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
 export default function HubDetails({ hub, members, links, regionInfo, isHubAdmin }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   if (!hub)
     throw Error("A hub is required for this component")
-  useHydrateAtoms([[currentHubAtom, hub], [isHubAdminAtom, isHubAdmin]] as const)
+  useHydrateAtoms([[currentHubAtom, hub], [isHubAdminAtom, isHubAdmin], [currentHubLinks, links]] as const)
   const [currentHub, setCurrentHub] = useAtom(currentHubAtom)
+  const [currentLinks, setCurrentLinks] = useAtom(currentHubLinks)
   const isAdmin = useAtomValue(isHubAdminAtom)
   const [edit, setEdit] = useAtom(editAtom)
 
@@ -58,7 +59,7 @@ export default function HubDetails({ hub, members, links, regionInfo, isHubAdmin
                   hub={hub}
                   onSubmit={() => setEdit(false)}
                   onCancel={() => setEdit(false)}/>
-              {/*Add Links*/}
+              <LinksCard links={currentLinks} editMode={edit} onUpdate={(newLinks) => setCurrentLinks(newLinks)}/>
             </Box>
         ) : (
             <Box width="large">
@@ -68,7 +69,7 @@ export default function HubDetails({ hub, members, links, regionInfo, isHubAdmin
               <MembersCard members={members}/>
               {regionInfo && <RegionInfoCard info={regionInfo}/>}
               <HubAttributesCard hub={currentHub!}/>
-              <LinksCard links={links}/>
+              <LinksCard links={currentLinks}/>
               {isAdmin && <Button
                             label="Edit"
                             style={{textAlign: 'center'}}

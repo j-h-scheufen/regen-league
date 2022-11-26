@@ -105,35 +105,44 @@ export default function LinksCard({links, linkOwner, editMode = false, onUpdate}
             <CardHeader pad="small">Links</CardHeader>
             <CardBody>
                 {editMode && (
-                    <Form<NewLink>
-                        value={newLink}
-                        onChange={(nextValue) => setNewLink(nextValue)}
-                        onSubmit={() => addNewLink()}>
-                        <Box direction="row">
-                            <FormField name="url" htmlFor="url" label="URL" required>
-                                <TextInput id="url" name="url" type="url"/>
-                            </FormField>
-                            <FormField name="typeId" htmlFor="typeSelectId" label="Type" required>
-                                <Select
-                                    id="typeSelectId"
-                                    name="typeId"
-                                    valueKey={{ key: 'id', reduce: true }}
-                                    labelKey="name"
-                                    options={linkTypes}
-                                />
-                            </FormField>
-                            <Button type="submit" primary label={loading ? 'Loading ...' : 'Add'} disabled={loading}/>
-                        </Box>
-                    </Form>
+                    <Box pad="small" margin={{bottom: "small"}}>
+                        <Form<NewLink>
+                            value={newLink}
+                            onChange={(nextValue) => setNewLink(nextValue)}
+                            onSubmit={() => addNewLink()}>
+                            <Box direction="row">
+                                <FormField name="url" htmlFor="url" label="URL" required width="100%">
+                                    <TextInput id="url" name="url" type="url"/>
+                                </FormField>
+                                <FormField name="typeId" htmlFor="typeSelectId" label="Type" required>
+                                    <Select
+                                        id="typeSelectId"
+                                        name="typeId"
+                                        valueKey={{ key: 'id', reduce: true }}
+                                        labelKey="name"
+                                        options={linkTypes}
+                                    />
+                                </FormField>
+                                <Button
+                                    primary
+                                    type="submit"
+                                    label={loading ? 'Loading ...' : 'Add'}
+                                    disabled={loading}
+                                    alignSelf="center"
+                                    margin={{left: "small"}}/>
+                            </Box>
+                        </Form>
+                    </Box>
                 )}
                 {links.map((item, index) => <LinkRow key={item.id} {...item}/>)}
             </CardBody>
             {deleteLinkId && (
                 <Layer
-                    id="delete link modal"
+                    id="deleteLinkModal"
                     position="center"
                     onClickOutside={() => setDeleteLinkId(null)}
                     onEsc={() => setDeleteLinkId(null)}
+                    animation="fadeIn"
                 >
                     <Box pad="medium" gap="small" width="medium">
                         <Heading level={3} margin="none">Confirm</Heading>

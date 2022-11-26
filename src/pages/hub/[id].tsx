@@ -1,10 +1,10 @@
 import {GetServerSidePropsContext, InferGetServerSidePropsType} from "next";
 import {Box, Button, Heading, Page} from "grommet";
-import {atom, useAtom, useAtomValue} from "jotai";
-import {useCallback, useEffect} from "react";
+import {useAtom, useAtomValue} from "jotai";
 
 import {
-  getBioregionData, getHubData,
+  getBioregionData,
+  getHubData,
   getHubMembersData,
   getLinksData,
   getServerClient,
@@ -17,7 +17,6 @@ import RegionInfoCard from "../../components/RegionInfoCard";
 import {useHydrateAtoms} from "jotai/utils";
 import {currentHubAtom, currentHubLinks, editAtom, isHubAdminAtom} from "../../state/hub";
 import HubForm from "../../components/hub/HubForm";
-
 
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
   const hubId = ctx.params?.id as string

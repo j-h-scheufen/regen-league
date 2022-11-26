@@ -1,7 +1,7 @@
 import {
     Box,
     BoxProps,
-    Button,
+    Button, Card, CardBody, CardHeader,
     Form,
     FormField, TextArea,
     TextInput,
@@ -65,24 +65,28 @@ export default function HubForm({hub, onSubmit, onCancel}: Props) {
     }, [currentHub, editHub, setCurrentHub, supabase, setLoading])
 
     return (
-        <Form<Hub>
-            value={editHub}
-            onChange={(nextValue) => setEditHub(nextValue)}
-            onSubmit={() => {
-                updateHub().then(() => {
-                    onSubmit()
-                })
-            }}>
-            <FormField name="name" htmlFor="nameId" label="Name" required>
-                <TextInput id="nameId" name="name" type="name"/>
-            </FormField>
-            <FormField name="description" htmlFor="descriptionId" label="Description" required>
-                <TextArea id="descriptionId" name="description" rows={5}/>
-            </FormField>
-            <Box direction="row" gap="medium" width="50%" margin={{ horizontal: 'auto', top: 'large' }}>
-                <Button secondary label={loading ? 'Loading ...' : 'Cancel'} disabled={loading} onClick={() => onCancel()}/>
-                <Button type="submit" primary label={loading ? 'Loading ...' : 'Update'} disabled={loading}/>
-            </Box>
-        </Form>
+        <Card pad="small">
+            <CardBody>
+                <Form<Hub>
+                value={editHub}
+                onChange={(nextValue) => setEditHub(nextValue)}
+                onSubmit={() => {
+                    updateHub().then(() => {
+                        onSubmit()
+                    })
+                }}>
+                    <FormField name="name" htmlFor="nameId" label="Name" required>
+                        <TextInput id="nameId" name="name" type="name"/>
+                    </FormField>
+                    <FormField name="description" htmlFor="descriptionId" label="Description" required>
+                        <TextArea id="descriptionId" name="description" rows={5}/>
+                    </FormField>
+                    <Box direction="row" gap="medium" justify="end" margin={{ right: "small", vertical: 'medium' }}>
+                        <Button secondary label={loading ? 'Loading ...' : 'Done'} disabled={loading} onClick={() => onCancel()}/>
+                        <Button type="submit" primary label={loading ? 'Loading ...' : 'Update'} disabled={loading}/>
+                    </Box>
+                </Form>
+            </CardBody>
+        </Card>
     )
 }

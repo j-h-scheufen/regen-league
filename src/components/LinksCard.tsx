@@ -1,44 +1,58 @@
-import {Box, Card, CardBody, CardHeader, Text, Button, Layer, Heading} from 'grommet'
-import {Twitter, Instagram, Github, Facebook, Link as Generic, Linkedin, Youtube, FormTrash} from "grommet-icons";
-import {useRouter} from "next/router";
+import {
+    Box,
+    Card,
+    CardBody,
+    CardHeader,
+    Text,
+    Button,
+    Layer,
+    Heading,
+    Form,
+    FormField,
+    TextInput,
+    Select
+} from 'grommet'
+import {FormTrash} from "grommet-icons";
 import Link from "next/link";
-
-import {LinkDetails} from "../utils/types";
-import {atom, useAtom} from "jotai";
+import {atom, useAtom, useAtomValue} from "jotai";
 import {useSupabaseClient} from "@supabase/auth-helpers-react";
-import {SupabaseClient} from "@supabase/supabase-js";
 import {useCallback} from "react";
 
-type IconDictionary = Record<string, JSX.Element>
+import {LinkDetails} from "../utils/types";
+import {deleteLink, insertNewLink} from "../utils/supabase";
+import {linkTypeIconsAtom, linkTypesAtom} from "../state/global";
 
 type Props = {
     links: Array<LinkDetails>
+    linkOwner?: string
     editMode?: boolean
     onUpdate?: (link: Array<LinkDetails>) => void
 }
 
-const iconConfig: IconDictionary = {
-    ['twitter']: <Twitter/>,
-    ['facebook']: <Facebook/>,
-    ['general']: <Generic/>,
-    ['github']: <Github/>,
-    ['instagram']: <Instagram/>,
-    ['youtube']: <Youtube/>,
-    ['linkedin']: <Linkedin/>,
+type NewLink = {
+    url: string
+    typeId: number
 }
 
-const deleteLinkAtom = atom<number | undefined>(undefined)
+const deleteLinkAtom = atom<number | null>(null)
+const emptyNewLink: NewLink = {typeId: 0, url: ''}
+const newLinkAtom = atom<NewLink>(emptyNewLink)
+const loadingAtom = atom<boolean>(false)
 
-export default function LinksCard({links, editMode = false, onUpdate}: Props) {
-    if (editMode && !onUpdate)
-        throw Error('A onUpdate function must be provided when using this component in editMode!')
+export default function LinksCard({links, linkOwner, editMode = false, onUpdate}: Props) {
+    if (editMode && !onUpdate && !linkOwner)
+        throw Error('A linkOwner and onUpdate function must be provided when using this component in editMode!')
     const [deleteLinkId, setDeleteLinkId] = useAtom(deleteLinkAtom)
+    const [newLink, setNewLink] = useAtom(newLinkAtom)
+    const [loading, setLoading] = useAtom(loadingAtom)
+    const linkTypes = useAtomValue(linkTypesAtom)
+    const iconConfig = useAtomValue(linkTypeIconsAtom)
     const client = useSupabaseClient()
 
     const LinkRow = (item: LinkDetails) => {
         return (
             <Box direction="row" gap="medium" pad="small" flex>
-                {iconConfig[item.type]}
+                {iconConfig[item.typeId]}
                 <Link href={item.url}>{item.url}</Link>
                 {editMode && (
                     <Button
@@ -52,22 +66,65 @@ export default function LinksCard({links, editMode = false, onUpdate}: Props) {
     }
 
     const handleLinkDelete = useCallback(async (id: number) => {
-        const {data, error} = await client.from('links').delete().eq('id', id)
-        if (error) {
-            console.log('Unable to delete link ID: '+id+'. Error: '+error.message)
-            throw error
+        try {
+            setLoading(true)
+            await deleteLink(client, id)
+            const newLinks = links.filter(item => item.id !== id)
+            if (onUpdate)
+                onUpdate(newLinks)
         }
-        links = links.filter(item => item.id !== id)
-        if (onUpdate)
-            onUpdate(links)
-    }, [links, client, onUpdate])
+        catch (error) {
+            alert('Unable to delete the link. Message: '+JSON.stringify(error))
+        }
+        finally {
+            setLoading(false)
+        }
+    }, [links, client, onUpdate, setLoading])
+
+    const addNewLink = useCallback( async () => {
+        if(newLink) {
+            try {
+                setLoading(true)
+                const linkDetails = await insertNewLink(client, newLink.url, newLink.typeId, linkOwner!)
+                links.push(linkDetails)
+                if (onUpdate)
+                    onUpdate(links)
+                setNewLink(emptyNewLink)
+            }
+            catch (error) {
+                alert('Unable to create new link. Message: '+JSON.stringify(error))
+            }
+            finally {
+                setLoading(false)
+            }
+        }
+    }, [links, client, newLink, linkOwner, onUpdate, setNewLink, setLoading])
 
     return (
         <Card pad="small">
             <CardHeader pad="small">Links</CardHeader>
             <CardBody>
                 {editMode && (
-                    <Text>Add a new link</Text>
+                    <Form<NewLink>
+                        value={newLink}
+                        onChange={(nextValue) => setNewLink(nextValue)}
+                        onSubmit={() => addNewLink()}>
+                        <Box direction="row">
+                            <FormField name="url" htmlFor="url" label="URL" required>
+                                <TextInput id="url" name="url" type="url"/>
+                            </FormField>
+                            <FormField name="typeId" htmlFor="typeSelectId" label="Type" required>
+                                <Select
+                                    id="typeSelectId"
+                                    name="typeId"
+                                    valueKey={{ key: 'id', reduce: true }}
+                                    labelKey="name"
+                                    options={linkTypes}
+                                />
+                            </FormField>
+                            <Button type="submit" primary label={loading ? 'Loading ...' : 'Add'} disabled={loading}/>
+                        </Box>
+                    </Form>
                 )}
                 {links.map((item, index) => <LinkRow key={item.id} {...item}/>)}
             </CardBody>
@@ -75,8 +132,8 @@ export default function LinksCard({links, editMode = false, onUpdate}: Props) {
                 <Layer
                     id="delete link modal"
                     position="center"
-                    onClickOutside={() => setDeleteLinkId(undefined)}
-                    onEsc={() => setDeleteLinkId(undefined)}
+                    onClickOutside={() => setDeleteLinkId(null)}
+                    onEsc={() => setDeleteLinkId(null)}
                 >
                     <Box pad="medium" gap="small" width="medium">
                         <Heading level={3} margin="none">Confirm</Heading>
@@ -89,7 +146,7 @@ export default function LinksCard({links, editMode = false, onUpdate}: Props) {
                             justify="end"
                             pad={{ top: 'medium', bottom: 'small' }}
                         >
-                            <Button label="Cancel" onClick={() => setDeleteLinkId(undefined)} color="dark-3" />
+                            <Button label="Cancel" onClick={() => setDeleteLinkId(null)} color="dark-3" />
                             <Button
                                 label={
                                     <Text color="white">
@@ -98,7 +155,7 @@ export default function LinksCard({links, editMode = false, onUpdate}: Props) {
                                 }
                                 onClick={() => {
                                     handleLinkDelete(deleteLinkId);
-                                    setDeleteLinkId(undefined);
+                                    setDeleteLinkId(null);
                                 }}
                                 primary
                                 color="status-critical"

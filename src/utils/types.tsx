@@ -1,4 +1,5 @@
-import {tSStringKeyword} from "@babel/types";
+
+export type IconDictionary = Record<number, JSX.Element>
 
 export type Profile = {
     id: string,
@@ -70,5 +71,10 @@ export type MembershipItem = {
 export type LinkDetails = {
     id: number,
     url: string,
-    type: string
+    typeId: number
+}
+
+export type LinkType = {
+    id: number
+    name: string
 }

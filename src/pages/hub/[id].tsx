@@ -10,7 +10,6 @@ import {
   getServerClient,
   isUserHubAdmin
 } from "../../utils/supabase";
-import {useSupabaseClient, useUser} from "@supabase/auth-helpers-react";
 import LinksCard from "../../components/LinksCard";
 import HubAttributesCard from "../../components/hub/HubAttributesCard";
 import MembersCard from "../../components/MembersCard";
@@ -59,7 +58,11 @@ export default function HubDetails({ hub, members, links, regionInfo, isHubAdmin
                   hub={hub}
                   onSubmit={() => setEdit(false)}
                   onCancel={() => setEdit(false)}/>
-              <LinksCard links={currentLinks} editMode={edit} onUpdate={(newLinks) => setCurrentLinks(newLinks)}/>
+              <LinksCard
+                  links={currentLinks}
+                  linkOwner={hub.id}
+                  editMode={edit}
+                  onUpdate={(newLinks) => setCurrentLinks(newLinks)}/>
             </Box>
         ) : (
             <Box width="large">

@@ -14,13 +14,16 @@ import {
     Bioregion,
     Realm,
     Profile,
-    Project
+    Project, LinkType
 } from "./types";
 import {printLocation} from "graphql/language";
+import {Js} from "grommet-icons";
+import {number} from "prop-types";
 
 type DbProfile = Database['public']['Tables']['profiles']['Row']
 type DbHub = Database['public']['Tables']['hubs']['Row']
 type DbLink = Database['public']['Tables']['links']['Row']
+type DbLinkInsert = Database['public']['Tables']['links']['Insert']
 type DbProject = Database['public']['Tables']['projects']['Row']
 type DbProjectRole = Database['public']['Tables']['project_roles']['Row']
 type DbHubRole = Database['public']['Tables']['hub_roles']['Row']
@@ -73,7 +76,7 @@ export async function isUserProjectAdmin(client: SupabaseClient, userId: string,
     return result.project_roles.name.toUpperCase() == 'ADMIN'
 }
 
-export async function getProjectsForUser(supabase: SupabaseClient, userId: string): Promise<Array<MembershipItem | undefined>> {
+export async function getProjectsForUser(supabase: SupabaseClient, userId: string): Promise<Array<MembershipItem>> {
     const {data, error} = await supabase.rpc('get_user_projects', {user_id: userId})
     if (error) {
         console.error('Unable to retrieve projects for profile ' + userId + '. Error: ' + error.message)
@@ -168,16 +171,16 @@ export async function getProjectMembersData(supabase: SupabaseClient, projectId:
 }
 
 export async function getLinksData(supabase: SupabaseClient, objectId: string): Promise<Array<LinkDetails>> {
-    const {data, error} = await supabase.from('links').select('*, link_types(name)').eq('owner_id', objectId)
+    const {data, error} = await supabase.from('links').select('*').eq('owner_id', objectId)
     if (error) {
-        console.error('Unable to retrieve links for object ID '+objectId+'. Error: '+error.message)
+        console.error('Unable to retrieve links for owner ID '+objectId+'. Error: '+error.message)
         throw error
     }
     return data ? data.map((dbLink) => {
         const newItem: LinkDetails = {
             id: dbLink.id,
             url: dbLink.url,
-            type: dbLink.link_types.name
+            typeId: dbLink.type_id
         }
         return newItem
     }) : new Array<LinkDetails>()
@@ -300,4 +303,32 @@ export async function updateAvatarFile(supabase: SupabaseClient, profileId: stri
     const {data} = supabase.storage.from('avatars').getPublicUrl(filename)
 
     return {filename: filename, url: data?.publicUrl || ''}
+}
+
+export async function deleteLink(client: SupabaseClient, linkId: number) {
+    const {error} = await client.from('links').delete().eq('id', linkId)
+    if (error) {
+        console.log('Error deleting link ID: '+linkId+'. Error: '+error.message)
+        throw error
+    }
+}
+
+export async function insertNewLink(client: SupabaseClient<Database>, url: string, typeId: number, ownerId: string): Promise<LinkDetails> {
+    const newDbLink: DbLinkInsert = {url: url, type_id: typeId, owner_id: ownerId}
+    const {data, error} = await client.from('links').insert(newDbLink).select('*').single()
+    if (error) {
+        console.log('Error insert a new link: '+JSON.stringify(newDbLink)+'. Error: '+error.message)
+        throw error
+    }
+    const newLink: LinkDetails = {id: data.id, typeId: data.type_id, url: url}
+    return newLink
+}
+
+export async function getLinkTypes(client: SupabaseClient): Promise<Array<LinkType>> {
+    const {data, error} = await client.from('link_types').select('*')
+    if (error) {
+        console.log('Error retrieving link types. Error: '+error.message)
+        throw error
+    }
+    return data as Array<LinkType>
 }

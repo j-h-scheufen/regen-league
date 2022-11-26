@@ -62,7 +62,7 @@ export default function HubForm({hub, onSubmit, onCancel}: Props) {
         } finally {
             setLoading(false)
         }
-    }, [currentHub, editHub, setCurrentHub, supabase, user])
+    }, [currentHub, editHub, setCurrentHub, supabase, setLoading])
 
     return (
         <Form<Hub>

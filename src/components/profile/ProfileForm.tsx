@@ -6,7 +6,7 @@ import {useHydrateAtoms} from "jotai/utils";
 
 import { Database } from '../../utils/database.types'
 import { Profile } from '../../utils/types'
-import {currentUserProfile} from "../../state/global";
+import {currentUserProfileAtom} from "../../state/global";
 
 type Props = {
     profile: Profile
@@ -21,9 +21,9 @@ const loadingAtom = atom<boolean>(false)
 export default function ProfileForm({profile, onSubmit, onCancel}: Props) {
     if(!profile)
         throw Error('This component requires a profile')
-    useHydrateAtoms([[currentUserProfile, profile], [editProfileAtom, {...profile}]] as const)
+    useHydrateAtoms([[currentUserProfileAtom, profile], [editProfileAtom, {...profile}]] as const)
     const supabase = useSupabaseClient<Database>()
-    const [currentProfile , setCurrentProfile] = useAtom(currentUserProfile)
+    const [currentProfile , setCurrentProfile] = useAtom(currentUserProfileAtom)
     const [editProfile, setEditProfile] = useAtom(editProfileAtom)
     const [loading, setLoading] = useAtom(loadingAtom)
 
@@ -47,7 +47,7 @@ export default function ProfileForm({profile, onSubmit, onCancel}: Props) {
         } finally {
             setLoading(false)
         }
-    }, [editProfile, setCurrentProfile, supabase, profile])
+    }, [editProfile, currentProfile, setCurrentProfile, supabase, profile, setLoading])
 
     return (
             <Form<Profile>

@@ -50,6 +50,7 @@ export type LinkType = {
 export type RegionNode = {
     id: number
     name: string
+    link?: string
     parent?: number
 }
 
@@ -61,11 +62,8 @@ export type RegionAssociations = {
 
 //////////////////////////////
 // ONE EARTH
-export type Bioregion = {
-    id: number,
-    code: string,
-    name: string,
-    link: string,
+export type Bioregion = RegionNode & {
+    code: string
 }
 
 export type Subrealm = {
@@ -73,23 +71,11 @@ export type Subrealm = {
     name: string,
 }
 
-export type Realm = {
-    id: number,
-    name: string,
-    link: string
-}
-
-export type Ecoregion = {
-    id: number,
-    name: string,
-    link: string,
-}
-
 export type OneEarthInfo = {
-    ecoregion?: Ecoregion, // ecoregion is optional for now
+    ecoregion?: RegionNode, // ecoregion is optional for now
     bioregion: Bioregion,
     subrealm: Subrealm,
-    realm: Realm
+    realm: RegionNode
 }
 
 export type OneEarthCatalog = {
@@ -104,6 +90,7 @@ export type OneEarthCatalog = {
 
 export type EPARegion = RegionNode & {
     level: number
+    code: string
 }
 
 export type EPAInfo = {

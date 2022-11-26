@@ -12,7 +12,6 @@ import {
     Hub,
     Subrealm,
     Bioregion,
-    Realm,
     Profile,
     Project, LinkType, OneEarthCatalog, RegionNode, RegionAssociations
 } from "./types";
@@ -104,7 +103,7 @@ export async function getOneEarthInfo(client: SupabaseClient, bioregionId: numbe
             id: data.sr_id,
             name: data.sr_name,
         }
-        const realm: Realm = {
+        const realm: RegionNode = {
             id: data.r_id,
             name: data.r_name,
             link: data.r_link
@@ -125,13 +124,23 @@ export async function getRegionAssociations(client: SupabaseClient, ownerId: str
         console.error('Unable to retrieve region associations from owner ID ' + ownerId + '. Error: ' + error.message)
         throw error
     }
+    const custom = data[0].custom_id ? await getCustomRegion(client, data[0].custom_id) : null
 
     const associations: RegionAssociations = {
         oneEarth: data[0]?.oe_bioregion_id ? await getOneEarthInfo(client, data[0].oe_bioregion_id) : null,
         epa: null,
-        custom: new Array<RegionNode>()
+        custom: custom ? [custom] : new Array<RegionNode>()
     }
     return associations
+}
+
+export async function getCustomRegion(client: SupabaseClient, id: string): Promise<RegionNode> {
+    const {data, error} = await client.from('custom_regions').select('*').eq('id', id).single()
+    if (error) {
+        console.error('Unable to retrieve custom region ID. Error: ' + error.message)
+        throw error
+    }
+    return {id: data.id, link: data.link, name: data.name}
 }
 
 export async function getOneEarthCatalog(client: SupabaseClient): Promise<OneEarthCatalog> {

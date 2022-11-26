@@ -27,7 +27,7 @@ type Props = {
     onCancel: () => void
 }
 
-const emptyHub: Hub = {bioregionId: null, description: '', id: '', name: ''}
+const emptyHub: Hub = {description: '', id: '', name: ''}
 const editHubAtom = atom<Hub>(emptyHub)
 const loadingAtom = atom<boolean>(false)
 

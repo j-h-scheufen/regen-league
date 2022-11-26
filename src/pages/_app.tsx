@@ -7,8 +7,9 @@ import Layout from '../components/Layout'
 
 import type {AppProps} from 'next/app'
 import {useState} from "react";
+import {useRouter} from "next/router";
 
-export default function App({ Component, pageProps }: AppProps<{
+export default function App({ Component, pageProps}: AppProps<{
     initialSession: Session,
 }>) {
 
@@ -20,7 +21,7 @@ export default function App({ Component, pageProps }: AppProps<{
                 supabaseClient={client}
                 initialSession={pageProps.initialSession}>
                 <Layout>
-                    <Component {...pageProps} />
+                    <Component {...pageProps}/>
                 </Layout>
             </SessionContextProvider>
         </JotaiProvider>

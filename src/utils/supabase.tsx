@@ -1,11 +1,11 @@
 import {GetServerSidePropsContext} from "next";
 import {createServerSupabaseClient} from "@supabase/auth-helpers-nextjs";
 import {SupabaseClient} from "@supabase/supabase-js";
-import {Session, useSupabaseClient, useUser} from "@supabase/auth-helpers-react";
+import {Session} from "@supabase/auth-helpers-react";
 
 import {Database} from "./database.types";
 import {
-    BioregionInfo,
+    OneEarthInfo,
     LinkDetails,
     MemberDetails,
     MembershipItem,
@@ -14,22 +14,15 @@ import {
     Bioregion,
     Realm,
     Profile,
-    Project, LinkType
+    Project, LinkType, OneEarthCatalog, RegionNode, RegionAssociations
 } from "./types";
-import {printLocation} from "graphql/language";
-import {Js} from "grommet-icons";
-import {number} from "prop-types";
 
-type DbProfile = Database['public']['Tables']['profiles']['Row']
 type DbHub = Database['public']['Tables']['hubs']['Row']
-type DbLink = Database['public']['Tables']['links']['Row']
 type DbLinkInsert = Database['public']['Tables']['links']['Insert']
 type DbProject = Database['public']['Tables']['projects']['Row']
-type DbProjectRole = Database['public']['Tables']['project_roles']['Row']
-type DbHubRole = Database['public']['Tables']['hub_roles']['Row']
-type DbProjectMember = Database['public']['Tables']['project_members']['Row']
-type DbHubMember = Database['public']['Tables']['hub_members']['Row']
+type DbEcoregion = Database['public']['Tables']['oe_ecoregions']['Row']
 type DbBioregion = Database['public']['Tables']['oe_bioregions']['Row']
+type DbSubrealm = Database['public']['Tables']['oe_subrealms']['Row']
 type DbRealm = Database['public']['Tables']['oe_realms']['Row']
 
 export type DbContext = {
@@ -38,12 +31,12 @@ export type DbContext = {
 }
 
 export const getServerClient = async (ctx: GetServerSidePropsContext): Promise<DbContext> => {
-    const supabase = createServerSupabaseClient<Database>(ctx)
+    const client = createServerSupabaseClient<Database>(ctx)
     const {
         data: {session},
-    } = await supabase.auth.getSession()
+    } = await client.auth.getSession()
 
-    return { client: supabase, session }
+    return { client, session }
 }
 
 export async function getAvatarFilename(session: Session, client: SupabaseClient): Promise<String> {
@@ -76,8 +69,8 @@ export async function isUserProjectAdmin(client: SupabaseClient, userId: string,
     return result.project_roles.name.toUpperCase() == 'ADMIN'
 }
 
-export async function getProjectsForUser(supabase: SupabaseClient, userId: string): Promise<Array<MembershipItem>> {
-    const {data, error} = await supabase.rpc('get_user_projects', {user_id: userId})
+export async function getProjectsForUser(client: SupabaseClient, userId: string): Promise<Array<MembershipItem>> {
+    const {data, error} = await client.rpc('get_user_projects', {user_id: userId})
     if (error) {
         console.error('Unable to retrieve projects for profile ' + userId + '. Error: ' + error.message)
         throw error
@@ -85,8 +78,8 @@ export async function getProjectsForUser(supabase: SupabaseClient, userId: strin
     return data as Array<MembershipItem>
 }
 
-export async function getHubsForUser(supabase: SupabaseClient, userId: string): Promise<Array<MembershipItem>> {
-    const {data, error} = await supabase.rpc('get_user_hubs', {user_id: userId})
+export async function getHubsForUser(client: SupabaseClient, userId: string): Promise<Array<MembershipItem>> {
+    const {data, error} = await client.rpc('get_user_hubs', {user_id: userId})
     if (error) {
         console.error('Unable to retrieve hubs for profile ' + userId + '. Error: ' + error.message)
         throw error
@@ -94,8 +87,8 @@ export async function getHubsForUser(supabase: SupabaseClient, userId: string): 
     return data as Array<MembershipItem>
 }
 
-export async function getBioregionData(supabase: SupabaseClient, bioregionId: number): Promise<BioregionInfo | null> {
-    const {data, error} = await supabase.rpc('get_bioregion_data', {bioregion_id: bioregionId}).single()
+export async function getOneEarthInfo(client: SupabaseClient, bioregionId: number): Promise<OneEarthInfo | null> {
+    const {data, error} = await client.rpc('get_bioregion_data', {bioregion_id: bioregionId}).single()
     if (error) {
         console.error('Unable to retrieve bioregion data ID ' + bioregionId + '. Error: ' + error.message)
         throw error
@@ -116,7 +109,7 @@ export async function getBioregionData(supabase: SupabaseClient, bioregionId: nu
             name: data.r_name,
             link: data.r_link
         }
-        const info: BioregionInfo = {
+        const info: OneEarthInfo = {
             bioregion: bioregion,
             subrealm: subrealm,
             realm: realm,
@@ -126,8 +119,60 @@ export async function getBioregionData(supabase: SupabaseClient, bioregionId: nu
     return null
 }
 
-export async function getHubMembersData(supabase: SupabaseClient, hubId: string): Promise<Array<MemberDetails>> {
-    const {data, error} = await supabase.rpc('get_hub_members', {hub_id: hubId})
+export async function getRegionAssociations(client: SupabaseClient, ownerId: string): Promise<RegionAssociations> {
+    const {data, error} = await client.from('region_associations').select('*').eq('owner_id', ownerId)
+    if (error) {
+        console.error('Unable to retrieve region associations from owner ID ' + ownerId + '. Error: ' + error.message)
+        throw error
+    }
+
+    const associations: RegionAssociations = {
+        oneEarth: data[0]?.oe_bioregion_id ? await getOneEarthInfo(client, data[0].oe_bioregion_id) : null,
+        epa: null,
+        custom: new Array<RegionNode>()
+    }
+    return associations
+}
+
+export async function getOneEarthCatalog(client: SupabaseClient): Promise<OneEarthCatalog> {
+    const rResult = await client.from('oe_realms').select('*')
+    if (rResult.error) {
+        console.error('Unable to retrieve OE realms. Error: ' + rResult.error.message)
+        throw rResult.error
+    }
+    const srResult = await client.from('oe_subrealms').select('*')
+    if (srResult.error) {
+        console.error('Unable to retrieve OE subrealms. Error: ' + srResult.error.message)
+        throw srResult.error
+    }
+    const brResult = await client.from('oe_bioregions').select('*')
+    if (brResult.error) {
+        console.error('Unable to retrieve OE bioregions. Error: ' + brResult.error.message)
+        throw brResult.error
+    }
+    const erResult = await client.from('oe_ecoregions').select('*')
+    if (erResult.error) {
+        console.error('Unable to retrieve OE ecoregions. Error: ' + erResult.error.message)
+        throw erResult.error
+    }
+
+    const realms: Array<RegionNode> = rResult.data.map((entry: DbRealm) => {
+        return {id: entry.id, name: entry.name}
+    })
+    const subrealms: Array<RegionNode> = srResult.data.map((entry: DbSubrealm) => {
+        return {id: entry.id, name: entry.name, parent: entry.realm_id}
+    })
+    const bioregions: Array<RegionNode> = brResult.data.map((entry: DbBioregion) => {
+        return {id: entry.id, name: entry.name, parent: entry.subrealm_id}
+    })
+    const ecoregions: Array<RegionNode> = brResult.data.map((entry: DbEcoregion) => {
+        return {id: entry.id, name: entry.name, parent: entry.bioregion_id}
+    })
+    return {bioregions: bioregions, ecoregions: ecoregions, realms: realms, subrealms: subrealms}
+}
+
+export async function getHubMembersData(client: SupabaseClient, hubId: string): Promise<Array<MemberDetails>> {
+    const {data, error} = await client.rpc('get_hub_members', {hub_id: hubId})
     if (error) {
         console.error('Unable to retrieve members for hub '+hubId+'. Error: '+error.message)
         throw error
@@ -141,15 +186,15 @@ export async function getHubMembersData(supabase: SupabaseClient, hubId: string)
             avatarURL: ''
         }
         if (newItem.avatarImage) {
-            const urlResult = supabase.storage.from('avatars').getPublicUrl(newItem.avatarImage)
+            const urlResult = client.storage.from('avatars').getPublicUrl(newItem.avatarImage)
             newItem.avatarURL = urlResult.data.publicUrl
         }
         return newItem
     }) : new Array<MemberDetails>()
 }
 
-export async function getProjectMembersData(supabase: SupabaseClient, projectId: string): Promise<Array<MemberDetails>> {
-    const {data, error} = await supabase.rpc('get_project_members', {project_id: projectId})
+export async function getProjectMembersData(client: SupabaseClient, projectId: string): Promise<Array<MemberDetails>> {
+    const {data, error} = await client.rpc('get_project_members', {project_id: projectId})
     if (error) {
         console.error('Unable to retrieve members for project '+projectId+'. Error: '+error.message)
         throw error
@@ -163,15 +208,15 @@ export async function getProjectMembersData(supabase: SupabaseClient, projectId:
             avatarURL: ''
         }
         if (newItem.avatarImage) {
-            const urlResult = supabase.storage.from('avatars').getPublicUrl(newItem.avatarImage)
+            const urlResult = client.storage.from('avatars').getPublicUrl(newItem.avatarImage)
             newItem.avatarURL = urlResult.data.publicUrl
         }
         return newItem
     }) : new Array<MemberDetails>()
 }
 
-export async function getLinksData(supabase: SupabaseClient, objectId: string): Promise<Array<LinkDetails>> {
-    const {data, error} = await supabase.from('links').select('*').eq('owner_id', objectId)
+export async function getLinksData(client: SupabaseClient, objectId: string): Promise<Array<LinkDetails>> {
+    const {data, error} = await client.from('links').select('*').eq('owner_id', objectId)
     if (error) {
         console.error('Unable to retrieve links for owner ID '+objectId+'. Error: '+error.message)
         throw error
@@ -186,8 +231,8 @@ export async function getLinksData(supabase: SupabaseClient, objectId: string): 
     }) : new Array<LinkDetails>()
 }
 
-export async function getHubData(supabase: SupabaseClient, hubId: string): Promise<Hub | null> {
-    const {data, error} = await supabase.from('hubs').select('*').eq('id', hubId).single()
+export async function getHubData(client: SupabaseClient, hubId: string): Promise<Hub | null> {
+    const {data, error} = await client.from('hubs').select('*').eq('id', hubId).single()
     if (error) {
         console.error('Unable to retrieve data for hub ID '+hubId+'. Error: '+error.message)
         throw error
@@ -196,16 +241,15 @@ export async function getHubData(supabase: SupabaseClient, hubId: string): Promi
         const newItem: Hub = {
             id: data.id,
             name: data.name,
-            description: data.description,
-            bioregionId: data.bioregion_id
+            description: data.description
         }
         return newItem
     }
     return null
 }
 
-export async function getProjectData(supabase: SupabaseClient, projectId: string): Promise<Project | null> {
-    const {data, error} = await supabase.from('projects').select('*').eq('id', projectId).single()
+export async function getProjectData(client: SupabaseClient, projectId: string): Promise<Project | null> {
+    const {data, error} = await client.from('projects').select('*').eq('id', projectId).single()
     if (error) {
         console.error('Unable to retrieve data for project ID '+projectId+'. Error: '+error.message)
         throw error
@@ -214,16 +258,15 @@ export async function getProjectData(supabase: SupabaseClient, projectId: string
         const newItem: Project = {
             id: data.id,
             name: data.name,
-            description: data.description,
-            bioregionId: data.bioregion_id
+            description: data.description
         }
         return newItem
     }
     return null
 }
 
-export async function getUserProfile(supabase: SupabaseClient, userId: string): Promise<Profile | null> {
-    const {data, error} = await supabase.from('profiles').select('*').eq('id', userId).single() // uses policy
+export async function getUserProfile(client: SupabaseClient, userId: string): Promise<Profile | null> {
+    const {data, error} = await client.from('profiles').select('*').eq('id', userId).single() // uses policy
     if (error) {
         console.error('Unable to retrieve profile data for user ID '+userId+'. Error: '+error.message)
         throw error
@@ -236,7 +279,7 @@ export async function getUserProfile(supabase: SupabaseClient, userId: string): 
             username: data.username
         }
         if (data.avatar_filename) {
-            const urlResult = supabase.storage.from('avatars').getPublicUrl(data.avatar_filename)
+            const urlResult = client.storage.from('avatars').getPublicUrl(data.avatar_filename)
             newItem.avatarURL = urlResult.data.publicUrl
         }
         return newItem
@@ -244,8 +287,8 @@ export async function getUserProfile(supabase: SupabaseClient, userId: string): 
     return null
 }
 
-export async function getHubs(supabase: SupabaseClient): Promise<Array<Hub>> {
-    const {data, error} = await supabase.from('hubs').select('*')
+export async function getHubs(client: SupabaseClient): Promise<Array<Hub>> {
+    const {data, error} = await client.from('hubs').select('*')
     if (error) {
         console.error('Unable to retrieve hubs. Error: '+error.message)
         throw error
@@ -255,8 +298,7 @@ export async function getHubs(supabase: SupabaseClient): Promise<Array<Hub>> {
             const hub: Hub = {
                 id: item.id,
                 name: item.name,
-                description: item.description || '',
-                bioregionId: item.bioregion_id
+                description: item.description || ''
             }
             return hub
         })
@@ -264,8 +306,8 @@ export async function getHubs(supabase: SupabaseClient): Promise<Array<Hub>> {
     return new Array<Hub>()
 }
 
-export async function getProjects(supabase: SupabaseClient): Promise<Array<Project>> {
-    const {data, error} = await supabase.from('projects').select('*')
+export async function getProjects(client: SupabaseClient): Promise<Array<Project>> {
+    const {data, error} = await client.from('projects').select('*')
     if (error) {
         console.error('Unable to retrieve projects. Error: '+error.message)
         throw error
@@ -275,8 +317,7 @@ export async function getProjects(supabase: SupabaseClient): Promise<Array<Proje
             const project: Project = {
                 id: item.id,
                 name: item.name,
-                description: item.description || '',
-                bioregionId: item.bioregion_id
+                description: item.description || ''
             }
             return project
         })
@@ -284,8 +325,8 @@ export async function getProjects(supabase: SupabaseClient): Promise<Array<Proje
     return new Array<Project>()
 }
 
-export async function updateAvatarFile(supabase: SupabaseClient, profileId: string, filename: string, file: any): Promise<{filename: string, url: string}> {
-    const { error: uploadError } = await supabase.storage
+export async function updateAvatarFile(client: SupabaseClient, profileId: string, filename: string, file: any): Promise<{filename: string, url: string}> {
+    const { error: uploadError } = await client.storage
         .from('avatars')
         .upload(filename, file, { upsert: true })
     if (uploadError) {
@@ -294,13 +335,13 @@ export async function updateAvatarFile(supabase: SupabaseClient, profileId: stri
     }
 
     const updates = {avatar_filename: filename}
-    const {error: updateError} = await supabase.from('profiles').update(updates).eq('id', profileId)
+    const {error: updateError} = await client.from('profiles').update(updates).eq('id', profileId)
     if (updateError) {
         console.log('Error updating avatar filename for user ID ' + profileId+'. Error: '+updateError.message)
         throw updateError
     }
 
-    const {data} = supabase.storage.from('avatars').getPublicUrl(filename)
+    const {data} = client.storage.from('avatars').getPublicUrl(filename)
 
     return {filename: filename, url: data?.publicUrl || ''}
 }

@@ -135,21 +135,18 @@ export interface Database {
           created_at: string | null
           description: string | null
           name: string
-          bioregion_id: number | null
         }
         Insert: {
           id?: string
           created_at?: string | null
           description?: string | null
           name: string
-          bioregion_id?: number | null
         }
         Update: {
           id?: string
           created_at?: string | null
           description?: string | null
           name?: string
-          bioregion_id?: number | null
         }
       }
       link_types: {
@@ -248,17 +245,17 @@ export interface Database {
       }
       oe_subrealms: {
         Row: {
-          realm_id: number | null
+          realm_id: number
           id: number
           name: string
         }
         Insert: {
-          realm_id?: number | null
+          realm_id: number
           id?: number
           name: string
         }
         Update: {
-          realm_id?: number | null
+          realm_id?: number
           id?: number
           name?: string
         }
@@ -319,21 +316,18 @@ export interface Database {
       }
       projects: {
         Row: {
-          bioregion_id: number | null
           created_at: string | null
           name: string
           description: string | null
           id: string
         }
         Insert: {
-          bioregion_id?: number | null
           created_at?: string | null
           name: string
           description?: string | null
           id?: string
         }
         Update: {
-          bioregion_id?: number | null
           created_at?: string | null
           name?: string
           description?: string | null
@@ -352,6 +346,26 @@ export interface Database {
         Update: {
           project_id?: string
           hub_id?: string
+        }
+      }
+      region_associations: {
+        Row: {
+          oe_bioregion_id: number | null
+          custom_id: string | null
+          epa_bioregion_id: number | null
+          owner_id: string
+        }
+        Insert: {
+          oe_bioregion_id?: number | null
+          custom_id?: string | null
+          epa_bioregion_id?: number | null
+          owner_id: string
+        }
+        Update: {
+          oe_bioregion_id?: number | null
+          custom_id?: string | null
+          epa_bioregion_id?: number | null
+          owner_id?: string
         }
       }
     }

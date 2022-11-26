@@ -14,7 +14,7 @@ import ProfileAttributesCard from "../../components/profile/ProfileAttributesCar
 import ProfileAvatar from "../../components/profile/ProfileAvatar";
 import AvatarUpload from "../../components/profile/AvatarUpload";
 import ProfileForm from "../../components/profile/ProfileForm";
-import {currentUserProfile} from "../../state/global";
+import {currentUserProfileAtom} from "../../state/global";
 import {editAtom} from "../../state/profile";
 
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
@@ -47,8 +47,8 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
 export default function CurrentUserProfile({ profile, hubs, projects, editMode }: InferGetServerSidePropsType<typeof getServerSideProps>) {
     if(!profile)
         throw Error('This component requires a profile')
-    useHydrateAtoms([[currentUserProfile, profile], [editAtom, editMode]] as const)
-    const [currentProfile, setCurrentProfile] = useAtom(currentUserProfile)
+    useHydrateAtoms([[currentUserProfileAtom, profile], [editAtom, editMode]] as const)
+    const [currentProfile, setCurrentProfile] = useAtom(currentUserProfileAtom)
     const [edit, setEdit] = useAtom(editAtom)
 
     const refreshAfterAvatarChange = (filename: string, url: string) => {

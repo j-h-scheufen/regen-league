@@ -17,7 +17,7 @@ import {useAtom, useAtomValue} from "jotai";
 import {useSession, useSupabaseClient, useUser} from "@supabase/auth-helpers-react";
 
 import {getUserProfile} from "../utils/supabase";
-import {currentAvatarUrl, currentUserProfile} from "../state/global";
+import {currentAvatarUrlAtom, currentUserProfileAtom} from "../state/global";
 import ProfileAvatar from "./profile/ProfileAvatar";
 
 const theme: ThemeType = {
@@ -35,7 +35,7 @@ type LayoutProps = React.PropsWithChildren<{
 }>
 
 const UserAvatar = () => {
-    const url = useAtomValue(currentAvatarUrl)
+    const url = useAtomValue(currentAvatarUrlAtom)
     const user = useUser()
     if (!user)
         return <Anchor href="/login"><Login size="medium" color="black"/></Anchor>
@@ -47,7 +47,7 @@ export default function Layout({ title = 'Regen League', children }: LayoutProps
     const router = useRouter()
     const session = useSession()
     const supabase = useSupabaseClient()
-    const [currentProfile, setCurrentProfile] = useAtom(currentUserProfile)
+    const [currentProfile, setCurrentProfile] = useAtom(currentUserProfileAtom)
 
     const populateProfile = useCallback(async () => {
         if (session && !currentProfile) {
@@ -56,11 +56,11 @@ export default function Layout({ title = 'Regen League', children }: LayoutProps
                 setCurrentProfile(profile)
             }
         }
-    }, [session, supabase, setCurrentProfile])
+    }, [session, supabase, setCurrentProfile, currentProfile])
 
     useEffect(() => {
         populateProfile()
-    }, [session])
+    }, [session, populateProfile])
 
     const menuItems = [
         { label: 'Hubs', onClick: () => {router.push("/hubs")} },

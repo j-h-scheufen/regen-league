@@ -1,4 +1,4 @@
-import {Box, Card, CardBody, CardHeader, TextArea} from 'grommet'
+import {Box, Card, CardBody, CardHeader, Paragraph, TextArea} from 'grommet'
 import {Hub} from "../../utils/types";
 
 type Props = {
@@ -11,8 +11,13 @@ export default function HubAttributesCard({hub}: Props) {
         <Card pad="small">
             <CardHeader pad="small">Details</CardHeader>
             <CardBody>
-                <Box>
-                    <TextArea value={hub.description || ''} rows={5} disabled/>
+                <Box width="100%" pad="small">
+                    <Paragraph
+                        maxLines={20}
+                        fill={true}
+                        margin={{vertical: "xsmall"}}>
+                            {hub.description || ''}
+                    </Paragraph>
                 </Box>
             </CardBody>
         </Card>

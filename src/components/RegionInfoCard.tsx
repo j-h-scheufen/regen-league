@@ -4,7 +4,7 @@ import {useAtomValue, Provider as JotaiProvider} from "jotai";
 
 import {epaCatalogAtom, oneEarthCatalogAtom} from "../state/global";
 import {RegionAssociations, RegionNode} from "../utils/types";
-import RegionInfoSelector from "./project/RegionInfoSelector";
+import RegionInfoSelector, {selectionAtom} from "./project/RegionInfoSelector";
 import {waitForAll} from "jotai/utils";
 
 type Props = {
@@ -29,19 +29,19 @@ export default function RegionInfoCard({associations, editMode, ownerId, onUpdat
 
             content = (
                 <Form>
-                    <JotaiProvider>
+                    <JotaiProvider initialValues={[[selectionAtom, oeSelection]] as const}>
                         <RegionInfoSelector
                             title="One Earth"
                             regions={[oeCatalog.realms, oeCatalog.subrealms, oeCatalog.bioregions]}
                             labels={['Realm', 'Subrealm', 'Bioregion']}
-                            selection={oeSelection}/>
+                        />
                     </JotaiProvider>
-                    <JotaiProvider>
+                    <JotaiProvider initialValues={[[selectionAtom, epaSelection]] as const}>
                         <RegionInfoSelector
                             title="EPA"
                             regions={[epaCatalog.level1, epaCatalog.level2]}
                             labels={['Level 1', 'Level 2']}
-                            selection={oeSelection}/>
+                        />
                     </JotaiProvider>
                 </Form>
             )

@@ -7,16 +7,14 @@ type Props = {
     title: string
     regions: Array<Array<RegionNode>>
     labels: Array<string>
-    selection: Array<RegionNode>
 }
 
-const selectionAtom = atom<Array<RegionNode | null>>([])
+export const selectionAtom = atom<Array<RegionNode | null>>([])
 const dirtyAtom = atom<boolean>(false)
 
-export default function RegionInfoSelector({title, regions, labels, selection}: Props) {
+export default function RegionInfoSelector({title, regions, labels}: Props) {
     const [currentSelection, setSelection] = useAtom(selectionAtom)
     const [dirty, setDirty] = useAtom(dirtyAtom)
-    setSelection(selection)
 
     const updateSelection = (idx: number, node: RegionNode | null) => {
         currentSelection[idx] = node
@@ -26,6 +24,7 @@ export default function RegionInfoSelector({title, regions, labels, selection}: 
             }
         }
         setSelection({...currentSelection})
+        setDirty(true)
     }
 
     function filterNodes(idx: number, nodes: Array<RegionNode>): Array<RegionNode> {

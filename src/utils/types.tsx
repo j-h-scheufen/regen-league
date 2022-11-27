@@ -99,3 +99,10 @@ export type EPAInfo = {
     level3: EPARegion
     level4: EPARegion
 }
+
+export type EPACatalog = {
+    level1: Array<RegionNode>
+    level2: Array<RegionNode>
+    level3: Array<RegionNode>
+    level4: Array<RegionNode>
+}

@@ -13,7 +13,7 @@ import {
     Subrealm,
     Bioregion,
     Profile,
-    Project, LinkType, OneEarthCatalog, RegionNode, RegionAssociations
+    Project, LinkType, OneEarthCatalog, RegionNode, RegionAssociations, EPACatalog
 } from "./types";
 
 type DbHub = Database['public']['Tables']['hubs']['Row']
@@ -177,7 +177,38 @@ export async function getOneEarthCatalog(client: SupabaseClient): Promise<OneEar
     const ecoregions: Array<RegionNode> = brResult.data.map((entry: DbEcoregion) => {
         return {id: entry.id, name: entry.name, parent: entry.bioregion_id}
     })
+
     return {bioregions: bioregions, ecoregions: ecoregions, realms: realms, subrealms: subrealms}
+}
+
+export async function getEPACatalog(client: SupabaseClient): Promise<EPACatalog> {
+    const result1 = await client.from('epa_regions_1').select('*')
+    if (result1.error) {
+        console.error('Unable to retrieve EPA regions level 1. Error: ' + result1.error.message)
+        throw result1.error
+    }
+    const result2 = await client.from('epa_regions_2').select('*')
+    if (result2.error) {
+        console.error('Unable to retrieve EPA regions level 2. Error: ' + result2.error.message)
+        throw result2.error
+    }
+    const result3 = await client.from('epa_regions_3').select('*')
+    if (result3.error) {
+        console.error('Unable to retrieve EPA regions level 3. Error: ' + result3.error.message)
+        throw result3.error
+    }
+
+    const level1: Array<RegionNode> = result1.data.map((entry) => {
+        return {id: entry.id, name: entry.name}
+    })
+    const level2: Array<RegionNode> = result2.data.map((entry) => {
+        return {id: entry.id, name: entry.name, parent: entry.level1_id}
+    })
+    const level3: Array<RegionNode> = result3.data.map((entry) => {
+        return {id: entry.id, name: entry.name, parent: entry.level2_id}
+    })
+
+    return {level1: level1, level2: level2, level3: level3, level4: new Array<RegionNode>()}
 }
 
 export async function getHubMembersData(client: SupabaseClient, hubId: string): Promise<Array<MemberDetails>> {

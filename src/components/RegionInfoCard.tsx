@@ -1,10 +1,11 @@
 import {Box, Card, CardBody, Heading, Text, Form, FormField, Select} from 'grommet'
 import Link from "next/link";
-import {useAtomValue} from "jotai";
+import {useAtomValue, Provider as JotaiProvider} from "jotai";
 
-import {oneEarthCatalogAtom} from "../state/global";
-import {RegionAssociations} from "../utils/types";
+import {epaCatalogAtom, oneEarthCatalogAtom} from "../state/global";
+import {RegionAssociations, RegionNode} from "../utils/types";
 import RegionInfoSelector from "./project/RegionInfoSelector";
+import {waitForAll} from "jotai/utils";
 
 type Props = {
     associations: RegionAssociations | null
@@ -14,22 +15,35 @@ type Props = {
 }
 
 export default function RegionInfoCard({associations, editMode, ownerId, onUpdate}: Props) {
-    const oeCatalog = useAtomValue(oneEarthCatalogAtom)
+    const [oeCatalog, epaCatalog] = useAtomValue(waitForAll([oneEarthCatalogAtom, epaCatalogAtom]))
 
     let content;
     if (!associations || (!associations.oneEarth && !associations.epa && associations.custom.length === 0))
         content = (<Text>No region data configured!</Text>)
     else {
         if (editMode) {
+            const oeSelection: Array<RegionNode> = associations.oneEarth ?
+                [associations.oneEarth.realm, associations.oneEarth.subrealm, associations.oneEarth.bioregion] : new Array<RegionNode>()
+            const epaSelection: Array<RegionNode> = associations.epa ?
+                [associations.epa.level1, associations.epa.level2] : new Array<RegionNode>()
+
             content = (
-                <Box>
-                    {associations.oneEarth && (
+                <Form>
+                    <JotaiProvider>
                         <RegionInfoSelector
+                            title="One Earth"
                             regions={[oeCatalog.realms, oeCatalog.subrealms, oeCatalog.bioregions]}
-                            categories={['Realm', 'Subrealm', 'Bioregion']}
-                            selection={[associations.oneEarth.realm, associations.oneEarth.subrealm, associations.oneEarth.bioregion]}/>
-                    )}
-                </Box>
+                            labels={['Realm', 'Subrealm', 'Bioregion']}
+                            selection={oeSelection}/>
+                    </JotaiProvider>
+                    <JotaiProvider>
+                        <RegionInfoSelector
+                            title="EPA"
+                            regions={[epaCatalog.level1, epaCatalog.level2]}
+                            labels={['Level 1', 'Level 2']}
+                            selection={oeSelection}/>
+                    </JotaiProvider>
+                </Form>
             )
         } else {
             content = (

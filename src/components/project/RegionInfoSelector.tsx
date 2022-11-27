@@ -1,19 +1,21 @@
-import {Box, Form, FormField, Select} from 'grommet'
+import {Box, Form, FormField, Heading, Select} from 'grommet'
 import {atom, useAtom} from "jotai";
 
 import {RegionNode} from "../../utils/types";
 
 type Props = {
+    title: string
     regions: Array<Array<RegionNode>>
-    categories: Array<string>
+    labels: Array<string>
     selection: Array<RegionNode>
 }
 
 const selectionAtom = atom<Array<RegionNode | null>>([])
+const dirtyAtom = atom<boolean>(false)
 
-export default function RegionInfoSelector({regions, categories, selection}: Props) {
-
+export default function RegionInfoSelector({title, regions, labels, selection}: Props) {
     const [currentSelection, setSelection] = useAtom(selectionAtom)
+    const [dirty, setDirty] = useAtom(dirtyAtom)
     setSelection(selection)
 
     const updateSelection = (idx: number, node: RegionNode | null) => {
@@ -34,14 +36,17 @@ export default function RegionInfoSelector({regions, categories, selection}: Pro
     }
 
     return (
-        <Form>
+        <Box direction="column">
+            <Heading level={4} margin={{vertical: "xsmall"}}>{title}</Heading>
             <Box direction="row">
                 {regions.map((nodes, idx) => {
+                    const selectId = title+'_'+labels[idx]+'_selectId_'+idx
+                    const selectName = title+'_'+labels[idx]+'_selectName_'+idx
                     return (
-                        <FormField key={idx} htmlFor={'select_'+idx} label={categories[idx]}>
+                        <FormField key={idx} htmlFor={selectId} label={labels[idx]}>
                             <Select
-                                id={'select_'+idx}
-                                name={'name_'+idx}
+                                id={selectId}
+                                name={selectName}
                                 valueKey="id"
                                 labelKey="name"
                                 options={filterNodes(idx, nodes)}
@@ -52,7 +57,6 @@ export default function RegionInfoSelector({regions, categories, selection}: Pro
                     )
                 })}
             </Box>
-
-        </Form>
+        </Box>
     )
 }

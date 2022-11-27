@@ -1,30 +1,34 @@
-import {Box, Card, CardBody, Heading, Text, Form} from 'grommet'
+import {Box, Card, CardBody, Heading, Text, Form, FormField, Select} from 'grommet'
 import Link from "next/link";
 import {useAtomValue} from "jotai";
 
 import {oneEarthCatalogAtom} from "../state/global";
 import {RegionAssociations} from "../utils/types";
+import RegionInfoSelector from "./project/RegionInfoSelector";
 
 type Props = {
     associations: RegionAssociations | null
     editMode?: boolean
-    profileId?: string
+    ownerId?: string
     onUpdate?: (update: RegionAssociations) => void
 }
 
-export default function RegionInfoCard({associations, editMode, profileId, onUpdate}: Props) {
+export default function RegionInfoCard({associations, editMode, ownerId, onUpdate}: Props) {
     const oeCatalog = useAtomValue(oneEarthCatalogAtom)
 
     let content;
     if (!associations || (!associations.oneEarth && !associations.epa && associations.custom.length === 0))
-        content = (<Text>No region data available!</Text>)
+        content = (<Text>No region data configured!</Text>)
     else {
         if (editMode) {
             content = (
                 <Box>
-                    <Form>
-
-                    </Form>
+                    {associations.oneEarth && (
+                        <RegionInfoSelector
+                            regions={[oeCatalog.realms, oeCatalog.subrealms, oeCatalog.bioregions]}
+                            categories={['Realm', 'Subrealm', 'Bioregion']}
+                            selection={[associations.oneEarth.realm, associations.oneEarth.subrealm, associations.oneEarth.bioregion]}/>
+                    )}
                 </Box>
             )
         } else {

@@ -68,7 +68,14 @@ export default function HubDetails({ hub, members, links, regions, isHubAdmin }:
                   hub={currentHub!}
                   onSubmit={() => setEdit(false)}
                   onCancel={() => setEdit(false)}/>
-              {/*Manage Regional Info*/}
+              <RegionInfoCard
+                  associations={currentRegions}
+                  editMode={edit}
+                  ownerId={hub.id}
+                  onUpdate={(update) => {
+                    setCurrentRegions({...update})
+                  }}
+              />
               <LinksCard
                   links={currentLinks}
                   linkOwner={hub.id}

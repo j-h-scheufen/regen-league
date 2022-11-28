@@ -35,9 +35,28 @@ export default function RegionInfoCard({associations, editMode, ownerId, onUpdat
     const client = useSupabaseClient()
 
     const updateRegions = useCallback(async () => {
-        const oeRegion = (oeSelection && oeSelection.length > 0) ? oeSelection[oeSelection.length-1] : null
-        const epaRegion = (epaSelection && epaSelection.length > 0) ? epaSelection[epaSelection.length-1] : null
-        const newRegions = await updateRegionAssociations(client, ownerId!, oeRegion?.id, oeRegion?.level, epaRegion?.id, epaRegion?.level, undefined)
+        let oeRegion
+        let epaRegion
+        if (oeSelection) {
+            if (oeSelection.length > 0) {
+                const region = oeSelection[oeSelection.length - 1]
+                if (region?.id && region.level)
+                    oeRegion = {id: region.id, level: region.level}
+            }
+            else
+                oeRegion = null
+        }
+        if (epaSelection) {
+            if (epaSelection.length > 0) {
+                const region = epaSelection[epaSelection.length - 1]
+                if (region?.id && region.level)
+                    epaRegion = {id: region.id, level: region.level}
+            }
+            else
+                epaRegion = null
+        }
+
+        const newRegions = await updateRegionAssociations(client, ownerId!, oeRegion, epaRegion,undefined)
         if (onUpdate)
             onUpdate(newRegions)
         console.log("AFTER UPDATE: "+JSON.stringify(newRegions))

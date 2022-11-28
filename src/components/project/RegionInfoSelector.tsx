@@ -19,19 +19,17 @@ export default function RegionInfoSelector({title, regions, labels, onChange}: P
         setSelection([])
 
     const updateSelection = (idx: number, node: RegionNode) => {
-        console.log('IDX: '+idx+', NODE: '+JSON.stringify(node))
         // clear selections to the right of current selection idx
         if (idx < currentSelection.length-1) {
             for (let step = currentSelection.length-1; step > idx; step--) {
                 currentSelection.pop()
             }
         }
-        console.log('IDX exists: '+(node ? 'yes' : 'no'))
 
         if (node)
             currentSelection[idx] = node
         else
-            currentSelection.pop()
+            currentSelection.pop() // when current select is cleared
 
         setSelection([...currentSelection])
         onChange(currentSelection)
@@ -65,6 +63,7 @@ export default function RegionInfoSelector({title, regions, labels, onChange}: P
                                 value={currentSelection ? currentSelection[idx] : undefined}
                                 onChange={(event) => updateSelection(idx, event.value)}
                                 clear={{ position: 'top', label: 'Clear' }}
+                                placeholder="Select ..."
                             />
                         </FormField>
                     )

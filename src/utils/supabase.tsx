@@ -374,27 +374,33 @@ export async function getLinkTypes(client: SupabaseClient): Promise<Array<LinkTy
     return data as Array<LinkType>
 }
 
+//
+// An undefined value = no change, don't update
+// a NULL value = update table, set to NULL
 export async function updateRegionAssociations(
     client: SupabaseClient,
     ownerId: string,
-    oeRegionId: number | undefined,
-    oeLevel: number | undefined,
-    epaRegionId: number | undefined,
-    epaLevel: number | undefined,
-    customId: string | undefined
+    oeRegion: {id: number, level: number} | null | undefined,
+    epaRegion: {id: number, level: number} | null | undefined,
+    customId: string | null | undefined
 ) {
+    console.log('PARAMS: '+JSON.stringify(oeRegion)+', '+JSON.stringify(epaRegion))
+
     const updates: any = {owner_id: ownerId}
-    if (oeRegionId && oeLevel) {
-        updates['oe_region_id'] = oeRegionId
-        updates['oe_level'] = oeLevel
+    if (oeRegion !== undefined) {
+        updates['oe_region_id'] = oeRegion ? oeRegion.id : null
+        updates['oe_level'] = oeRegion ? oeRegion.level : null
     }
-    if (epaRegionId && epaLevel) {
-        updates['epa_region_id'] = epaRegionId
-        updates['epa_level'] = epaLevel
+    if (epaRegion !== undefined) {
+        updates['epa_region_id'] = epaRegion ? epaRegion.id : null
+        updates['epa_level'] = epaRegion ? epaRegion.level : null
     }
-    if (customId) {
-        updates['custom_id'] = customId
+    if (customId !== undefined) {
+        updates['custom_id'] = customId || null
     }
+
+    console.log('UPDATES: '+JSON.stringify(updates))
+
     const {data, error} = await client.from('region_associations').upsert(updates)
     if (error) {
         console.log('Error updating region associations for owner ID: ' + ownerId + ', updates: '+JSON.stringify(updates)+'. Error: ' + error.message)

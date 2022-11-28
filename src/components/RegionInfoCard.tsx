@@ -1,11 +1,11 @@
-import {Box, Card, CardBody, Heading, Text, Form, FormField, Select} from 'grommet'
+import {Box, Card, CardBody, Heading, Text, Form} from 'grommet'
 import Link from "next/link";
 import {useAtomValue, Provider as JotaiProvider} from "jotai";
+import {waitForAll} from "jotai/utils";
 
 import {epaCatalogAtom, oneEarthCatalogAtom} from "../state/global";
 import {RegionAssociations, RegionNode} from "../utils/types";
 import RegionInfoSelector, {selectionAtom} from "./project/RegionInfoSelector";
-import {waitForAll} from "jotai/utils";
 
 type Props = {
     associations: RegionAssociations | null
@@ -22,21 +22,16 @@ export default function RegionInfoCard({associations, editMode, ownerId, onUpdat
         content = (<Text>No region data configured!</Text>)
     else {
         if (editMode) {
-            const oeSelection: Array<RegionNode> = associations.oneEarth ?
-                [associations.oneEarth.realm, associations.oneEarth.subrealm, associations.oneEarth.bioregion] : new Array<RegionNode>()
-            const epaSelection: Array<RegionNode> = associations.epa ?
-                [associations.epa.level1, associations.epa.level2] : new Array<RegionNode>()
-
             content = (
                 <Form>
-                    <JotaiProvider initialValues={[[selectionAtom, oeSelection]] as const}>
+                    <JotaiProvider initialValues={[[selectionAtom, associations.oneEarth]] as const}>
                         <RegionInfoSelector
                             title="One Earth"
-                            regions={[oeCatalog.realms, oeCatalog.subrealms, oeCatalog.bioregions]}
+                            regions={[oeCatalog.level1, oeCatalog.level2, oeCatalog.level3]}
                             labels={['Realm', 'Subrealm', 'Bioregion']}
                         />
                     </JotaiProvider>
-                    <JotaiProvider initialValues={[[selectionAtom, epaSelection]] as const}>
+                    <JotaiProvider initialValues={[[selectionAtom, associations.epa]] as const}>
                         <RegionInfoSelector
                             title="EPA"
                             regions={[epaCatalog.level1, epaCatalog.level2]}
@@ -54,11 +49,11 @@ export default function RegionInfoCard({associations, editMode, ownerId, onUpdat
                             <Box direction="row">
                                 <Box basis="1/2">
                                     <Text>Realm: <Link
-                                        href={associations.oneEarth.realm.link || ''}>{associations.oneEarth.realm.name}</Link></Text>
+                                        href={associations.oneEarth[0].link || ''}>{associations.oneEarth[0].name}</Link></Text>
                                 </Box>
                                 <Box basis="1/2">
                                     <Text>Bioregion: <Link
-                                        href={associations.oneEarth.bioregion.link || ''}>{associations.oneEarth.bioregion.name}</Link></Text>
+                                        href={associations.oneEarth[2].link || ''}>{associations.oneEarth[2].name}</Link></Text>
                                 </Box>
                             </Box>
                         </Box>
@@ -69,11 +64,11 @@ export default function RegionInfoCard({associations, editMode, ownerId, onUpdat
                             <Box direction="row">
                                 <Box basis="1/2">
                                     <Text>Level 1: <Link
-                                        href={associations.epa.level1.link || ''}>{associations.epa.level1.name}</Link></Text>
+                                        href={associations.epa[0].link || ''}>{associations.epa[0].name}</Link></Text>
                                 </Box>
                                 <Box basis="1/2">
                                     <Text>Level 2: <Link
-                                        href={associations.epa.level2.link || ''}>{associations.epa.level2.name}</Link></Text>
+                                        href={associations.epa[1].link || ''}>{associations.epa[1].name}</Link></Text>
                                 </Box>
                             </Box>
                         </Box>

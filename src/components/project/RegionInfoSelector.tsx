@@ -31,7 +31,7 @@ export default function RegionInfoSelector({title, regions, labels}: Props) {
         if (idx <= 0)
             return nodes
         const parentRegion = currentSelection[idx-1]
-        return nodes.filter((node) => node.parent === parentRegion?.id)
+        return nodes.filter((node) => node.parentId === parentRegion?.id)
     }
 
     return (

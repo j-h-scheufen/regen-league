@@ -3,9 +3,8 @@ import {Facebook, Github, Instagram, Linkedin, Twitter, Youtube} from "grommet-i
 import {Link as Generic} from "grommet-icons/icons";
 import {createBrowserSupabaseClient} from "@supabase/auth-helpers-nextjs";
 import {SupabaseClient} from "@supabase/supabase-js";
-import {useHydrateAtoms, useUpdateAtom} from "jotai/utils";
 
-import {EPACatalog, IconDictionary, LinkType, OneEarthCatalog, Profile} from "../utils/types";
+import {IconDictionary, LinkType, RegionCatalog, Profile} from "../utils/types";
 import {getEPACatalog, getLinkTypes, getOneEarthCatalog} from "../utils/supabase";
 
 export const dbClientAtom = atom<SupabaseClient>((get) => createBrowserSupabaseClient())
@@ -30,10 +29,10 @@ export const linkTypeIconsAtom = atom<IconDictionary>((get) => {
     return iconConfig
 })
 
-export const oneEarthCatalogAtom = atom<Promise<OneEarthCatalog>>(async (get) => {
+export const oneEarthCatalogAtom = atom<Promise<RegionCatalog>>(async (get) => {
     return getOneEarthCatalog(get(dbClientAtom))
 })
 
-export const epaCatalogAtom = atom<Promise<EPACatalog>>(async (get) => {
+export const epaCatalogAtom = atom<Promise<RegionCatalog>>(async (get) => {
     return getEPACatalog(get(dbClientAtom))
 })

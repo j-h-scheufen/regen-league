@@ -5,24 +5,22 @@ import {Session} from "@supabase/auth-helpers-react";
 
 import {Database} from "./database.types";
 import {
-    OneEarthInfo,
+    RegionInfo,
+    RegionCatalog,
     LinkDetails,
     MemberDetails,
     MembershipItem,
     Hub,
-    Subrealm,
-    Bioregion,
     Profile,
-    Project, LinkType, OneEarthCatalog, RegionNode, RegionAssociations, EPACatalog
+    Project,
+    LinkType,
+    RegionNode,
+    RegionAssociations, StandardRegion
 } from "./types";
 
 type DbHub = Database['public']['Tables']['hubs']['Row']
 type DbLinkInsert = Database['public']['Tables']['links']['Insert']
 type DbProject = Database['public']['Tables']['projects']['Row']
-type DbEcoregion = Database['public']['Tables']['oe_ecoregions']['Row']
-type DbBioregion = Database['public']['Tables']['oe_bioregions']['Row']
-type DbSubrealm = Database['public']['Tables']['oe_subrealms']['Row']
-type DbRealm = Database['public']['Tables']['oe_realms']['Row']
 
 export type DbContext = {
     client: SupabaseClient
@@ -86,49 +84,33 @@ export async function getHubsForUser(client: SupabaseClient, userId: string): Pr
     return data as Array<MembershipItem>
 }
 
-export async function getOneEarthInfo(client: SupabaseClient, bioregionId: number): Promise<OneEarthInfo | null> {
-    const {data, error} = await client.rpc('get_bioregion_data', {bioregion_id: bioregionId}).single()
+async function getRegionInfo(client: SupabaseClient, regionId: number, level: number, tablePrefix: string): Promise<RegionInfo> {
+    const tablename = 'get_'+tablePrefix+'_region_info_l'+level
+    const {data, error} = await client.rpc(tablename, {region_id: regionId}).single()
     if (error) {
-        console.error('Unable to retrieve bioregion data ID ' + bioregionId + '. Error: ' + error.message)
+        console.error('Unable to retrieve region info from table '+tablename+', region ID: ' + regionId + ', level: '+level+'. Error: ' + error.message)
         throw error
     }
+    const result = Array<StandardRegion>()
     if (data) {
-        const bioregion: Bioregion = {
-            id: data.br_id,
-            code: data.br_code,
-            name: data.br_name,
-            link: data.br_link,
+        for (let i=1; i <= level; i++) {
+            result[i-1] = {id: data['l'+i+'_id'], level: i, link: data['l'+i+'_link'], name: data['l'+i+'_name']}
         }
-        const subrealm: Subrealm = {
-            id: data.sr_id,
-            name: data.sr_name,
-        }
-        const realm: RegionNode = {
-            id: data.r_id,
-            name: data.r_name,
-            link: data.r_link
-        }
-        const info: OneEarthInfo = {
-            bioregion: bioregion,
-            subrealm: subrealm,
-            realm: realm,
-        }
-        return info
     }
-    return null
+    return result
 }
 
 export async function getRegionAssociations(client: SupabaseClient, ownerId: string): Promise<RegionAssociations> {
-    const {data, error} = await client.from('region_associations').select('*').eq('owner_id', ownerId)
+    const {data, error} = await client.from('region_associations').select('*').eq('owner_id', ownerId).single()
     if (error) {
         console.error('Unable to retrieve region associations from owner ID ' + ownerId + '. Error: ' + error.message)
         throw error
     }
-    const custom = data[0].custom_id ? await getCustomRegion(client, data[0].custom_id) : null
+    const custom = data.custom_id ? await getCustomRegion(client, data.custom_id) : null
 
     const associations: RegionAssociations = {
-        oneEarth: data[0]?.oe_bioregion_id ? await getOneEarthInfo(client, data[0].oe_bioregion_id) : null,
-        epa: null,
+        oneEarth: data?.oe_region_id ? await getRegionInfo(client, data.oe_region_id, data.oe_level, 'oe') : null,
+        epa: data?.epa_region_id ? await getRegionInfo(client, data.epa_region_id, data.epa_level, 'epa') : null,
         custom: custom ? [custom] : new Array<RegionNode>()
     }
     return associations
@@ -143,72 +125,50 @@ export async function getCustomRegion(client: SupabaseClient, id: string): Promi
     return {id: data.id, link: data.link, name: data.name}
 }
 
-export async function getOneEarthCatalog(client: SupabaseClient): Promise<OneEarthCatalog> {
-    const rResult = await client.from('oe_realms').select('*')
-    if (rResult.error) {
-        console.error('Unable to retrieve OE realms. Error: ' + rResult.error.message)
-        throw rResult.error
-    }
-    const srResult = await client.from('oe_subrealms').select('*')
-    if (srResult.error) {
-        console.error('Unable to retrieve OE subrealms. Error: ' + srResult.error.message)
-        throw srResult.error
-    }
-    const brResult = await client.from('oe_bioregions').select('*')
-    if (brResult.error) {
-        console.error('Unable to retrieve OE bioregions. Error: ' + brResult.error.message)
-        throw brResult.error
-    }
-    const erResult = await client.from('oe_ecoregions').select('*')
-    if (erResult.error) {
-        console.error('Unable to retrieve OE ecoregions. Error: ' + erResult.error.message)
-        throw erResult.error
-    }
-
-    const realms: Array<RegionNode> = rResult.data.map((entry: DbRealm) => {
-        return {id: entry.id, name: entry.name}
-    })
-    const subrealms: Array<RegionNode> = srResult.data.map((entry: DbSubrealm) => {
-        return {id: entry.id, name: entry.name, parent: entry.realm_id}
-    })
-    const bioregions: Array<RegionNode> = brResult.data.map((entry: DbBioregion) => {
-        return {id: entry.id, name: entry.name, parent: entry.subrealm_id}
-    })
-    const ecoregions: Array<RegionNode> = brResult.data.map((entry: DbEcoregion) => {
-        return {id: entry.id, name: entry.name, parent: entry.bioregion_id}
-    })
-
-    return {bioregions: bioregions, ecoregions: ecoregions, realms: realms, subrealms: subrealms}
+export async function getOneEarthCatalog(client: SupabaseClient): Promise<RegionCatalog> {
+    return getStandardCatalog(client, 'oe')
 }
 
-export async function getEPACatalog(client: SupabaseClient): Promise<EPACatalog> {
-    const result1 = await client.from('epa_regions_1').select('*')
+export async function getEPACatalog(client: SupabaseClient): Promise<RegionCatalog> {
+    return getStandardCatalog(client, 'epa')
+}
+
+async function getStandardCatalog(client: SupabaseClient, tablePrefix: string): Promise<RegionCatalog> {
+    const result1 = await client.from(tablePrefix+'_regions_1').select('*')
     if (result1.error) {
-        console.error('Unable to retrieve EPA regions level 1. Error: ' + result1.error.message)
+        console.error('Unable to retrieve regions level 1 with table prefix: '+tablePrefix+'. Error: ' + result1.error.message)
         throw result1.error
     }
-    const result2 = await client.from('epa_regions_2').select('*')
+    const result2 = await client.from(tablePrefix+'_regions_2').select('*')
     if (result2.error) {
-        console.error('Unable to retrieve EPA regions level 2. Error: ' + result2.error.message)
+        console.error('Unable to retrieve regions level 2 with table prefix: '+tablePrefix+'. Error: ' + result2.error.message)
         throw result2.error
     }
-    const result3 = await client.from('epa_regions_3').select('*')
+    const result3 = await client.from(tablePrefix+'_regions_3').select('*')
     if (result3.error) {
-        console.error('Unable to retrieve EPA regions level 3. Error: ' + result3.error.message)
+        console.error('Unable to retrieve regions level 3 with table prefix: '+tablePrefix+'. Error: ' + result3.error.message)
         throw result3.error
+    }
+    const result4 = await client.from(tablePrefix+'_regions_4').select('*')
+    if (result4.error) {
+        console.error('Unable to retrieve regions level 4 with table prefix: '+tablePrefix+'. Error: ' + result4.error.message)
+        throw result4.error
     }
 
     const level1: Array<RegionNode> = result1.data.map((entry) => {
         return {id: entry.id, name: entry.name}
     })
     const level2: Array<RegionNode> = result2.data.map((entry) => {
-        return {id: entry.id, name: entry.name, parent: entry.level1_id}
+        return {id: entry.id, name: entry.name, parentId: entry.parent_id}
     })
     const level3: Array<RegionNode> = result3.data.map((entry) => {
-        return {id: entry.id, name: entry.name, parent: entry.level2_id}
+        return {id: entry.id, name: entry.name, parentId: entry.parent_id}
+    })
+    const level4: Array<RegionNode> = result4.data.map((entry) => {
+        return {id: entry.id, name: entry.name, parentId: entry.parent_id}
     })
 
-    return {level1: level1, level2: level2, level3: level3, level4: new Array<RegionNode>()}
+    return {level1, level2, level3, level4}
 }
 
 export async function getHubMembersData(client: SupabaseClient, hubId: string): Promise<Array<MemberDetails>> {

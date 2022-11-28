@@ -1,6 +1,7 @@
 import {GetServerSidePropsContext, InferGetServerSidePropsType} from "next";
 import {Box, Button, Heading, Page} from "grommet";
-import {Provider as JotaiProvider, useAtom, useAtomValue, useSetAtom} from "jotai";
+import {useAtom} from "jotai";
+import {useHydrateAtoms} from "jotai/utils";
 
 import {
   getHubData,
@@ -14,7 +15,6 @@ import LinksCard from "../../components/LinksCard";
 import HubAttributesCard from "../../components/hub/HubAttributesCard";
 import MembersCard from "../../components/MembersCard";
 import RegionInfoCard from "../../components/RegionInfoCard";
-import {useHydrateAtoms, useUpdateAtom} from "jotai/utils";
 import {currentHubAtom, currentHubLinks, currentHubRegionInfo, editAtom, isHubAdminAtom} from "../../state/hub";
 import HubForm from "../../components/hub/HubForm";
 
@@ -26,6 +26,8 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
   const membersData = await getHubMembersData(client, hubId);
   const linksData = await getLinksData(client, hubId)
   const isAdmin = session?.user ? await isUserHubAdmin(client, session.user.id, hubId) : false
+
+  console.log("ASSOC: "+JSON.stringify(regionAssociations))
 
   return {
     props: {

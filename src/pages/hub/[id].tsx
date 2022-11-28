@@ -15,32 +15,30 @@ import LinksCard from "../../components/LinksCard";
 import HubAttributesCard from "../../components/hub/HubAttributesCard";
 import MembersCard from "../../components/MembersCard";
 import RegionInfoCard from "../../components/RegionInfoCard";
-import {currentHubAtom, currentHubLinks, currentHubRegionInfo, editAtom, isHubAdminAtom} from "../../state/hub";
+import {currentHubAtom, currentHubLinks, currentHubRegionAssociations, editAtom, isHubAdminAtom} from "../../state/hub";
 import HubForm from "../../components/hub/HubForm";
 
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
   const hubId = ctx.params?.id as string
   const {client, session} = await getServerClient(ctx)
   const hubData = await getHubData(client, hubId)
-  const regionAssociations = await getRegionAssociations(client, hubId)
+  const associationsData = await getRegionAssociations(client, hubId)
   const membersData = await getHubMembersData(client, hubId);
   const linksData = await getLinksData(client, hubId)
   const isAdmin = session?.user ? await isUserHubAdmin(client, session.user.id, hubId) : false
-
-  console.log("ASSOC: "+JSON.stringify(regionAssociations))
 
   return {
     props: {
       hub: hubData,
       members: membersData,
       links: linksData,
-      regions: regionAssociations,
+      regionAssociations: associationsData,
       isHubAdmin: isAdmin,
     }
   }
 }
 
-export default function HubDetails({ hub, members, links, regions, isHubAdmin }: InferGetServerSidePropsType<typeof getServerSideProps>) {
+export default function HubDetails({ hub, members, links, regionAssociations, isHubAdmin }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   if (!hub)
     throw Error("A hub is required for this component")
 
@@ -48,15 +46,15 @@ export default function HubDetails({ hub, members, links, regions, isHubAdmin }:
       [currentHubAtom, hub],
       [isHubAdminAtom, isHubAdmin],
       [currentHubLinks, links],
-      [currentHubRegionInfo, regions]] as const;
+      [currentHubRegionAssociations, regionAssociations]] as const;
   useHydrateAtoms(initialPageState)
 
   const [currentHub, setCurrentHub] = useAtom(currentHubAtom)
   setCurrentHub(hub)
   const [currentLinks, setCurrentLinks] = useAtom(currentHubLinks)
   setCurrentLinks(links)
-  const [currentRegions, setCurrentRegions] = useAtom(currentHubRegionInfo)
-  setCurrentRegions(regions)
+  const [currentRegions, setCurrentRegions] = useAtom(currentHubRegionAssociations)
+  setCurrentRegions(regionAssociations)
   const [isAdmin, setIsAdmin] = useAtom(isHubAdminAtom)
   setIsAdmin(isHubAdmin)
   const [edit, setEdit] = useAtom(editAtom)
@@ -75,7 +73,7 @@ export default function HubDetails({ hub, members, links, regions, isHubAdmin }:
                   editMode={edit}
                   ownerId={hub.id}
                   onUpdate={(update) => {
-                    setCurrentRegions({...update})
+                    setCurrentRegions(update)
                   }}
               />
               <LinksCard

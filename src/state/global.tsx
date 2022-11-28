@@ -1,10 +1,10 @@
-import {Atom, atom, Getter, SetStateAction, useAtom, WritableAtom} from 'jotai'
+import {atom} from 'jotai'
 import {Facebook, Github, Instagram, Linkedin, Twitter, Youtube} from "grommet-icons";
 import {Link as Generic} from "grommet-icons/icons";
 import {createBrowserSupabaseClient} from "@supabase/auth-helpers-nextjs";
 import {SupabaseClient} from "@supabase/supabase-js";
 
-import {IconDictionary, LinkType, RegionCatalog, Profile} from "../utils/types";
+import {IconDictionary, LinkType, RegionCatalog, Profile, RegionAssociations, LinkDetails} from "../utils/types";
 import {getEPACatalog, getLinkTypes, getOneEarthCatalog} from "../utils/supabase";
 
 export const dbClientAtom = atom<SupabaseClient>((get) => createBrowserSupabaseClient())
@@ -36,3 +36,6 @@ export const oneEarthCatalogAtom = atom<Promise<RegionCatalog>>(async (get) => {
 export const epaCatalogAtom = atom<Promise<RegionCatalog>>(async (get) => {
     return getEPACatalog(get(dbClientAtom))
 })
+
+export const regionAssociationsAtom = atom<RegionAssociations | null>(null)
+export const linkDetailsAtom = atom<Array<LinkDetails>>(new Array<LinkDetails>())

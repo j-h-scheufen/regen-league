@@ -15,7 +15,7 @@ import {
     Project,
     LinkType,
     RegionNode,
-    RegionAssociations, StandardRegion
+    RegionAssociations
 } from "./types";
 
 type DbHub = Database['public']['Tables']['hubs']['Row']
@@ -91,7 +91,7 @@ async function getRegionInfo(client: SupabaseClient, regionId: number, level: nu
         console.error('Unable to retrieve region info from table '+tablename+', region ID: ' + regionId + ', level: '+level+'. Error: ' + error.message)
         throw error
     }
-    const result = Array<StandardRegion>()
+    const result = Array<RegionNode>()
     if (data) {
         for (let i=1; i <= level; i++) {
             result[i-1] = {id: data['l'+i+'_id'], level: i, link: data['l'+i+'_link'], name: data['l'+i+'_name']}
@@ -101,16 +101,16 @@ async function getRegionInfo(client: SupabaseClient, regionId: number, level: nu
 }
 
 export async function getRegionAssociations(client: SupabaseClient, ownerId: string): Promise<RegionAssociations> {
-    const {data, error} = await client.from('region_associations').select('*').eq('owner_id', ownerId).single()
+    const {data, error} = await client.from('region_associations').select('*').eq('owner_id', ownerId)
     if (error) {
         console.error('Unable to retrieve region associations from owner ID ' + ownerId + '. Error: ' + error.message)
         throw error
     }
-    const custom = data.custom_id ? await getCustomRegion(client, data.custom_id) : null
 
+    const custom = data[0]?.custom_id ? await getCustomRegion(client, data[0].custom_id) : null
     const associations: RegionAssociations = {
-        oneEarth: data?.oe_region_id ? await getRegionInfo(client, data.oe_region_id, data.oe_level, 'oe') : null,
-        epa: data?.epa_region_id ? await getRegionInfo(client, data.epa_region_id, data.epa_level, 'epa') : null,
+        oneEarth: data[0]?.oe_region_id ? await getRegionInfo(client, data[0].oe_region_id, data[0].oe_level, 'oe') : null,
+        epa: data[0]?.epa_region_id ? await getRegionInfo(client, data[0].epa_region_id, data[0].epa_level, 'epa') : null,
         custom: custom ? [custom] : new Array<RegionNode>()
     }
     return associations
@@ -122,7 +122,7 @@ export async function getCustomRegion(client: SupabaseClient, id: string): Promi
         console.error('Unable to retrieve custom region ID. Error: ' + error.message)
         throw error
     }
-    return {id: data.id, link: data.link, name: data.name}
+    return {id: data.id, link: data.link, name: data.name, level: 0}
 }
 
 export async function getOneEarthCatalog(client: SupabaseClient): Promise<RegionCatalog> {
@@ -156,16 +156,16 @@ async function getStandardCatalog(client: SupabaseClient, tablePrefix: string): 
     }
 
     const level1: Array<RegionNode> = result1.data.map((entry) => {
-        return {id: entry.id, name: entry.name}
+        return {id: entry.id, name: entry.name, level: 1}
     })
     const level2: Array<RegionNode> = result2.data.map((entry) => {
-        return {id: entry.id, name: entry.name, parentId: entry.parent_id}
+        return {id: entry.id, name: entry.name, level: 2, parentId: entry.parent_id}
     })
     const level3: Array<RegionNode> = result3.data.map((entry) => {
-        return {id: entry.id, name: entry.name, parentId: entry.parent_id}
+        return {id: entry.id, name: entry.name, level: 3, parentId: entry.parent_id}
     })
     const level4: Array<RegionNode> = result4.data.map((entry) => {
-        return {id: entry.id, name: entry.name, parentId: entry.parent_id}
+        return {id: entry.id, name: entry.name, level: 4, parentId: entry.parent_id}
     })
 
     return {level1, level2, level3, level4}
@@ -372,4 +372,33 @@ export async function getLinkTypes(client: SupabaseClient): Promise<Array<LinkTy
         throw error
     }
     return data as Array<LinkType>
+}
+
+export async function updateRegionAssociations(
+    client: SupabaseClient,
+    ownerId: string,
+    oeRegionId: number | undefined,
+    oeLevel: number | undefined,
+    epaRegionId: number | undefined,
+    epaLevel: number | undefined,
+    customId: string | undefined
+) {
+    const updates: any = {owner_id: ownerId}
+    if (oeRegionId && oeLevel) {
+        updates['oe_region_id'] = oeRegionId
+        updates['oe_level'] = oeLevel
+    }
+    if (epaRegionId && epaLevel) {
+        updates['epa_region_id'] = epaRegionId
+        updates['epa_level'] = epaLevel
+    }
+    if (customId) {
+        updates['custom_id'] = customId
+    }
+    const {data, error} = await client.from('region_associations').upsert(updates)
+    if (error) {
+        console.log('Error updating region associations for owner ID: ' + ownerId + ', updates: '+JSON.stringify(updates)+'. Error: ' + error.message)
+        throw error
+    }
+    return getRegionAssociations(client, ownerId)
 }

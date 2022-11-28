@@ -1,4 +1,8 @@
 
+export function notEmpty<TValue>(value: TValue | null | undefined): value is TValue {
+    return value !== null && value !== undefined;
+}
+
 export type IconDictionary = Record<number, JSX.Element>
 
 export type Profile = {
@@ -47,9 +51,13 @@ export type LinkType = {
     name: string
 }
 
+//////////////////////////////
+// ONE EARTH & EPA Regions
 export type RegionNode = {
     id: number
     name: string
+    level: number
+    code?: string
     link?: string
     parentId?: number
 }
@@ -60,14 +68,7 @@ export type RegionAssociations = {
     custom: Array<RegionNode>
 }
 
-//////////////////////////////
-// ONE EARTH & EPA Regions
-export type StandardRegion = RegionNode & {
-    level: number
-    code?: string
-}
-
-export type RegionInfo = Array<StandardRegion>
+export type RegionInfo = Array<RegionNode>
 
 export type RegionCatalog = {
     level1: Array<RegionNode>

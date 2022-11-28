@@ -54,21 +54,21 @@ export interface Database {
       }
       epa_regions_2: {
         Row: {
-          level1_id: number
+          parent_id: number
           code: string
           name: string
           link: string | null
           id: number
         }
         Insert: {
-          level1_id: number
+          parent_id: number
           code: string
           name: string
           link?: string | null
           id?: number
         }
         Update: {
-          level1_id?: number
+          parent_id?: number
           code?: string
           name?: string
           link?: string | null
@@ -80,19 +80,39 @@ export interface Database {
           name: string
           link: string | null
           id: number
-          level2_id: number
+          parent_id: number
         }
         Insert: {
           name: string
           link?: string | null
           id?: number
-          level2_id: number
+          parent_id: number
         }
         Update: {
           name?: string
           link?: string | null
           id?: number
-          level2_id?: number
+          parent_id?: number
+        }
+      }
+      epa_regions_4: {
+        Row: {
+          parent_id: number
+          name: string
+          link: string | null
+          id: number
+        }
+        Insert: {
+          parent_id: number
+          name: string
+          link?: string | null
+          id?: number
+        }
+        Update: {
+          parent_id?: number
+          name?: string
+          link?: string | null
+          id?: number
         }
       }
       hub_members: {
@@ -183,81 +203,84 @@ export interface Database {
           url?: string
         }
       }
-      oe_bioregions: {
+      oe_regions_1: {
+        Row: {
+          id: number
+          name: string
+          link: string | null
+        }
+        Insert: {
+          id?: number
+          name: string
+          link?: string | null
+        }
+        Update: {
+          id?: number
+          name?: string
+          link?: string | null
+        }
+      }
+      oe_regions_2: {
+        Row: {
+          parent_id: number
+          link: string | null
+          id: number
+          name: string
+        }
+        Insert: {
+          parent_id: number
+          link?: string | null
+          id?: number
+          name: string
+        }
+        Update: {
+          parent_id?: number
+          link?: string | null
+          id?: number
+          name?: string
+        }
+      }
+      oe_regions_3: {
         Row: {
           name: string
           link: string | null
           code: string
           id: number
-          subrealm_id: number
+          parent_id: number
         }
         Insert: {
           name: string
           link?: string | null
           code: string
           id?: number
-          subrealm_id: number
+          parent_id: number
         }
         Update: {
           name?: string
           link?: string | null
           code?: string
           id?: number
-          subrealm_id?: number
+          parent_id?: number
         }
       }
-      oe_ecoregions: {
+      oe_regions_4: {
         Row: {
           name: string
           link: string | null
           id: number
-          bioregion_id: number
+          parent_id: number
         }
         Insert: {
           name: string
           link?: string | null
           id?: number
-          bioregion_id: number
+          parent_id: number
         }
         Update: {
           name?: string
           link?: string | null
           id?: number
-          bioregion_id?: number
-        }
-      }
-      oe_realms: {
-        Row: {
-          id: number
-          name: string
-          link: string | null
-        }
-        Insert: {
-          id?: number
-          name: string
-          link?: string | null
-        }
-        Update: {
-          id?: number
-          name?: string
-          link?: string | null
-        }
-      }
-      oe_subrealms: {
-        Row: {
-          realm_id: number
-          id: number
-          name: string
-        }
-        Insert: {
-          realm_id: number
-          id?: number
-          name: string
-        }
-        Update: {
-          realm_id?: number
-          id?: number
-          name?: string
+          parent_id?: number
         }
       }
       profiles: {
@@ -350,21 +373,27 @@ export interface Database {
       }
       region_associations: {
         Row: {
-          oe_bioregion_id: number | null
+          oe_region_id: number | null
           custom_id: string | null
-          epa_bioregion_id: number | null
+          oe_level: number | null
+          epa_region_id: number | null
+          epa_level: number | null
           owner_id: string
         }
         Insert: {
-          oe_bioregion_id?: number | null
+          oe_region_id?: number | null
           custom_id?: string | null
-          epa_bioregion_id?: number | null
+          oe_level?: number | null
+          epa_region_id?: number | null
+          epa_level?: number | null
           owner_id: string
         }
         Update: {
-          oe_bioregion_id?: number | null
+          oe_region_id?: number | null
           custom_id?: string | null
-          epa_bioregion_id?: number | null
+          oe_level?: number | null
+          epa_region_id?: number | null
+          epa_level?: number | null
           owner_id?: string
         }
       }
@@ -381,12 +410,40 @@ export interface Database {
         Args: { name: string; description: string; firstadmin: string }
         Returns: string
       }
-      get_bioregion_data: {
-        Args: { bioregion_id: number }
+      get_epa_region_info_l1: {
+        Args: { region_id: number }
+        Returns: Record<string, unknown>[]
+      }
+      get_epa_region_info_l2: {
+        Args: { region_id: number }
+        Returns: Record<string, unknown>[]
+      }
+      get_epa_region_info_l3: {
+        Args: { region_id: number }
+        Returns: Record<string, unknown>[]
+      }
+      get_epa_region_info_l4: {
+        Args: { region_id: number }
         Returns: Record<string, unknown>[]
       }
       get_hub_members: {
         Args: { hub_id: string }
+        Returns: Record<string, unknown>[]
+      }
+      get_oe_region_info_l1: {
+        Args: { region_id: number }
+        Returns: Record<string, unknown>[]
+      }
+      get_oe_region_info_l2: {
+        Args: { region_id: number }
+        Returns: Record<string, unknown>[]
+      }
+      get_oe_region_info_l3: {
+        Args: { region_id: number }
+        Returns: Record<string, unknown>[]
+      }
+      get_oe_region_info_l4: {
+        Args: { region_id: number }
         Returns: Record<string, unknown>[]
       }
       get_project_members: {

@@ -5,24 +5,22 @@ import {Session} from "@supabase/auth-helpers-react";
 
 import {Database} from "./database.types";
 import {
-    OneEarthInfo,
+    RegionInfo,
+    RegionCatalog,
     LinkDetails,
     MemberDetails,
     MembershipItem,
     Hub,
-    Subrealm,
-    Bioregion,
     Profile,
-    Project, LinkType, OneEarthCatalog, RegionNode, RegionAssociations
+    Project,
+    LinkType,
+    RegionNode,
+    RegionAssociations
 } from "./types";
 
 type DbHub = Database['public']['Tables']['hubs']['Row']
 type DbLinkInsert = Database['public']['Tables']['links']['Insert']
 type DbProject = Database['public']['Tables']['projects']['Row']
-type DbEcoregion = Database['public']['Tables']['oe_ecoregions']['Row']
-type DbBioregion = Database['public']['Tables']['oe_bioregions']['Row']
-type DbSubrealm = Database['public']['Tables']['oe_subrealms']['Row']
-type DbRealm = Database['public']['Tables']['oe_realms']['Row']
 
 export type DbContext = {
     client: SupabaseClient
@@ -86,36 +84,20 @@ export async function getHubsForUser(client: SupabaseClient, userId: string): Pr
     return data as Array<MembershipItem>
 }
 
-export async function getOneEarthInfo(client: SupabaseClient, bioregionId: number): Promise<OneEarthInfo | null> {
-    const {data, error} = await client.rpc('get_bioregion_data', {bioregion_id: bioregionId}).single()
+async function getRegionInfo(client: SupabaseClient, regionId: number, level: number, tablePrefix: string): Promise<RegionInfo> {
+    const tablename = 'get_'+tablePrefix+'_region_info_l'+level
+    const {data, error} = await client.rpc(tablename, {region_id: regionId}).single()
     if (error) {
-        console.error('Unable to retrieve bioregion data ID ' + bioregionId + '. Error: ' + error.message)
+        console.error('Unable to retrieve region info from table '+tablename+', region ID: ' + regionId + ', level: '+level+'. Error: ' + error.message)
         throw error
     }
+    const result = Array<RegionNode>()
     if (data) {
-        const bioregion: Bioregion = {
-            id: data.br_id,
-            code: data.br_code,
-            name: data.br_name,
-            link: data.br_link,
+        for (let i=1; i <= level; i++) {
+            result[i-1] = {id: data['l'+i+'_id'], level: i, link: data['l'+i+'_link'], name: data['l'+i+'_name']}
         }
-        const subrealm: Subrealm = {
-            id: data.sr_id,
-            name: data.sr_name,
-        }
-        const realm: RegionNode = {
-            id: data.r_id,
-            name: data.r_name,
-            link: data.r_link
-        }
-        const info: OneEarthInfo = {
-            bioregion: bioregion,
-            subrealm: subrealm,
-            realm: realm,
-        }
-        return info
     }
-    return null
+    return result
 }
 
 export async function getRegionAssociations(client: SupabaseClient, ownerId: string): Promise<RegionAssociations> {
@@ -124,11 +106,11 @@ export async function getRegionAssociations(client: SupabaseClient, ownerId: str
         console.error('Unable to retrieve region associations from owner ID ' + ownerId + '. Error: ' + error.message)
         throw error
     }
-    const custom = data[0].custom_id ? await getCustomRegion(client, data[0].custom_id) : null
 
+    const custom = data[0]?.custom_id ? await getCustomRegion(client, data[0].custom_id) : null
     const associations: RegionAssociations = {
-        oneEarth: data[0]?.oe_bioregion_id ? await getOneEarthInfo(client, data[0].oe_bioregion_id) : null,
-        epa: null,
+        oneEarth: data[0]?.oe_region_id ? await getRegionInfo(client, data[0].oe_region_id, data[0].oe_level, 'oe') : null,
+        epa: data[0]?.epa_region_id ? await getRegionInfo(client, data[0].epa_region_id, data[0].epa_level, 'epa') : null,
         custom: custom ? [custom] : new Array<RegionNode>()
     }
     return associations
@@ -140,44 +122,53 @@ export async function getCustomRegion(client: SupabaseClient, id: string): Promi
         console.error('Unable to retrieve custom region ID. Error: ' + error.message)
         throw error
     }
-    return {id: data.id, link: data.link, name: data.name}
+    return {id: data.id, link: data.link, name: data.name, level: 0}
 }
 
-export async function getOneEarthCatalog(client: SupabaseClient): Promise<OneEarthCatalog> {
-    const rResult = await client.from('oe_realms').select('*')
-    if (rResult.error) {
-        console.error('Unable to retrieve OE realms. Error: ' + rResult.error.message)
-        throw rResult.error
+export async function getOneEarthCatalog(client: SupabaseClient): Promise<RegionCatalog> {
+    return getStandardCatalog(client, 'oe')
+}
+
+export async function getEPACatalog(client: SupabaseClient): Promise<RegionCatalog> {
+    return getStandardCatalog(client, 'epa')
+}
+
+async function getStandardCatalog(client: SupabaseClient, tablePrefix: string): Promise<RegionCatalog> {
+    const result1 = await client.from(tablePrefix+'_regions_1').select('*')
+    if (result1.error) {
+        console.error('Unable to retrieve regions level 1 with table prefix: '+tablePrefix+'. Error: ' + result1.error.message)
+        throw result1.error
     }
-    const srResult = await client.from('oe_subrealms').select('*')
-    if (srResult.error) {
-        console.error('Unable to retrieve OE subrealms. Error: ' + srResult.error.message)
-        throw srResult.error
+    const result2 = await client.from(tablePrefix+'_regions_2').select('*')
+    if (result2.error) {
+        console.error('Unable to retrieve regions level 2 with table prefix: '+tablePrefix+'. Error: ' + result2.error.message)
+        throw result2.error
     }
-    const brResult = await client.from('oe_bioregions').select('*')
-    if (brResult.error) {
-        console.error('Unable to retrieve OE bioregions. Error: ' + brResult.error.message)
-        throw brResult.error
+    const result3 = await client.from(tablePrefix+'_regions_3').select('*')
+    if (result3.error) {
+        console.error('Unable to retrieve regions level 3 with table prefix: '+tablePrefix+'. Error: ' + result3.error.message)
+        throw result3.error
     }
-    const erResult = await client.from('oe_ecoregions').select('*')
-    if (erResult.error) {
-        console.error('Unable to retrieve OE ecoregions. Error: ' + erResult.error.message)
-        throw erResult.error
+    const result4 = await client.from(tablePrefix+'_regions_4').select('*')
+    if (result4.error) {
+        console.error('Unable to retrieve regions level 4 with table prefix: '+tablePrefix+'. Error: ' + result4.error.message)
+        throw result4.error
     }
 
-    const realms: Array<RegionNode> = rResult.data.map((entry: DbRealm) => {
-        return {id: entry.id, name: entry.name}
+    const level1: Array<RegionNode> = result1.data.map((entry) => {
+        return {id: entry.id, name: entry.name, level: 1}
     })
-    const subrealms: Array<RegionNode> = srResult.data.map((entry: DbSubrealm) => {
-        return {id: entry.id, name: entry.name, parent: entry.realm_id}
+    const level2: Array<RegionNode> = result2.data.map((entry) => {
+        return {id: entry.id, name: entry.name, level: 2, parentId: entry.parent_id}
     })
-    const bioregions: Array<RegionNode> = brResult.data.map((entry: DbBioregion) => {
-        return {id: entry.id, name: entry.name, parent: entry.subrealm_id}
+    const level3: Array<RegionNode> = result3.data.map((entry) => {
+        return {id: entry.id, name: entry.name, level: 3, parentId: entry.parent_id}
     })
-    const ecoregions: Array<RegionNode> = brResult.data.map((entry: DbEcoregion) => {
-        return {id: entry.id, name: entry.name, parent: entry.bioregion_id}
+    const level4: Array<RegionNode> = result4.data.map((entry) => {
+        return {id: entry.id, name: entry.name, level: 4, parentId: entry.parent_id}
     })
-    return {bioregions: bioregions, ecoregions: ecoregions, realms: realms, subrealms: subrealms}
+
+    return {level1, level2, level3, level4}
 }
 
 export async function getHubMembersData(client: SupabaseClient, hubId: string): Promise<Array<MemberDetails>> {
@@ -381,4 +372,33 @@ export async function getLinkTypes(client: SupabaseClient): Promise<Array<LinkTy
         throw error
     }
     return data as Array<LinkType>
+}
+
+export async function updateRegionAssociations(
+    client: SupabaseClient,
+    ownerId: string,
+    oeRegionId: number | undefined,
+    oeLevel: number | undefined,
+    epaRegionId: number | undefined,
+    epaLevel: number | undefined,
+    customId: string | undefined
+) {
+    const updates: any = {owner_id: ownerId}
+    if (oeRegionId && oeLevel) {
+        updates['oe_region_id'] = oeRegionId
+        updates['oe_level'] = oeLevel
+    }
+    if (epaRegionId && epaLevel) {
+        updates['epa_region_id'] = epaRegionId
+        updates['epa_level'] = epaLevel
+    }
+    if (customId) {
+        updates['custom_id'] = customId
+    }
+    const {data, error} = await client.from('region_associations').upsert(updates)
+    if (error) {
+        console.log('Error updating region associations for owner ID: ' + ownerId + ', updates: '+JSON.stringify(updates)+'. Error: ' + error.message)
+        throw error
+    }
+    return getRegionAssociations(client, ownerId)
 }

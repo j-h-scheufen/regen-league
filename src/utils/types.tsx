@@ -1,4 +1,8 @@
 
+export function notEmpty<TValue>(value: TValue | null | undefined): value is TValue {
+    return value !== null && value !== undefined;
+}
+
 export type IconDictionary = Record<number, JSX.Element>
 
 export type Profile = {
@@ -47,55 +51,28 @@ export type LinkType = {
     name: string
 }
 
+//////////////////////////////
+// ONE EARTH & EPA Regions
 export type RegionNode = {
     id: number
     name: string
+    level: number
+    code?: string
     link?: string
-    parent?: number
+    parentId?: number
 }
 
 export type RegionAssociations = {
-    oneEarth: OneEarthInfo | null
-    epa: EPAInfo | null
+    oneEarth: RegionInfo | null
+    epa: RegionInfo | null
     custom: Array<RegionNode>
 }
 
-//////////////////////////////
-// ONE EARTH
-export type Bioregion = RegionNode & {
-    code: string
-}
+export type RegionInfo = Array<RegionNode>
 
-export type Subrealm = {
-    id: number,
-    name: string,
-}
-
-export type OneEarthInfo = {
-    ecoregion?: RegionNode, // ecoregion is optional for now
-    bioregion: Bioregion,
-    subrealm: Subrealm,
-    realm: RegionNode
-}
-
-export type OneEarthCatalog = {
-    realms: Array<RegionNode>
-    subrealms: Array<RegionNode>
-    bioregions: Array<RegionNode>
-    ecoregions: Array<RegionNode>
-}
-
-//////////////////////////////
-// EPA Regions
-
-export type EPARegion = RegionNode & {
-    level: number
-    code: string
-}
-
-export type EPAInfo = {
-    level1: EPARegion
-    level2: EPARegion
-    level3: EPARegion
-    level4: EPARegion
+export type RegionCatalog = {
+    level1: Array<RegionNode>
+    level2: Array<RegionNode>
+    level3: Array<RegionNode>
+    level4: Array<RegionNode>
 }

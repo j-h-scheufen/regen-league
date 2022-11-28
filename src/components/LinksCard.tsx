@@ -40,8 +40,8 @@ const newLinkAtom = atom<NewLink>(emptyNewLink)
 const loadingAtom = atom<boolean>(false)
 
 export default function LinksCard({links, linkOwner, editMode = false, onUpdate}: Props) {
-    // if (editMode && !onUpdate && !linkOwner)
-    //     throw Error('A linkOwner and onUpdate function must be provided when using this component in editMode!')
+    if (editMode && !onUpdate && !linkOwner)
+        throw Error('A linkOwner and onUpdate function must be provided when using this component in editMode!')
     const linkTypes = useAtomValue(linkTypesAtom)
     const iconConfig = useAtomValue(linkTypeIconsAtom)
     const client = useSupabaseClient()

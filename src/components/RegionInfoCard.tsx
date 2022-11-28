@@ -4,7 +4,7 @@ import {useAtomValue, Provider as JotaiProvider, atom, useAtom} from "jotai";
 import {waitForAll} from "jotai/utils";
 
 import {epaCatalogAtom, oneEarthCatalogAtom} from "../state/global";
-import {notEmpty, RegionAssociations, RegionNode} from "../utils/types";
+import {RegionAssociations, RegionNode} from "../utils/types";
 import RegionInfoSelector, {selectionAtom} from "./project/RegionInfoSelector";
 import {updateRegionAssociations} from "../utils/supabase";
 import {useCallback} from "react";

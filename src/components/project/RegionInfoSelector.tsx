@@ -14,16 +14,24 @@ export const selectionAtom = atom<Array<RegionNode>>([])
 
 export default function RegionInfoSelector({title, regions, labels, onChange}: Props) {
     const [currentSelection, setSelection] = useAtom(selectionAtom)
+
     if (!currentSelection)
         setSelection([])
 
     const updateSelection = (idx: number, node: RegionNode) => {
-        currentSelection[idx] = node
+        console.log('IDX: '+idx+', NODE: '+JSON.stringify(node))
+        // clear selections to the right of current selection idx
         if (idx < currentSelection.length-1) {
             for (let step = currentSelection.length-1; step > idx; step--) {
                 currentSelection.pop()
             }
         }
+        console.log('IDX exists: '+(node ? 'yes' : 'no'))
+
+        if (node)
+            currentSelection[idx] = node
+        else
+            currentSelection.pop()
 
         setSelection([...currentSelection])
         onChange(currentSelection)
@@ -56,6 +64,7 @@ export default function RegionInfoSelector({title, regions, labels, onChange}: P
                                 options={filterNodes(idx, nodes)}
                                 value={currentSelection ? currentSelection[idx] : undefined}
                                 onChange={(event) => updateSelection(idx, event.value)}
+                                clear={{ position: 'top', label: 'Clear' }}
                             />
                         </FormField>
                     )

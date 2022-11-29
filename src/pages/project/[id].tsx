@@ -40,9 +40,9 @@ export default function HubDetails({ project, members, links }: PageProps) {
         <Box direction="row" alignSelf="center">
           <Heading size="medium" margin="small" alignSelf="center">{project.name}</Heading>
         </Box>
-        <MembersCard members={members}/>
+        <MembersCard/>
         <ProjectAttributesCard project={project}/>
-        <LinksCard links={links}/>
+        <LinksCard/>
       </Box>
   )
 

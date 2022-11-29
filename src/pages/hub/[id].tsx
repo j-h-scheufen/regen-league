@@ -1,6 +1,6 @@
 import {GetServerSidePropsContext, InferGetServerSidePropsType} from "next";
 import {Box, Button, Heading, Page} from "grommet";
-import {useAtom} from "jotai";
+import {useAtom, Provider as JotaiProvider} from "jotai";
 import {useHydrateAtoms} from "jotai/utils";
 
 import {
@@ -11,12 +11,9 @@ import {
   isUserHubAdmin,
   getRegionAssociations
 } from "../../utils/supabase";
-import LinksCard from "../../components/LinksCard";
-import HubAttributesCard from "../../components/hub/HubAttributesCard";
-import MembersCard from "../../components/MembersCard";
-import RegionInfoCard from "../../components/RegionInfoCard";
-import {currentHubAtom, currentHubLinks, currentHubRegionAssociations, editAtom, isHubAdminAtom} from "../../state/hub";
-import HubForm from "../../components/hub/HubForm";
+import {currentHubAtom, isHubAdminAtom} from "../../state/hub";
+import HubMain from "../../components/hub/HubMain";
+import {linkDetailsAtom, membersAtom, regionAssociationsAtom} from "../../state/global";
 
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
   const hubId = ctx.params?.id as string
@@ -38,66 +35,20 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
   }
 }
 
-export default function HubDetails({ hub, members, links, regionAssociations, isHubAdmin }: InferGetServerSidePropsType<typeof getServerSideProps>) {
+export default function HubPage({ hub, members, links, regionAssociations, isHubAdmin }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   if (!hub)
     throw Error("A hub is required for this component")
 
   const initialPageState = [
       [currentHubAtom, hub],
       [isHubAdminAtom, isHubAdmin],
-      [currentHubLinks, links],
-      [currentHubRegionAssociations, regionAssociations]] as const;
-  useHydrateAtoms(initialPageState)
-
-  const [currentHub, setCurrentHub] = useAtom(currentHubAtom)
-  setCurrentHub(hub)
-  const [currentLinks, setCurrentLinks] = useAtom(currentHubLinks)
-  setCurrentLinks(links)
-  const [currentRegions, setCurrentRegions] = useAtom(currentHubRegionAssociations)
-  setCurrentRegions(regionAssociations)
-  const [isAdmin, setIsAdmin] = useAtom(isHubAdminAtom)
-  setIsAdmin(isHubAdmin)
-  const [edit, setEdit] = useAtom(editAtom)
+      [linkDetailsAtom, links],
+      [regionAssociationsAtom, regionAssociations],
+      [membersAtom, members]] as const;
 
   return (
-      <Page align="center">
-        {edit ? (
-            <Box width="large">
-              {/*Manage Members*/}
-              <HubForm
-                  hub={currentHub!}
-                  onSubmit={() => setEdit(false)}
-                  onCancel={() => setEdit(false)}/>
-              <RegionInfoCard
-                  associations={currentRegions}
-                  editMode={edit}
-                  ownerId={hub.id}
-                  onUpdate={(update) => {
-                    setCurrentRegions(update)
-                  }}
-              />
-              <LinksCard
-                  links={currentLinks}
-                  linkOwner={hub.id}
-                  editMode={edit}
-                  onUpdate={(newLinks) => setCurrentLinks(newLinks)}/>
-            </Box>
-        ) : (
-            <Box width="large">
-              <Box direction="row" alignSelf="center">
-                <Heading size="medium" margin="small" alignSelf="center">{currentHub!.name}</Heading>
-              </Box>
-              <MembersCard members={members}/>
-              <HubAttributesCard hub={currentHub!}/>
-              <RegionInfoCard associations={currentRegions}/>
-              <LinksCard links={currentLinks}/>
-              {isAdmin && <Button
-                            label="Edit"
-                            style={{textAlign: 'center'}}
-                            onClick={() => setEdit(true)}
-                            margin={{top: "medium"}}/>}
-            </Box>
-        )}
-      </Page>
+      <JotaiProvider initialValues={initialPageState}>
+        <HubMain/>
+      </JotaiProvider>
   )
 }

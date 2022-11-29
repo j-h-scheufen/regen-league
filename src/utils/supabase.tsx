@@ -384,7 +384,6 @@ export async function updateRegionAssociations(
     epaRegion: {id: number, level: number} | null | undefined,
     customId: string | null | undefined
 ) {
-    console.log('PARAMS: '+JSON.stringify(oeRegion)+', '+JSON.stringify(epaRegion))
 
     const updates: any = {owner_id: ownerId}
     if (oeRegion !== undefined) {
@@ -398,8 +397,6 @@ export async function updateRegionAssociations(
     if (customId !== undefined) {
         updates['custom_id'] = customId || null
     }
-
-    console.log('UPDATES: '+JSON.stringify(updates))
 
     const {data, error} = await client.from('region_associations').upsert(updates)
     if (error) {

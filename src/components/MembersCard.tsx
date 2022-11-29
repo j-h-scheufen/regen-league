@@ -1,14 +1,13 @@
 import {Box, Card, CardBody, CardHeader, Text} from 'grommet'
 import React from "react";
 
-import {MemberDetails} from "../utils/types";
 import ProfileAvatar from "./profile/ProfileAvatar";
+import {useAtomValue} from "jotai";
+import {membersAtom} from "../state/global";
 
-type Props = {
-    members: Array<MemberDetails>
-}
+export default function MembersCard() {
+    const members = useAtomValue(membersAtom)
 
-export default function MembersCard({members}: Props) {
     return (
         <Card pad="small">
             <CardHeader pad="small"><Text>{members.length} Member{members.length != 1?'s':''}</Text></CardHeader>

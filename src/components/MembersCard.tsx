@@ -1,15 +1,12 @@
-import {Box, Card, CardBody, CardHeader, Paragraph, Text, List, Avatar} from 'grommet'
-import {User as UserIcon} from "grommet-icons/icons";
-import {useRouter} from "next/router";
-import {MemberDetails} from "../utils/types";
+import {Box, Card, CardBody, CardHeader, Text} from 'grommet'
+import React from "react";
+
 import ProfileAvatar from "./profile/ProfileAvatar";
+import {useAtomValue} from "jotai";
+import {membersAtom} from "../state/global";
 
-
-type Props = {
-    members: Array<MemberDetails>
-}
-
-export default function MembersCard({members}: Props) {
+export default function MembersCard() {
+    const members = useAtomValue(membersAtom)
 
     return (
         <Card pad="small">
@@ -17,7 +14,8 @@ export default function MembersCard({members}: Props) {
             <CardBody>
                 <Box direction="row">
                     {members.map((member, index) =>
-                        <ProfileAvatar key={index}
+                        <ProfileAvatar
+                            key={index}
                             profileId={member.userId}
                             name={member.username}
                             avatarURL={member.avatarURL}

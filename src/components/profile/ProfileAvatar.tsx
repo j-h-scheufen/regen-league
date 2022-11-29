@@ -1,5 +1,6 @@
 import {Anchor, Avatar, Box, Text} from 'grommet'
 import {User as UserIcon} from "grommet-icons/icons";
+import React from "react";
 
 type Props = {
     profileId?: string,
@@ -12,13 +13,13 @@ type Props = {
 const AnchorWrapper = ({ condition, url, children }: {condition: any, url: string | undefined, children: any}) =>
     (condition && url) ? <Anchor href={url}>{children}</Anchor> : children;
 
-export default function ProfileAvatar({profileId, name, avatarURL, size="medium", linkTo}: Props) {
-
+function ProfileAvatar({profileId, name, avatarURL, size="medium", linkTo}: Props) {
     const MyAvatar = ({url}: {url: string | undefined}) => {
         let content
         if (url)
             content = (<AnchorWrapper condition={linkTo} url={linkTo}>
-                            <Avatar src={url}
+                            <Avatar
+                                src={url}
                                 size={size!}
                                 margin="small"
                                 round="medium"/>
@@ -42,3 +43,5 @@ export default function ProfileAvatar({profileId, name, avatarURL, size="medium"
         </Box>
     )
 }
+
+export default ProfileAvatar

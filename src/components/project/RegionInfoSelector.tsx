@@ -14,16 +14,22 @@ export const selectionAtom = atom<Array<RegionNode>>([])
 
 export default function RegionInfoSelector({title, regions, labels, onChange}: Props) {
     const [currentSelection, setSelection] = useAtom(selectionAtom)
+
     if (!currentSelection)
         setSelection([])
 
     const updateSelection = (idx: number, node: RegionNode) => {
-        currentSelection[idx] = node
+        // clear selections to the right of current selection idx
         if (idx < currentSelection.length-1) {
             for (let step = currentSelection.length-1; step > idx; step--) {
                 currentSelection.pop()
             }
         }
+
+        if (node)
+            currentSelection[idx] = node
+        else
+            currentSelection.pop() // when current select is cleared
 
         setSelection([...currentSelection])
         onChange(currentSelection)
@@ -56,6 +62,8 @@ export default function RegionInfoSelector({title, regions, labels, onChange}: P
                                 options={filterNodes(idx, nodes)}
                                 value={currentSelection ? currentSelection[idx] : undefined}
                                 onChange={(event) => updateSelection(idx, event.value)}
+                                clear={{ position: 'top', label: 'Clear' }}
+                                placeholder="Select ..."
                             />
                         </FormField>
                     )

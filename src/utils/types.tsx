@@ -1,10 +1,4 @@
 
-export function notEmpty<TValue>(value: TValue | null | undefined): value is TValue {
-    return value !== null && value !== undefined;
-}
-
-export type IconDictionary = Record<number, JSX.Element>
-
 export type Profile = {
     id: string,
     username: string,
@@ -50,6 +44,8 @@ export type LinkType = {
     id: number
     name: string
 }
+
+export type IconDictionary = Record<number, JSX.Element>
 
 //////////////////////////////
 // ONE EARTH & EPA Regions

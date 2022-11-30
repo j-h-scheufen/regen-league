@@ -2,8 +2,8 @@
 export type Profile = {
     id: string,
     username: string,
-    avatarFilename: string,
-    avatarURL: string
+    avatarFilename?: string,
+    avatarURL?: string
 }
 
 export type Hub = {
@@ -22,9 +22,9 @@ export type Project = {
 export type MemberDetails = {
     userId: string,
     username: string,
-    avatarImage: string,
     roleName: string,
-    avatarURL: string
+    avatarFilename?: string,
+    avatarURL?: string
 }
 
 export type MembershipItem = {
@@ -32,6 +32,12 @@ export type MembershipItem = {
     name: string,
     description: string,
     role: string
+}
+
+export type Role = {
+    id: number
+    name: string
+    description: string
 }
 
 export type LinkDetails = {

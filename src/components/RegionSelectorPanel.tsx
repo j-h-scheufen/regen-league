@@ -65,7 +65,7 @@ export default function RegionSelectorPanel({ ownerId }: Props) {
         const newRegions = await updateRegionAssociations(client, ownerId!, oeRegion, epaRegion, customRegion)
         setAssociations(newRegions)
         console.log("AFTER UPDATE: "+JSON.stringify(newRegions))
-    }, [client, oeSelection, epaSelection, setAssociations, ownerId])
+    }, [client, oeSelection, epaSelection, customSelection, setAssociations, ownerId])
 
     return (
         <Card pad="medium">

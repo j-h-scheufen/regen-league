@@ -7,7 +7,8 @@ import Layout from '../components/Layout'
 
 import type {AppProps} from 'next/app'
 import {Suspense, useState} from "react";
-import {epaCatalogAtom, linkTypesAtom, oneEarthCatalogAtom} from "../state/global";
+import {customCatalogAtom, epaCatalogAtom, linkTypesAtom, oneEarthCatalogAtom} from "../state/global";
+import {Text} from "grommet";
 
 export default function App({ Component, pageProps}: AppProps<{
     initialSession: Session,
@@ -20,12 +21,13 @@ export default function App({ Component, pageProps}: AppProps<{
         useAtomValue(linkTypesAtom)
         useAtomValue(oneEarthCatalogAtom)
         useAtomValue(epaCatalogAtom)
+        useAtomValue(customCatalogAtom)
         return null
     }
 
     return (
         <JotaiProvider>
-            <Suspense fallback={"Loading ..."}> {/* Needed to avoid infinite loop with async atoms that were not preloaded */}
+            <Suspense fallback={<Text size="large" margin={{vertical: 'large', horizontal: 'large'}}>Loading ...</Text>}> {/* Needed to avoid infinite loop with async atoms that were not preloaded */}
                 <GlobalStatePreloader/>
                 <SessionContextProvider
                     supabaseClient={client}

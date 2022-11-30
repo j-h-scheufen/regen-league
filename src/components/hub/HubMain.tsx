@@ -9,6 +9,7 @@ import MembersCard from "../MembersCard";
 import HubAttributesCard from "./HubAttributesCard";
 import {currentHubAtom, editAtom, isHubAdminAtom} from "../../state/hub";
 import RegionSelectorPanel from "../RegionSelectorPanel";
+import MembersForm, {Mode} from "../MembersForm";
 
 export default function HubMain() {
     const currentHub = useAtomValue(currentHubAtom)
@@ -22,13 +23,13 @@ export default function HubMain() {
         <Page align="center">
             {edit ? (
                 <Box width="large">
-                    {/*Manage Members*/}
                     <HubForm
                         hub={currentHub}
                         onSubmit={() => setEdit(false)}
                         onCancel={() => setEdit(false)}/>
                     <RegionSelectorPanel ownerId={currentHub.id}/>
                     <LinksForm ownerId={currentHub.id}/>
+                    <MembersForm orgId={currentHub.id} mode={Mode.HUB}/>
                 </Box>
             ) : (
                 <Box width="large">

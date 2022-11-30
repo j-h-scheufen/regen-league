@@ -495,8 +495,20 @@ export interface Database {
         Args: { region_id: number }
         Returns: Record<string, unknown>[]
       }
+      get_hub_member: {
+        Args: { hub_id: string; user_id: string }
+        Returns: Record<string, unknown>[]
+      }
       get_hub_members: {
         Args: { hub_id: string }
+        Returns: Record<string, unknown>[]
+      }
+      get_non_hub_members: {
+        Args: { hub_id: string }
+        Returns: Record<string, unknown>[]
+      }
+      get_non_project_members: {
+        Args: { project_id: string }
         Returns: Record<string, unknown>[]
       }
       get_oe_region_info_l1: {
@@ -513,6 +525,10 @@ export interface Database {
       }
       get_oe_region_info_l4: {
         Args: { region_id: number }
+        Returns: Record<string, unknown>[]
+      }
+      get_project_member: {
+        Args: { project_id: string; user_id: string }
         Returns: Record<string, unknown>[]
       }
       get_project_members: {

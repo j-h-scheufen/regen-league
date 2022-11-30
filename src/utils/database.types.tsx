@@ -9,70 +9,47 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
-      custom_regions: {
-        Row: {
-          id: string
-          created_by: string
-          name: string
-          description: string | null
-          link: string | null
-        }
-        Insert: {
-          id?: string
-          created_by: string
-          name: string
-          description?: string | null
-          link?: string | null
-        }
-        Update: {
-          id?: string
-          created_by?: string
-          name?: string
-          description?: string | null
-          link?: string | null
-        }
-      }
       epa_regions_1: {
         Row: {
-          code: string
           name: string
           link: string | null
           id: number
+          code: string
         }
         Insert: {
-          code: string
           name: string
           link?: string | null
           id?: number
+          code: string
         }
         Update: {
-          code?: string
           name?: string
           link?: string | null
           id?: number
+          code?: string
         }
       }
       epa_regions_2: {
         Row: {
-          parent_id: number
-          code: string
           name: string
           link: string | null
           id: number
-        }
-        Insert: {
           parent_id: number
           code: string
+        }
+        Insert: {
           name: string
           link?: string | null
           id?: number
+          parent_id: number
+          code: string
         }
         Update: {
-          parent_id?: number
-          code?: string
           name?: string
           link?: string | null
           id?: number
+          parent_id?: number
+          code?: string
         }
       }
       epa_regions_3: {
@@ -97,55 +74,55 @@ export interface Database {
       }
       epa_regions_4: {
         Row: {
-          parent_id: number
           name: string
           link: string | null
           id: number
+          parent_id: number
         }
         Insert: {
-          parent_id: number
           name: string
           link?: string | null
           id?: number
+          parent_id: number
         }
         Update: {
-          parent_id?: number
           name?: string
           link?: string | null
           id?: number
+          parent_id?: number
         }
       }
       hub_members: {
         Row: {
-          role_id: number
           hub_id: string
           user_id: string
+          role_id: number
         }
         Insert: {
-          role_id: number
           hub_id: string
           user_id: string
+          role_id: number
         }
         Update: {
-          role_id?: number
           hub_id?: string
           user_id?: string
+          role_id?: number
         }
       }
       hub_roles: {
         Row: {
-          name: string
           id: number
+          name: string
           description: string | null
         }
         Insert: {
-          name: string
           id?: number
+          name: string
           description?: string | null
         }
         Update: {
-          name?: string
           id?: number
+          name?: string
           description?: string | null
         }
       }
@@ -153,20 +130,20 @@ export interface Database {
         Row: {
           id: string
           created_at: string | null
-          description: string | null
           name: string
+          description: string | null
         }
         Insert: {
           id?: string
           created_at?: string | null
-          description?: string | null
           name: string
+          description?: string | null
         }
         Update: {
           id?: string
           created_at?: string | null
-          description?: string | null
           name?: string
+          description?: string | null
         }
       }
       link_types: {
@@ -185,22 +162,22 @@ export interface Database {
       }
       links: {
         Row: {
-          type_id: number
-          owner_id: string
           id: number
           url: string
-        }
-        Insert: {
           type_id: number
           owner_id: string
+        }
+        Insert: {
           id?: number
           url: string
+          type_id: number
+          owner_id: string
         }
         Update: {
-          type_id?: number
-          owner_id?: string
           id?: number
           url?: string
+          type_id?: number
+          owner_id?: string
         }
       }
       oe_regions_1: {
@@ -222,45 +199,45 @@ export interface Database {
       }
       oe_regions_2: {
         Row: {
-          parent_id: number
-          link: string | null
           id: number
           name: string
+          parent_id: number
+          link: string | null
         }
         Insert: {
-          parent_id: number
-          link?: string | null
           id?: number
           name: string
+          parent_id: number
+          link?: string | null
         }
         Update: {
-          parent_id?: number
-          link?: string | null
           id?: number
           name?: string
+          parent_id?: number
+          link?: string | null
         }
       }
       oe_regions_3: {
         Row: {
           name: string
           link: string | null
-          code: string
           id: number
           parent_id: number
+          code: string
         }
         Insert: {
           name: string
           link?: string | null
-          code: string
           id?: number
           parent_id: number
+          code: string
         }
         Update: {
           name?: string
           link?: string | null
-          code?: string
           id?: number
           parent_id?: number
+          code?: string
         }
       }
       oe_regions_4: {
@@ -285,39 +262,39 @@ export interface Database {
       }
       profiles: {
         Row: {
-          created_at: string
           id: string
+          created_at: string
           username: string | null
           avatar_filename: string | null
         }
         Insert: {
-          created_at?: string
           id: string
+          created_at?: string
           username?: string | null
           avatar_filename?: string | null
         }
         Update: {
-          created_at?: string
           id?: string
+          created_at?: string
           username?: string | null
           avatar_filename?: string | null
         }
       }
       project_members: {
         Row: {
-          project_id: string
-          role_id: number
           user_id: string
+          role_id: number
+          project_id: string
         }
         Insert: {
-          project_id: string
-          role_id: number
           user_id: string
+          role_id: number
+          project_id: string
         }
         Update: {
-          project_id?: string
-          role_id?: number
           user_id?: string
+          role_id?: number
+          project_id?: string
         }
       }
       project_roles: {
@@ -373,28 +350,120 @@ export interface Database {
       }
       region_associations: {
         Row: {
-          oe_region_id: number | null
-          custom_id: string | null
-          oe_level: number | null
-          epa_region_id: number | null
-          epa_level: number | null
           owner_id: string
+          oe_region_id: number | null
+          rl_region_id: string | null
+          epa_region_id: number | null
+          oe_level: number | null
+          epa_level: number | null
+          rl_level: number | null
         }
         Insert: {
-          oe_region_id?: number | null
-          custom_id?: string | null
-          oe_level?: number | null
-          epa_region_id?: number | null
-          epa_level?: number | null
           owner_id: string
+          oe_region_id?: number | null
+          rl_region_id?: string | null
+          epa_region_id?: number | null
+          oe_level?: number | null
+          epa_level?: number | null
+          rl_level?: number | null
         }
         Update: {
-          oe_region_id?: number | null
-          custom_id?: string | null
-          oe_level?: number | null
-          epa_region_id?: number | null
-          epa_level?: number | null
           owner_id?: string
+          oe_region_id?: number | null
+          rl_region_id?: string | null
+          epa_region_id?: number | null
+          oe_level?: number | null
+          epa_level?: number | null
+          rl_level?: number | null
+        }
+      }
+      rl_regions_1: {
+        Row: {
+          name: string
+          link: string | null
+          id: string
+          description: string | null
+        }
+        Insert: {
+          name: string
+          link?: string | null
+          id?: string
+          description?: string | null
+        }
+        Update: {
+          name?: string
+          link?: string | null
+          id?: string
+          description?: string | null
+        }
+      }
+      rl_regions_2: {
+        Row: {
+          name: string
+          link: string | null
+          id: string
+          description: string | null
+          parent_id: string
+        }
+        Insert: {
+          name: string
+          link?: string | null
+          id?: string
+          description?: string | null
+          parent_id: string
+        }
+        Update: {
+          name?: string
+          link?: string | null
+          id?: string
+          description?: string | null
+          parent_id?: string
+        }
+      }
+      rl_regions_3: {
+        Row: {
+          name: string
+          link: string | null
+          id: string
+          description: string | null
+          parent_id: string
+        }
+        Insert: {
+          name: string
+          link?: string | null
+          id?: string
+          description?: string | null
+          parent_id: string
+        }
+        Update: {
+          name?: string
+          link?: string | null
+          id?: string
+          description?: string | null
+          parent_id?: string
+        }
+      }
+      rl_regions_4: {
+        Row: {
+          name: string
+          link: string | null
+          id: string
+          description: string | null
+          parent_id: string
+        }
+        Insert: {
+          name: string
+          link?: string | null
+          id?: string
+          description?: string | null
+          parent_id: string
+        }
+        Update: {
+          name?: string
+          link?: string | null
+          id?: string
+          description?: string | null
+          parent_id?: string
         }
       }
     }
@@ -448,6 +517,22 @@ export interface Database {
       }
       get_project_members: {
         Args: { project_id: string }
+        Returns: Record<string, unknown>[]
+      }
+      get_rl_region_info_l1: {
+        Args: { region_id: string }
+        Returns: Record<string, unknown>[]
+      }
+      get_rl_region_info_l2: {
+        Args: { region_id: string }
+        Returns: Record<string, unknown>[]
+      }
+      get_rl_region_info_l3: {
+        Args: { region_id: string }
+        Returns: Record<string, unknown>[]
+      }
+      get_rl_region_info_l4: {
+        Args: { region_id: string }
         Returns: Record<string, unknown>[]
       }
       get_user_hubs: {

@@ -13,7 +13,7 @@ import {
     LinkDetails,
     MemberDetails
 } from "../utils/types";
-import {getEPACatalog, getLinkTypes, getOneEarthCatalog} from "../utils/supabase";
+import {getCustomCatalog, getEPACatalog, getLinkTypes, getOneEarthCatalog} from "../utils/supabase";
 
 export const dbClientAtom = atom<SupabaseClient>((get) => createBrowserSupabaseClient())
 
@@ -43,6 +43,10 @@ export const oneEarthCatalogAtom = atom<Promise<RegionCatalog>>(async (get) => {
 
 export const epaCatalogAtom = atom<Promise<RegionCatalog>>(async (get) => {
     return getEPACatalog(get(dbClientAtom))
+})
+
+export const customCatalogAtom = atom<Promise<RegionCatalog>>(async (get) => {
+    return getCustomCatalog(get(dbClientAtom))
 })
 
 export const regionAssociationsAtom = atom<RegionAssociations | null>(null)

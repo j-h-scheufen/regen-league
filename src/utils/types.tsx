@@ -50,18 +50,19 @@ export type IconDictionary = Record<number, JSX.Element>
 //////////////////////////////
 // ONE EARTH & EPA Regions
 export type RegionNode = {
-    id: number
+    id: number | string
     name: string
     level: number
     code?: string
     link?: string
-    parentId?: number
+    description?: string
+    parentId?: number | string
 }
 
 export type RegionAssociations = {
     oneEarth: RegionInfo | null
     epa: RegionInfo | null
-    custom: Array<RegionNode>
+    custom: RegionInfo | null
 }
 
 export type RegionInfo = Array<RegionNode>

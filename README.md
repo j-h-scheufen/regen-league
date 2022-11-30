@@ -315,4 +315,90 @@ as $$
   WHERE l4.id = $1;
 $$;
 
+create or replace function public.get_rl_region_info_l1(region_id uuid)
+RETURNS TABLE (
+    l1_id uuid,
+    l1_name varchar,
+    l1_link varchar
+)
+language sql
+as $$
+  SELECT 
+    l1.id AS l1_id, l1.name AS l1_name, l1.link AS l1_link
+  FROM rl_regions_1 l1
+  WHERE l1.id = $1;
+$$;
+
+create or replace function public.get_rl_region_info_l2(region_id uuid)
+RETURNS TABLE (
+    l1_id uuid,
+    l1_name varchar,
+    l1_link varchar,
+    l2_id uuid,
+    l2_name varchar,
+    l2_link varchar
+)
+language sql
+as $$
+  SELECT 
+    l1.id AS l1_id, l1.name AS l1_name, l1.link AS l1_link,
+    l2.id AS l2_id, l2.name AS l2_name, l2.link AS l2_link
+  FROM rl_regions_1 l1
+  JOIN rl_regions_2 l2 ON (l2.parent_id = l1.id)
+  WHERE l2.id = $1;
+$$;
+
+create or replace function public.get_rl_region_info_l3(region_id uuid)
+RETURNS TABLE (
+    l1_id uuid,
+    l1_name varchar,
+    l1_link varchar,
+    l2_id uuid,
+    l2_name varchar,
+    l2_link varchar,
+    l3_id uuid,
+    l3_name varchar,
+    l3_link varchar
+)
+language sql
+as $$
+  SELECT 
+    l1.id AS l1_id, l1.name AS l1_name, l1.link AS l1_link,
+    l2.id AS l2_id, l2.name AS l2_name, l2.link AS l2_link,
+    l3.id AS l3_id, l3.name AS l3_name, l3.link AS l3_link
+  FROM rl_regions_1 l1
+  JOIN rl_regions_2 l2 ON (l2.parent_id = l1.id)
+  JOIN rl_regions_3 l3 ON (l3.parent_id = l2.id)
+  WHERE l3.id = $1;
+$$;
+
+create or replace function public.get_rl_region_info_l4(region_id uuid)
+RETURNS TABLE (
+    l1_id uuid,
+    l1_name varchar,
+    l1_link varchar,
+    l2_id uuid,
+    l2_name varchar,
+    l2_link varchar,
+    l3_id uuid,
+    l3_name varchar,
+    l3_link varchar,
+    l4_id uuid,
+    l4_name varchar,
+    l4_link varchar
+)
+language sql
+as $$
+  SELECT 
+    l1.id AS l1_id, l1.name AS l1_name, l1.link AS l1_link,
+    l2.id AS l2_id, l2.name AS l2_name, l2.link AS l2_link,
+    l3.id AS l3_id, l3.name AS l3_name, l3.link AS l3_link,
+    l4.id AS l4_id, l4.name AS l4_name, l4.link AS l4_link
+  FROM rl_regions_1 l1
+  JOIN rl_regions_2 l2 ON (l2.parent_id = l1.id)
+  JOIN rl_regions_3 l3 ON (l3.parent_id = l2.id)
+  JOIN rl_regions_4 l4 ON (l4.parent_id = l3.id)
+  WHERE l4.id = $1;
+$$;
+
 ```

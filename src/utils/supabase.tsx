@@ -84,13 +84,14 @@ export async function getHubsForUser(client: SupabaseClient, userId: string): Pr
     return data as Array<MembershipItem>
 }
 
-async function getRegionInfo(client: SupabaseClient, regionId: number, level: number, tablePrefix: string): Promise<RegionInfo> {
+async function getRegionInfo(client: SupabaseClient, regionId: number | string, level: number, tablePrefix: string): Promise<RegionInfo> {
     const tablename = 'get_'+tablePrefix+'_region_info_l'+level
     const {data, error} = await client.rpc(tablename, {region_id: regionId}).single()
     if (error) {
         console.error('Unable to retrieve region info from table '+tablename+', region ID: ' + regionId + ', level: '+level+'. Error: ' + error.message)
         throw error
     }
+
     const result = Array<RegionNode>()
     if (data) {
         for (let i=1; i <= level; i++) {
@@ -107,11 +108,10 @@ export async function getRegionAssociations(client: SupabaseClient, ownerId: str
         throw error
     }
 
-    const custom = data[0]?.custom_id ? await getCustomRegion(client, data[0].custom_id) : null
     const associations: RegionAssociations = {
         oneEarth: data[0]?.oe_region_id ? await getRegionInfo(client, data[0].oe_region_id, data[0].oe_level, 'oe') : null,
         epa: data[0]?.epa_region_id ? await getRegionInfo(client, data[0].epa_region_id, data[0].epa_level, 'epa') : null,
-        custom: custom ? [custom] : new Array<RegionNode>()
+        custom: data[0]?.rl_region_id ? await getRegionInfo(client, data[0].rl_region_id, data[0].rl_level, 'rl') : null
     }
     return associations
 }
@@ -131,6 +131,10 @@ export async function getOneEarthCatalog(client: SupabaseClient): Promise<Region
 
 export async function getEPACatalog(client: SupabaseClient): Promise<RegionCatalog> {
     return getStandardCatalog(client, 'epa')
+}
+
+export async function getCustomCatalog(client: SupabaseClient): Promise<RegionCatalog> {
+    return getStandardCatalog(client, 'rl')
 }
 
 async function getStandardCatalog(client: SupabaseClient, tablePrefix: string): Promise<RegionCatalog> {
@@ -156,16 +160,16 @@ async function getStandardCatalog(client: SupabaseClient, tablePrefix: string): 
     }
 
     const level1: Array<RegionNode> = result1.data.map((entry) => {
-        return {id: entry.id, name: entry.name, level: 1}
+        return {id: entry.id, name: entry.name, level: 1, description: entry.description || ''}
     })
     const level2: Array<RegionNode> = result2.data.map((entry) => {
-        return {id: entry.id, name: entry.name, level: 2, parentId: entry.parent_id}
+        return {id: entry.id, name: entry.name, level: 2, description: entry.description || '', parentId: entry.parent_id}
     })
     const level3: Array<RegionNode> = result3.data.map((entry) => {
-        return {id: entry.id, name: entry.name, level: 3, parentId: entry.parent_id}
+        return {id: entry.id, name: entry.name, level: 3, description: entry.description || '', parentId: entry.parent_id}
     })
     const level4: Array<RegionNode> = result4.data.map((entry) => {
-        return {id: entry.id, name: entry.name, level: 4, parentId: entry.parent_id}
+        return {id: entry.id, name: entry.name, level: 4, description: entry.description || '', parentId: entry.parent_id}
     })
 
     return {level1, level2, level3, level4}
@@ -375,14 +379,14 @@ export async function getLinkTypes(client: SupabaseClient): Promise<Array<LinkTy
 }
 
 //
-// An undefined value = no change, don't update
-// a NULL value = update table, set to NULL
+// Parameter choices: An undefined value = no change, don't update.
+// a NULL value = update table, set to NULL = delete
 export async function updateRegionAssociations(
     client: SupabaseClient,
     ownerId: string,
-    oeRegion: {id: number, level: number} | null | undefined,
-    epaRegion: {id: number, level: number} | null | undefined,
-    customId: string | null | undefined
+    oeRegion: RegionNode | null | undefined,
+    epaRegion:RegionNode | null | undefined,
+    customRegion: RegionNode | null | undefined
 ) {
 
     const updates: any = {owner_id: ownerId}
@@ -394,8 +398,9 @@ export async function updateRegionAssociations(
         updates['epa_region_id'] = epaRegion ? epaRegion.id : null
         updates['epa_level'] = epaRegion ? epaRegion.level : null
     }
-    if (customId !== undefined) {
-        updates['custom_id'] = customId || null
+    if (customRegion !== undefined) {
+        updates['rl_region_id'] = customRegion ? customRegion.id : null
+        updates['rl_level'] = customRegion ? customRegion.level : null
     }
 
     const {data, error} = await client.from('region_associations').upsert(updates)

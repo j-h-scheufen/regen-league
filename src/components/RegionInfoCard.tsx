@@ -14,9 +14,10 @@ export default function RegionInfoCard() {
                 {(!associations || (
                     (!associations.oneEarth || associations.oneEarth.length === 0) &&
                     (!associations.epa || associations.epa.length === 0) &&
-                    associations.custom.length === 0)) ?
+                    (!associations.custom || associations.custom.length === 0))
+                ) ?
                     (<Text>No region data configured!</Text>)
-                    :
+                :
                     <Box>
                         {associations?.oneEarth && associations.oneEarth.length > 0 && (
                             <Box direction="column">
@@ -48,11 +49,16 @@ export default function RegionInfoCard() {
                                 </Box>
                             </Box>
                         )}
-                        {associations && associations.custom?.length > 0 && (
+                        {associations?.custom && associations.custom.length > 0 && (
                             <Box direction="column">
                                 <Heading level="4" margin={{vertical: "small"}}>Other</Heading>
-                                {associations.custom.map((item) => (
-                                    <Link key={item.id} href={item.link || ''}>{item.name}</Link>))}
+                                <Box basis="1/2">
+                                    <Text>{associations.custom[0] && (<Link
+                                        href={associations.custom[0]?.link || ''}>{associations.custom[0]?.name}</Link>)}</Text>
+                                </Box>
+                                <Box basis="1/2">
+                                    <Text>{associations.custom[0].description}</Text>
+                                </Box>
                             </Box>
                         )}
                     </Box>

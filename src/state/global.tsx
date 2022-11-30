@@ -11,9 +11,16 @@ import {
     Profile,
     RegionAssociations,
     LinkDetails,
-    MemberDetails
+    MemberDetails, Role
 } from "../utils/types";
-import {getEPACatalog, getLinkTypes, getOneEarthCatalog} from "../utils/supabase";
+import {
+    getCustomCatalog,
+    getEPACatalog,
+    getHubRoles,
+    getLinkTypes,
+    getOneEarthCatalog,
+    getProjectRoles
+} from "../utils/supabase";
 
 export const dbClientAtom = atom<SupabaseClient>((get) => createBrowserSupabaseClient())
 
@@ -45,6 +52,18 @@ export const epaCatalogAtom = atom<Promise<RegionCatalog>>(async (get) => {
     return getEPACatalog(get(dbClientAtom))
 })
 
+export const customCatalogAtom = atom<Promise<RegionCatalog>>(async (get) => {
+    return getCustomCatalog(get(dbClientAtom))
+})
+
+export const hubRolesAtom = atom<Promise<Array<Role>>>(async (get) => {
+    return getHubRoles(get(dbClientAtom))
+})
+
+export const projectRolesAtom = atom<Promise<Array<Role>>>(async (get) => {
+    return getProjectRoles(get(dbClientAtom))
+})
+
 export const regionAssociationsAtom = atom<RegionAssociations | null>(null)
 export const linkDetailsAtom = atom<Array<LinkDetails>>(new Array<LinkDetails>())
-export const membersAtom = atom<Array<MemberDetails>>(new Array<MemberDetails>())
+export const memberDetailsAtom = atom<Array<MemberDetails>>(new Array<MemberDetails>())

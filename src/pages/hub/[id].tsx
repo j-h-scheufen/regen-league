@@ -5,7 +5,7 @@ import {useHydrateAtoms} from "jotai/utils";
 
 import {
   getHubData,
-  getHubMembersData,
+  getHubMembers,
   getLinksData,
   getServerClient,
   isUserHubAdmin,
@@ -13,14 +13,14 @@ import {
 } from "../../utils/supabase";
 import {currentHubAtom, isHubAdminAtom} from "../../state/hub";
 import HubMain from "../../components/hub/HubMain";
-import {linkDetailsAtom, membersAtom, regionAssociationsAtom} from "../../state/global";
+import {linkDetailsAtom, memberDetailsAtom, regionAssociationsAtom} from "../../state/global";
 
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
   const hubId = ctx.params?.id as string
   const {client, session} = await getServerClient(ctx)
   const hubData = await getHubData(client, hubId)
   const associationsData = await getRegionAssociations(client, hubId)
-  const membersData = await getHubMembersData(client, hubId);
+  const membersData = await getHubMembers(client, hubId);
   const linksData = await getLinksData(client, hubId)
   const isAdmin = session?.user ? await isUserHubAdmin(client, session.user.id, hubId) : false
 
@@ -44,7 +44,7 @@ export default function HubPage({ hub, members, links, regionAssociations, isHub
       [isHubAdminAtom, isHubAdmin],
       [linkDetailsAtom, links],
       [regionAssociationsAtom, regionAssociations],
-      [membersAtom, members]] as const;
+      [memberDetailsAtom, members]] as const;
 
   return (
       <JotaiProvider initialValues={initialPageState}>

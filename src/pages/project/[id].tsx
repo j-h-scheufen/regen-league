@@ -2,7 +2,7 @@ import {GetServerSidePropsContext} from "next";
 import {atom} from "jotai";
 import {Box, Heading} from "grommet";
 
-import {getLinksData, getProjectData, getProjectMembersData, getServerClient} from "../../utils/supabase";
+import {getLinksData, getProjectData, getProjectMembers, getServerClient} from "../../utils/supabase";
 import LinksCard from "../../components/LinksCard";
 import MembersCard from "../../components/MembersCard";
 import ProjectAttributesCard from "../../components/project/ProjectAttributesCard";
@@ -21,7 +21,7 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
   const {client} = await getServerClient(ctx)
 
   const projectData = await getProjectData(client, projectId)
-  const membersData = await getProjectMembersData(client, projectId)
+  const membersData = await getProjectMembers(client, projectId)
   const linksData = await getLinksData(client, projectId)
 
   return {

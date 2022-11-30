@@ -4,8 +4,8 @@ import {waitForAll} from "jotai/utils";
 import {useCallback} from "react";
 import {useSupabaseClient} from "@supabase/auth-helpers-react";
 
-import {epaCatalogAtom, oneEarthCatalogAtom, regionAssociationsAtom} from "../state/global";
-import {RegionNode} from "../utils/types";
+import {customCatalogAtom, epaCatalogAtom, oneEarthCatalogAtom, regionAssociationsAtom} from "../state/global";
+import {RegionInfo, RegionNode} from "../utils/types";
 import RegionInfoSelector, {selectionAtom} from "./project/RegionInfoSelector";
 import {updateRegionAssociations} from "../utils/supabase";
 
@@ -13,14 +13,14 @@ type Props = {
     ownerId: string
 }
 
-const oeSelectionAtom = atom<Array<RegionNode | null> | null>(null)
-const epaSelectionAtom = atom<Array<RegionNode | null> | null>(null)
-const customSelectionAtom = atom<RegionNode | null>(null)
+const oeSelectionAtom = atom<RegionInfo | null>(null)
+const epaSelectionAtom = atom<RegionInfo | null>(null)
+const customSelectionAtom = atom<RegionInfo | null>(null)
 const dirtyAtom = atom<boolean>(false)
 const loadingAtom = atom<boolean>(false)
 
 export default function RegionSelectorPanel({ ownerId }: Props) {
-    const [oeCatalog, epaCatalog] = useAtomValue(waitForAll([oneEarthCatalogAtom, epaCatalogAtom]))
+    const [oeCatalog, epaCatalog, customCatalog] = useAtomValue(waitForAll([oneEarthCatalogAtom, epaCatalogAtom, customCatalogAtom]))
     const [associations, setAssociations] = useAtom(regionAssociationsAtom)
     const [oeSelection, setOeSelection] = useAtom(oeSelectionAtom)
     const [epaSelection, setEpaSelection] = useAtom(epaSelectionAtom)
@@ -32,11 +32,12 @@ export default function RegionSelectorPanel({ ownerId }: Props) {
     const updateRegions = useCallback(async () => {
         let oeRegion
         let epaRegion
+        let customRegion
         if (oeSelection) {
-            if (oeSelection.length > 0) {
+            if (oeSelection.length > 0) { // the length of the array returned from the RegionInfoSelector reflects how many levels down were configured by the user
                 const region = oeSelection[oeSelection.length - 1]
                 if (region?.id && region.level)
-                    oeRegion = {id: region.id, level: region.level}
+                    oeRegion = {...region}
             }
             else
                 oeRegion = null
@@ -45,16 +46,26 @@ export default function RegionSelectorPanel({ ownerId }: Props) {
             if (epaSelection.length > 0) {
                 const region = epaSelection[epaSelection.length - 1]
                 if (region?.id && region.level)
-                    epaRegion = {id: region.id, level: region.level}
+                    epaRegion = {...region}
             }
             else
                 epaRegion = null
         }
 
-        const newRegions = await updateRegionAssociations(client, ownerId!, oeRegion, epaRegion,undefined)
+        if (customSelection) {
+            if (customSelection.length > 0) {
+                const region = customSelection[customSelection.length - 1]
+                if (region?.id && region.level)
+                    customRegion = {...region}
+            }
+            else
+                customRegion = null
+        }
+
+        const newRegions = await updateRegionAssociations(client, ownerId!, oeRegion, epaRegion, customRegion)
         setAssociations(newRegions)
         console.log("AFTER UPDATE: "+JSON.stringify(newRegions))
-    }, [client, oeSelection, epaSelection, setAssociations, ownerId])
+    }, [client, oeSelection, epaSelection, customSelection, setAssociations, ownerId])
 
     return (
         <Card pad="medium">
@@ -83,6 +94,17 @@ export default function RegionSelectorPanel({ ownerId }: Props) {
                             labels={['Level 1', 'Level 2']}
                             onChange={(update) => {
                                 setEpaSelection(update)
+                                setDirty(true)
+                            }}
+                        />
+                    </JotaiProvider>
+                    <JotaiProvider initialValues={[[selectionAtom, associations?.custom || null]] as const}>
+                        <RegionInfoSelector
+                            title="Other"
+                            regions={[customCatalog.level1]}
+                            labels={[]}
+                            onChange={(update) => {
+                                setCustomSelection(update)
                                 setDirty(true)
                             }}
                         />

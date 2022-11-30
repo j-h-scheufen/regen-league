@@ -51,9 +51,24 @@ create trigger on_auth_user_created
   for each row execute procedure public.handle_new_user();
 ```
 
-4. Function get_hub_members and get_project_members
-Custom functions are being used to perform JOIN queries which are not possible via the supabase-js functionality
+4. Special getter functions to perform JOIN queries which are not possible via the supabase-js functionality
 ```
+create or replace function public.get_hub_member(hub_id uuid, user_id uuid)
+returns table (
+  user_id uuid,
+  username varchar,
+  avatar_filename varchar,
+  role_name varchar
+)
+language sql
+as $$
+  SELECT p.id, p.username, p.avatar_filename, hr.name
+  FROM hub_members hm
+  JOIN profiles p ON (hm.user_id = p.id)
+  JOIN hub_roles hr ON (hm.role_id = hr.id)
+  WHERE hm.hub_id = $1
+  AND hm.user_id = $2
+$$;
 
 create or replace function public.get_hub_members(hub_id uuid)
 returns table (
@@ -71,6 +86,36 @@ as $$
   WHERE hm.hub_id = $1;
 $$;
 
+create or replace function public.get_non_hub_members(hub_id uuid)
+returns table (
+  user_id uuid,
+  username varchar,
+  avatar_filename varchar
+)
+language sql
+as $$
+  SELECT p.id, p.username, p.avatar_filename
+  FROM profiles p
+  WHERE p.id NOT IN (SELECT hm.user_id from hub_members hm where hm.hub_id  = $1)
+$$;
+
+create or replace function public.get_project_member(project_id uuid, user_id uuid)
+returns table (
+  user_id uuid,
+  username varchar,
+  avatar_filename varchar,
+  role_name varchar
+)
+language sql
+as $$
+  SELECT p.id, p.username, p.avatar_filename, pr.name
+  FROM project_members pm
+  JOIN profiles p ON (pm.user_id = p.id)
+  JOIN project_roles pr ON (pm.role_id = pr.id)
+  WHERE pm.project_id = $1
+  AND pm.user_id = $2;
+$$;
+
 create or replace function public.get_project_members(project_id uuid)
 returns table (
   user_id uuid,
@@ -85,6 +130,19 @@ as $$
   JOIN profiles p ON (pm.user_id = p.id)
   JOIN project_roles pr ON (pm.role_id = pr.id)
   WHERE pm.project_id = $1;
+$$;
+
+create or replace function public.get_non_project_members(project_id uuid)
+returns table (
+  user_id uuid,
+  username varchar,
+  avatar_filename varchar
+)
+language sql
+as $$
+  SELECT p.id, p.username, p.avatar_filename
+  FROM profiles p
+  WHERE p.id NOT IN (SELECT pm.user_id from project_members pm where pm.project_id  = $1)
 $$;
 
 create or replace function public.get_user_projects(user_id uuid)
@@ -143,6 +201,37 @@ as $$
   WHERE br.id = $1;
 $$;
 
+```
+
+5. Added ON CASCADE DELETE clause to the profiles table to automatically delete a profile when a user is deleted.
+
+The Supabase UI cannot handle defining cascading deletes, so a table either has to be created from scratch via SQL CREATE
+or an existing table can be altered in the following way.
+
+This command lists existing constraints on tables (see also https://stackoverflow.com/questions/69251891/delete-associated-records-in-supabase:)
+```
+SELECT con.*
+    FROM pg_catalog.pg_constraint con
+        INNER JOIN pg_catalog.pg_class rel
+                      ON rel.oid = con.conrelid
+        INNER JOIN pg_catalog.pg_namespace nsp
+                      ON nsp.oid = connamespace
+    WHERE 1=1
+         AND rel.relname = 'profiles';
+```
+Then drop and re-add the appropriate constraint. For profiles this was `profiles_id_fkey`
+```
+ALTER TABLE public.profiles
+DROP CONSTRAINT profiles_id_fkey,
+ADD CONSTRAINT profiles_id_fkey
+    FOREIGN KEY (id)
+    REFERENCES auth.users(id)
+    ON DELETE CASCADE;
+```
+
+6. Functions joining data across a 4-level region tables to retrieve tuples of data.
+
+```
 create or replace function public.get_oe_region_info_l1(region_id int)
 RETURNS TABLE (
     l1_id int,
@@ -315,4 +404,90 @@ as $$
   WHERE l4.id = $1;
 $$;
 
+create or replace function public.get_rl_region_info_l1(region_id uuid)
+RETURNS TABLE (
+    l1_id uuid,
+    l1_name varchar,
+    l1_link varchar
+)
+language sql
+as $$
+  SELECT 
+    l1.id AS l1_id, l1.name AS l1_name, l1.link AS l1_link
+  FROM rl_regions_1 l1
+  WHERE l1.id = $1;
+$$;
+
+create or replace function public.get_rl_region_info_l2(region_id uuid)
+RETURNS TABLE (
+    l1_id uuid,
+    l1_name varchar,
+    l1_link varchar,
+    l2_id uuid,
+    l2_name varchar,
+    l2_link varchar
+)
+language sql
+as $$
+  SELECT 
+    l1.id AS l1_id, l1.name AS l1_name, l1.link AS l1_link,
+    l2.id AS l2_id, l2.name AS l2_name, l2.link AS l2_link
+  FROM rl_regions_1 l1
+  JOIN rl_regions_2 l2 ON (l2.parent_id = l1.id)
+  WHERE l2.id = $1;
+$$;
+
+create or replace function public.get_rl_region_info_l3(region_id uuid)
+RETURNS TABLE (
+    l1_id uuid,
+    l1_name varchar,
+    l1_link varchar,
+    l2_id uuid,
+    l2_name varchar,
+    l2_link varchar,
+    l3_id uuid,
+    l3_name varchar,
+    l3_link varchar
+)
+language sql
+as $$
+  SELECT 
+    l1.id AS l1_id, l1.name AS l1_name, l1.link AS l1_link,
+    l2.id AS l2_id, l2.name AS l2_name, l2.link AS l2_link,
+    l3.id AS l3_id, l3.name AS l3_name, l3.link AS l3_link
+  FROM rl_regions_1 l1
+  JOIN rl_regions_2 l2 ON (l2.parent_id = l1.id)
+  JOIN rl_regions_3 l3 ON (l3.parent_id = l2.id)
+  WHERE l3.id = $1;
+$$;
+
+create or replace function public.get_rl_region_info_l4(region_id uuid)
+RETURNS TABLE (
+    l1_id uuid,
+    l1_name varchar,
+    l1_link varchar,
+    l2_id uuid,
+    l2_name varchar,
+    l2_link varchar,
+    l3_id uuid,
+    l3_name varchar,
+    l3_link varchar,
+    l4_id uuid,
+    l4_name varchar,
+    l4_link varchar
+)
+language sql
+as $$
+  SELECT 
+    l1.id AS l1_id, l1.name AS l1_name, l1.link AS l1_link,
+    l2.id AS l2_id, l2.name AS l2_name, l2.link AS l2_link,
+    l3.id AS l3_id, l3.name AS l3_name, l3.link AS l3_link,
+    l4.id AS l4_id, l4.name AS l4_name, l4.link AS l4_link
+  FROM rl_regions_1 l1
+  JOIN rl_regions_2 l2 ON (l2.parent_id = l1.id)
+  JOIN rl_regions_3 l3 ON (l3.parent_id = l2.id)
+  JOIN rl_regions_4 l4 ON (l4.parent_id = l3.id)
+  WHERE l4.id = $1;
+$$;
 ```
+

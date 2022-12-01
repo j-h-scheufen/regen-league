@@ -21,7 +21,7 @@ import {hubRolesAtom, memberDetailsAtom, projectRolesAtom} from "../state/global
 import {MemberDetails, Profile, Role} from "../utils/types";
 import {
     addHubMembership,
-    addProjectMembership,
+    addProjectMembership, getUserProfile,
     removeHubMembership,
     removeProjectMembership
 } from "../utils/supabase";
@@ -99,12 +99,8 @@ export default function MembersForm({orgId, mode}: Props) {
                     await removeProjectMembership(client, orgId, deleteMember.userId)
 
                 const newMembers = members.filter(item => item.userId !== deleteMember.userId)
-                const newCandidate: Profile = {
-                    id: deleteMember.userId,
-                    avatarFilename: deleteMember.avatarFilename,
-                    avatarURL: deleteMember.avatarURL,
-                    username: deleteMember.username}
-                if (memberCandidates) {
+                const newCandidate = await getUserProfile(client, deleteMember.userId)
+                if (memberCandidates && newCandidate) {
                     memberCandidates.push(newCandidate)
                     setMemberCandidates([...memberCandidates])
                 }

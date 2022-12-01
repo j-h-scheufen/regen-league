@@ -1,24 +1,14 @@
 import React, {useCallback, useEffect} from "react";
-import {Github, Menu as MenuIcon, Twitter, Login, User as UserIcon} from "grommet-icons";
-import {
-    Anchor,
-    Box,
-    Grommet,
-    Header,
-    Heading,
-    Main,
-    Menu,
-    Nav,
-    type ThemeType,
-    Text
-} from 'grommet'
+import {Github, Login, Menu as MenuIcon, Twitter} from "grommet-icons";
+import {Anchor, Box, Grommet, Header, Heading, Main, Menu, Nav, type ThemeType} from 'grommet'
 import {useRouter} from "next/router";
-import {useAtom, useAtomValue} from "jotai";
+import {atom, useAtom, useAtomValue} from "jotai";
 import {useSession, useSupabaseClient, useUser} from "@supabase/auth-helpers-react";
 
 import {getUserProfile} from "../utils/supabase";
 import {currentAvatarUrlAtom, currentUserProfileAtom} from "../state/global";
 import ProfileAvatar from "./profile/ProfileAvatar";
+import {UserStatus} from "../utils/types";
 
 const theme: ThemeType = {
   global: {
@@ -51,7 +41,7 @@ export default function Layout({ title = 'Regen League', children }: LayoutProps
 
     const populateProfile = useCallback(async () => {
         if (session && !currentProfile) {
-            const profile = await getUserProfile(supabase, session!.user.id)
+            const profile = await getUserProfile(supabase, session.user.id)
             if (profile) {
                 setCurrentProfile(profile)
             }
@@ -98,7 +88,8 @@ export default function Layout({ title = 'Regen League', children }: LayoutProps
                     align="center"
                     overflow="auto"
                     justify="center"
-                    direction="column">
+                    direction="column"
+                >
                   {children}
                 </Main>
             </Box>

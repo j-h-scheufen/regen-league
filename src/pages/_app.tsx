@@ -9,6 +9,7 @@ import type {AppProps} from 'next/app'
 import {Suspense, useState} from "react";
 import {customCatalogAtom, epaCatalogAtom, linkTypesAtom, oneEarthCatalogAtom} from "../state/global";
 import {Text} from "grommet";
+import SuspenseSpinner from "../components/utils/SuspenseSpinner";
 
 export default function App({ Component, pageProps}: AppProps<{
     initialSession: Session,
@@ -27,7 +28,7 @@ export default function App({ Component, pageProps}: AppProps<{
 
     return (
         <JotaiProvider>
-            <Suspense fallback={<Text size="large" margin={{vertical: 'large', horizontal: 'large'}}>Loading ...</Text>}> {/* Needed to avoid infinite loop with async atoms that were not preloaded */}
+            <Suspense fallback={<SuspenseSpinner/>}> {/* Needed to avoid infinite loop with async atoms that were not preloaded */}
                 <GlobalStatePreloader/>
                 <SessionContextProvider
                     supabaseClient={client}

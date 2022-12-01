@@ -15,14 +15,12 @@ import {
     Project,
     LinkType,
     RegionNode,
-    RegionAssociations, Role
+    RegionAssociations, Role, UserStatus
 } from "./types";
 
 type DbHub = Database['public']['Tables']['hubs']['Row']
 type DbLinkInsert = Database['public']['Tables']['links']['Insert']
 type DbProject = Database['public']['Tables']['projects']['Row']
-type DbProjectRole = Database['public']['Tables']['project_roles']['Row']
-type DbHubRole = Database['public']['Tables']['hub_roles']['Row']
 type DbHubMember = Database['public']['Tables']['hub_members']['Row']
 type DbProjectMember = Database['public']['Tables']['project_members']['Row']
 
@@ -47,8 +45,9 @@ function createMemberDetails(client: SupabaseClient, userId: string, username: s
     return member
 }
 
-function createProfile(client: SupabaseClient, id: string, username: string, avatarFilename: string): Profile {
+function createProfile(client: SupabaseClient, id: string, username: string, avatarFilename: string, status: UserStatus): Profile {
     const p: Profile = {
+        status: status,
         id: id,
         username: username,
         avatarFilename: avatarFilename,
@@ -150,15 +149,6 @@ export async function getRegionAssociations(client: SupabaseClient, ownerId: str
     return associations
 }
 
-export async function getCustomRegion(client: SupabaseClient, id: string): Promise<RegionNode> {
-    const {data, error} = await client.from('custom_regions').select('*').eq('id', id).single()
-    if (error) {
-        console.error('Unable to retrieve custom region ID. Error: ' + error.message)
-        throw error
-    }
-    return {id: data.id, link: data.link, name: data.name, level: 0}
-}
-
 export async function getOneEarthCatalog(client: SupabaseClient): Promise<RegionCatalog> {
     return getStandardCatalog(client, 'oe')
 }
@@ -254,7 +244,7 @@ export async function getNonHubMembers(client: SupabaseClient, hubId: string): P
         throw error
     }
     return data ? data.map((dbProfile) => {
-        return createProfile(client, dbProfile.user_id, dbProfile.username, dbProfile.avatar_filename)
+        return createProfile(client, dbProfile.user_id, dbProfile.username, dbProfile.avatar_filename, dbProfile.status)
     }) : new Array<Profile>()
 }
 
@@ -265,7 +255,7 @@ export async function getNonProjectMembers(client: SupabaseClient, projectId: st
         throw error
     }
     return data ? data.map((dbProfile) => {
-        return createProfile(client, dbProfile.user_id, dbProfile.username, dbProfile.avatar_filename)
+        return createProfile(client, dbProfile.user_id, dbProfile.username, dbProfile.avatar_filename, dbProfile.status)
     }) : new Array<Profile>()
 }
 
@@ -318,7 +308,7 @@ export async function removeProjectMembership(client: SupabaseClient, projectId:
 }
 
 export async function getProjectRoles(client: SupabaseClient): Promise<Array<Role>> {
-    const {data, error} = await client.from('project_roles').select('*')
+    const {data, error} = await client.from('project_roles').select('*').order('name')
     if (error) {
         console.error('Unable to retrieve project roles. Error: '+error.message)
         throw error
@@ -327,7 +317,7 @@ export async function getProjectRoles(client: SupabaseClient): Promise<Array<Rol
 }
 
 export async function getHubRoles(client: SupabaseClient): Promise<Array<Role>> {
-    const {data, error} = await client.from('hub_roles').select('*')
+    const {data, error} = await client.from('hub_roles').select('*').order('name')
     if (error) {
         console.error('Unable to retrieve hub roles. Error: '+error.message)
         throw error
@@ -392,23 +382,13 @@ export async function getUserProfile(client: SupabaseClient, userId: string): Pr
         throw error
     }
     if (data) {
-        const newItem: Profile = {
-            id: data.id,
-            avatarFilename: data.avatar_filename,
-            avatarURL: '',
-            username: data.username
-        }
-        if (data.avatar_filename) {
-            const urlResult = client.storage.from('avatars').getPublicUrl(data.avatar_filename)
-            newItem.avatarURL = urlResult.data.publicUrl
-        }
-        return newItem
+        return createProfile(client, data.id, data.username, data.avatar_filename, data.status)
     }
     return null
 }
 
 export async function getHubs(client: SupabaseClient): Promise<Array<Hub>> {
-    const {data, error} = await client.from('hubs').select('*')
+    const {data, error} = await client.from('hubs').select('*').order('name')
     if (error) {
         console.error('Unable to retrieve hubs. Error: '+error.message)
         throw error
@@ -427,7 +407,7 @@ export async function getHubs(client: SupabaseClient): Promise<Array<Hub>> {
 }
 
 export async function getProjects(client: SupabaseClient): Promise<Array<Project>> {
-    const {data, error} = await client.from('projects').select('*')
+    const {data, error} = await client.from('projects').select('*').order('name')
     if (error) {
         console.error('Unable to retrieve projects. Error: '+error.message)
         throw error

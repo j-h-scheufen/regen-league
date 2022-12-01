@@ -25,6 +25,7 @@ import {
 export const dbClientAtom = atom<SupabaseClient>((get) => createBrowserSupabaseClient())
 
 export const currentUserProfileAtom = atom<Profile | null>(null)
+
 export const currentAvatarUrlAtom = atom<string>((get) => get(currentUserProfileAtom)?.avatarURL || '')
 
 export const linkTypesAtom = atom<Promise<Array<LinkType>>>(async (get) => {
@@ -65,5 +66,7 @@ export const projectRolesAtom = atom<Promise<Array<Role>>>(async (get) => {
 })
 
 export const regionAssociationsAtom = atom<RegionAssociations | null>(null)
+
 export const linkDetailsAtom = atom<Array<LinkDetails>>(new Array<LinkDetails>())
+
 export const memberDetailsAtom = atom<Array<MemberDetails>>(new Array<MemberDetails>())

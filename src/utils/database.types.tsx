@@ -266,18 +266,21 @@ export interface Database {
           created_at: string
           username: string | null
           avatar_filename: string | null
+          status: number
         }
         Insert: {
           id: string
           created_at?: string
           username?: string | null
           avatar_filename?: string | null
+          status?: number
         }
         Update: {
           id?: string
           created_at?: string
           username?: string | null
           avatar_filename?: string | null
+          status?: number
         }
       }
       project_members: {

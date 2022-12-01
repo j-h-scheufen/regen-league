@@ -64,7 +64,6 @@ export default function RegionSelectorPanel({ ownerId }: Props) {
 
         const newRegions = await updateRegionAssociations(client, ownerId!, oeRegion, epaRegion, customRegion)
         setAssociations(newRegions)
-        console.log("AFTER UPDATE: "+JSON.stringify(newRegions))
     }, [client, oeSelection, epaSelection, customSelection, setAssociations, ownerId])
 
     return (
@@ -109,12 +108,9 @@ export default function RegionSelectorPanel({ ownerId }: Props) {
                             }}
                         />
                     </JotaiProvider>
-                    {isDirty && (
-                        <Box direction="row" gap="medium" justify="end" margin={{ right: "small", vertical: 'medium' }}>
-                            <Button type="reset" label={loading ? 'Loading ...' : 'Reset'} disabled={loading} onClick={() => {}}/>
-                            <Button type="submit" primary label={loading ? 'Loading ...' : 'Update'} disabled={loading}/>
-                        </Box>
-                    )}
+                    <Box direction="row" gap="medium" justify="end" margin={{ right: "small", vertical: 'medium' }}>
+                        <Button type="submit" primary label={loading ? 'Loading ...' : 'Update'} disabled={loading || !isDirty}/>
+                    </Box>
                 </Form>
             </CardBody>
         </Card>

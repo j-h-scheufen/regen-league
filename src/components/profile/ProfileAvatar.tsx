@@ -26,7 +26,7 @@ function ProfileAvatar({profileId, name, avatarURL, size="medium", linkTo, role}
                                     margin="small"
                                     round="medium"/>
                                 {(role && role.toUpperCase() == 'ADMIN') && (
-                                    <Box background="orange" pad={{ horizontal: 'xsmall' }} round="small">
+                                    <Box background="light-6" pad={{ horizontal: 'xsmall' }} round="small">
                                         <Text size="xsmall" color="black">{role}</Text>
                                     </Box>
                                 )}

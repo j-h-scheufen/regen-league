@@ -1,4 +1,5 @@
 import React, {useCallback, useEffect} from "react";
+import {deepFreeze} from "grommet/utils"
 import {Github, Login, Menu as MenuIcon, Twitter} from "grommet-icons";
 import {Anchor, Box, Grommet, Header, Heading, Main, Menu, Nav, type ThemeType} from 'grommet'
 import {useRouter} from "next/router";
@@ -8,15 +9,17 @@ import {useSession, useSupabaseClient, useUser} from "@supabase/auth-helpers-rea
 import {getUserProfile} from "../utils/supabase";
 import {currentAvatarUrlAtom, currentUserProfileAtom} from "../state/global";
 import ProfileAvatar from "./profile/ProfileAvatar";
-import {UserStatus} from "../utils/types";
 
 const theme: ThemeType = {
-  global: {
-    font: {
-      family: 'RobotoRegular',
-      size: '18px',
-      height: '20px',
-    },
+    global: {
+        font: {
+            family: 'RobotoRegular',
+            size: '18px',
+            height: '20px',
+        },
+        colors: {
+            "brand": "#01a982",
+        }
   },
 }
 

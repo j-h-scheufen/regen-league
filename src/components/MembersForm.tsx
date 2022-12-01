@@ -152,7 +152,7 @@ export default function MembersForm({orgId, mode}: Props) {
                         onChange={(nextValue) => setNewMember(nextValue)}
                         onSubmit={() => addNewMember()}>
                         <Box direction="row">
-                            <FormField name="userId" htmlFor="candidateSelectId" label="Candidates" required>
+                            <FormField name="userId" htmlFor="candidateSelectId" label="Candidates" width="100%" required>
                                 <Select
                                     id="candidateSelectId"
                                     name="userId"

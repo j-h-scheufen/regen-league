@@ -1,7 +1,7 @@
 import {Box, Button, Heading, Page} from "grommet";
 import {useAtom, useAtomValue} from "jotai";
 
-import HubForm from "./HubForm";
+import HubAttributesForm from "./HubAttributesForm";
 import RegionInfoCard from "../RegionInfoCard";
 import LinksCard from "../LinksCard";
 import LinksForm from "../LinksForm";
@@ -23,13 +23,18 @@ export default function HubMain() {
         <Page align="center">
             {edit ? (
                 <Box width="large">
-                    <HubForm
+                    <HubAttributesForm
                         hub={currentHub}
                         onSubmit={() => setEdit(false)}
                         onCancel={() => setEdit(false)}/>
                     <RegionSelectorPanel ownerId={currentHub.id}/>
                     <LinksForm ownerId={currentHub.id}/>
                     <MembersForm orgId={currentHub.id} mode={Mode.HUB}/>
+                    <Button
+                        label="Done"
+                        style={{textAlign: 'center'}}
+                        onClick={() => setEdit(false)}
+                        margin={{top: "medium"}}/>
                 </Box>
             ) : (
                 <Box width="large">

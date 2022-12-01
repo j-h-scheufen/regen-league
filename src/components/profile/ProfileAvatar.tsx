@@ -1,4 +1,4 @@
-import {Anchor, Avatar, Box, Text} from 'grommet'
+import {Anchor, Avatar, Box, Stack, Text} from 'grommet'
 import {User as UserIcon} from "grommet-icons/icons";
 import React from "react";
 
@@ -7,22 +7,30 @@ type Props = {
     name?: string,
     avatarURL?: string,
     size?: "xsmall" | "small" | "medium" | "large" | "xlarge" | string,
-    linkTo?: string
+    linkTo?: string,
+    role?: string
 }
 
 const AnchorWrapper = ({ condition, url, children }: {condition: any, url: string | undefined, children: any}) =>
     (condition && url) ? <Anchor href={url}>{children}</Anchor> : children;
 
-function ProfileAvatar({profileId, name, avatarURL, size="medium", linkTo}: Props) {
+function ProfileAvatar({profileId, name, avatarURL, size="medium", linkTo, role}: Props) {
     const MyAvatar = ({url}: {url: string | undefined}) => {
         let content
         if (url)
             content = (<AnchorWrapper condition={linkTo} url={linkTo}>
-                            <Avatar
-                                src={url}
-                                size={size!}
-                                margin="small"
-                                round="medium"/>
+                            <Stack anchor="bottom-right">
+                                <Avatar
+                                    src={url}
+                                    size={size!}
+                                    margin="small"
+                                    round="medium"/>
+                                {(role && role.toUpperCase() == 'ADMIN') && (
+                                    <Box background="orange" pad={{ horizontal: 'xsmall' }} round="small">
+                                        <Text size="xsmall" color="black">{role}</Text>
+                                    </Box>
+                                )}
+                            </Stack>
                         </AnchorWrapper>)
         else
             content = (<AnchorWrapper condition={linkTo} url={linkTo}>

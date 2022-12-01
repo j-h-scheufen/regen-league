@@ -19,7 +19,9 @@ export default function MembersCard() {
                             profileId={member.userId}
                             name={member.username}
                             avatarURL={member.avatarURL}
-                            linkTo={'/profile/'+member.userId}/>
+                            linkTo={'/profile/'+member.userId}
+                            role={member.roleName}
+                        />
                     )}
                 </Box>
             </CardBody>

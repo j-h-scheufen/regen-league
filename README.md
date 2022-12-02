@@ -23,7 +23,7 @@ on storage.objects for select
 using ( bucket_id = 'public' );
 ```
 
-2. The app uses stored SQL functions to insert hubs and projects, so it can ensure that an admin is atomically assigned. These functions were allowed access in the following way:
+2. The app uses stored SQL functions to INSERT hubs and projects, e.g. to ensure that an admin is atomically assigned. These functions were authorized in the following way:
 ```
 ALTER DEFAULT PRIVILEGES REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC;
 
@@ -219,13 +219,41 @@ SELECT con.*
     WHERE 1=1
          AND rel.relname = 'profiles';
 ```
-Then drop and re-add the appropriate constraint. For profiles this was `profiles_id_fkey`
+Then drop and re-add the appropriate constraint. This procedure was used for the following constraints:
 ```
 ALTER TABLE public.profiles
 DROP CONSTRAINT profiles_id_fkey,
 ADD CONSTRAINT profiles_id_fkey
     FOREIGN KEY (id)
     REFERENCES auth.users(id)
+    ON DELETE CASCADE;
+
+ALTER TABLE public.project_members
+DROP CONSTRAINT project_members_project_id_fkey,
+ADD CONSTRAINT project_members_project_id_fkey
+    FOREIGN KEY (project_id)
+    REFERENCES public.projects(id)
+    ON DELETE CASCADE;
+
+ALTER TABLE public.hub_members
+DROP CONSTRAINT hub_members_hub_id_fkey,
+ADD CONSTRAINT hub_members_hub_id_fkey
+    FOREIGN KEY (hub_id)
+    REFERENCES public.hubs(id)
+    ON DELETE CASCADE;    
+
+ALTER TABLE public.projects_to_hubs
+DROP CONSTRAINT projects_to_hubs_hub_id_fkey,
+ADD CONSTRAINT projects_to_hubs_hub_id_fkey
+    FOREIGN KEY (project_id)
+    REFERENCES public.projects(id)
+    ON DELETE CASCADE;
+    
+ALTER TABLE public.projects_to_hubs
+DROP CONSTRAINT projects_to_hubs_hub_id_fkey,
+ADD CONSTRAINT projects_to_hubs_hub_id_fkey
+    FOREIGN KEY (hub_id)
+    REFERENCES public.hubs(id)
     ON DELETE CASCADE;
 ```
 

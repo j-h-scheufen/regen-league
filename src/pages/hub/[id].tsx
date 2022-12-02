@@ -26,11 +26,12 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
 
   return {
     props: {
-      hub: hubData,
-      members: membersData,
-      links: linksData,
-      regionAssociations: associationsData,
-      isHubAdmin: isAdmin,
+        key: hubId,
+        hub: hubData,
+        members: membersData,
+        links: linksData,
+        regionAssociations: associationsData,
+        isHubAdmin: isAdmin,
     }
   }
 }

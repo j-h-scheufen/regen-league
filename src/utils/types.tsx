@@ -82,6 +82,7 @@ export type RegionAssociations = {
 export type RegionInfo = Array<RegionNode>
 
 export type RegionCatalog = {
+    labels: Array<string>
     level1: Array<RegionNode>
     level2: Array<RegionNode>
     level3: Array<RegionNode>

@@ -150,18 +150,18 @@ export async function getRegionAssociations(client: SupabaseClient, ownerId: str
 }
 
 export async function getOneEarthCatalog(client: SupabaseClient): Promise<RegionCatalog> {
-    return getStandardCatalog(client, 'oe')
+    return getStandardCatalog(client, 'oe', ['Realm','Subrealm','Bioregion','Ecoregion'])
 }
 
 export async function getEPACatalog(client: SupabaseClient): Promise<RegionCatalog> {
-    return getStandardCatalog(client, 'epa')
+    return getStandardCatalog(client, 'epa', ['Level I','Level II','Level III','Level IV'])
 }
 
 export async function getCustomCatalog(client: SupabaseClient): Promise<RegionCatalog> {
-    return getStandardCatalog(client, 'rl')
+    return getStandardCatalog(client, 'rl', ['Bioregion','Bioregion','Bioregion','Bioregion'])
 }
 
-async function getStandardCatalog(client: SupabaseClient, tablePrefix: string): Promise<RegionCatalog> {
+async function getStandardCatalog(client: SupabaseClient, tablePrefix: string, labels: Array<string>): Promise<RegionCatalog> {
     const result1 = await client.from(tablePrefix+'_regions_1').select('*')
     if (result1.error) {
         console.error('Unable to retrieve regions level 1 with table prefix: '+tablePrefix+'. Error: ' + result1.error.message)
@@ -196,7 +196,7 @@ async function getStandardCatalog(client: SupabaseClient, tablePrefix: string): 
         return {id: entry.id, name: entry.name, level: 4, description: entry.description || '', parentId: entry.parent_id}
     })
 
-    return {level1, level2, level3, level4}
+    return {labels, level1, level2, level3, level4}
 }
 
 export async function getHubMembers(client: SupabaseClient, hubId: string): Promise<Array<MemberDetails>> {

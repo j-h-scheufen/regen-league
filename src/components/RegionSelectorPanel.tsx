@@ -5,8 +5,8 @@ import {useCallback} from "react";
 import {useSupabaseClient} from "@supabase/auth-helpers-react";
 
 import {customCatalogAtom, epaCatalogAtom, oneEarthCatalogAtom, regionAssociationsAtom} from "../state/global";
-import {RegionInfo, RegionNode} from "../utils/types";
-import RegionInfoSelector, {selectionAtom} from "./project/RegionInfoSelector";
+import {RegionInfo} from "../utils/types";
+import RegionInfoSelector, {selectionAtom} from "./RegionInfoSelector";
 import {updateRegionAssociations} from "../utils/supabase";
 
 type Props = {

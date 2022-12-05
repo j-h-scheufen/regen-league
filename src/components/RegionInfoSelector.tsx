@@ -1,7 +1,7 @@
 import {Box, FormField, Heading, Select} from 'grommet'
 import {atom, useAtom} from "jotai";
 
-import {RegionNode} from "../../utils/types";
+import {RegionNode} from "../utils/types";
 
 type Props = {
     title: string

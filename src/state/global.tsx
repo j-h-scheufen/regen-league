@@ -49,13 +49,13 @@ export const oneEarthCatalogAtom = atom<Promise<RegionCatalog>>(async (get) => {
     return getOneEarthCatalog(get(dbClientAtom))
 })
 
-// export const oneEarthLabelsAtom = atom<Array<string>>((get) => get(oneEarthCatalogAtom).labels)
+export const oneEarthLabelsAtom = atom<Array<string>>((get) => get(oneEarthCatalogAtom).labels)
 
 export const epaCatalogAtom = atom<Promise<RegionCatalog>>(async (get) => {
     return getEPACatalog(get(dbClientAtom))
 })
 
-// export const epaLabelsAtom = atom<Array<string>>((get) => get(epaCatalogAtom).labels)
+export const epaLabelsAtom = atom<Array<string>>((get) => get(epaCatalogAtom).labels)
 
 export const customCatalogAtom = atom<Promise<RegionCatalog>>(async (get) => {
     return getCustomCatalog(get(dbClientAtom))

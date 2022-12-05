@@ -1,7 +1,5 @@
 import {GetServerSidePropsContext, InferGetServerSidePropsType} from "next";
-import {Box, Button, Heading, Page} from "grommet";
-import {useAtom, Provider as JotaiProvider} from "jotai";
-import {useHydrateAtoms} from "jotai/utils";
+import {Provider as JotaiProvider} from "jotai";
 
 import {
   getHubData,

@@ -2,9 +2,14 @@
 
 Created in service of bioregionalism: https://utopia.org/guide/what-is-a-bioregion-and-which-ones-are-there/
 
-Using bioregion data from the following sources:
+This is essentially a mapping exercise to catalogue the regenerative movement via an app that can permeate the space
+by first letting power users map out what they know in terms of entities, projects and efforts using publicly available information. 
+Actual operators of projects can later claim and take ownership of their profiles, if desired!
+
+Bioregion data from the following sources was used:
 - One Earth Bioregions 2020 framework: https://www.oneearth.org/bioregions/
 - EPA Ecoregions definition: https://www.epa.gov/eco-research/ecoregions-north-america
+
 
 ## Requirements
 

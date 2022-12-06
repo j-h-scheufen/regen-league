@@ -117,6 +117,24 @@ export async function getHubsForUser(client: SupabaseClient, userId: string): Pr
     return data as Array<MembershipItem>
 }
 
+export async function getProjectsForHub(client: SupabaseClient, hubId: string): Promise<Array<Project>> {
+    const {data, error} = await client.rpc('get_hub_projects', {hub_id: hubId})
+    if (error) {
+        console.error('Unable to retrieve projects for hub ID ' + hubId + '. Error: ' + error.message)
+        throw error
+    }
+    return data || new Array<Project>()
+}
+
+export async function getNonProjectsForHub(client: SupabaseClient, hubId: string): Promise<Array<Project>> {
+    const {data, error} = await client.rpc('get_non_hub_projects', {hub_id: hubId})
+    if (error) {
+        console.error('Unable to retrieve project candidates for hub ID ' + hubId + '. Error: ' + error.message)
+        throw error
+    }
+    return data || new Array<Project>()
+}
+
 async function getRegionInfo(client: SupabaseClient, regionId: number | string, level: number, tablePrefix: string): Promise<RegionInfo> {
     const tablename = 'get_'+tablePrefix+'_region_info_l'+level
     const {data, error} = await client.rpc(tablename, {region_id: regionId}).single()

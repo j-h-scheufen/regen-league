@@ -11,7 +11,7 @@ import {
     Profile,
     RegionAssociations,
     LinkDetails,
-    MemberDetails, Role
+    MemberDetails, Role, Project
 } from "../utils/types";
 import {
     getCustomCatalog,
@@ -74,3 +74,5 @@ export const regionAssociationsAtom = atom<RegionAssociations | null>(null)
 export const linkDetailsAtom = atom<Array<LinkDetails>>(new Array<LinkDetails>())
 
 export const memberDetailsAtom = atom<Array<MemberDetails>>(new Array<MemberDetails>())
+
+export const projectsAtom = atom<Array<Project>>(new Array<Project>())

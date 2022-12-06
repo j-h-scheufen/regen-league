@@ -13,6 +13,12 @@ Bioregion data from the following sources was used:
 
 ## Requirements
 
+### General notes on using Supabase
+The app makes use of a lot of stored functions to select data and sometimes to store it. If a table being queried uses RLS
+and there is no rule corresponding rule, the function just returns an empty result and no error. Using the JS API to query
+a table correctly returns an error. This is mentioned here as a warning when working with Supabase. The current behavior
+is considered a bug!
+
 ### Generating types for Supabase
 In order for the code to work, the types need to be exported from the Supabase tables 
 
@@ -206,6 +212,33 @@ as $$
   WHERE br.id = $1;
 $$;
 
+create or replace function public.get_hub_projects(hub_id uuid)
+returns table (
+  id uuid,
+  name varchar,
+  description text
+)
+language sql
+as $$
+  SELECT p.id, p.name, p.description
+  FROM projects p
+  JOIN projects_to_hubs pth ON (pth.project_id = p.id)
+  WHERE pth.hub_id = $1;
+$$;
+
+create or replace function public.get_non_hub_projects(hub_id uuid)
+returns table (
+  id uuid,
+  name varchar,
+  description text
+)
+language sql
+as $$
+  SELECT p.id, p.name, p.description
+  FROM projects p
+  WHERE p.id NOT IN (SELECT pth.project_id FROM projects_to_hubs pth WHERE pth.hub_id = $1);
+$$;
+
 ```
 
 5. Added ON CASCADE DELETE clause to the profiles table to automatically delete a profile when a user is deleted.
@@ -248,8 +281,8 @@ ADD CONSTRAINT hub_members_hub_id_fkey
     ON DELETE CASCADE;    
 
 ALTER TABLE public.projects_to_hubs
-DROP CONSTRAINT projects_to_hubs_hub_id_fkey,
-ADD CONSTRAINT projects_to_hubs_hub_id_fkey
+DROP CONSTRAINT projects_to_hubs_project_id_fkey,
+ADD CONSTRAINT projects_to_hubs_project_id_fkey
     FOREIGN KEY (project_id)
     REFERENCES public.projects(id)
     ON DELETE CASCADE;

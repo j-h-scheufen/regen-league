@@ -10,6 +10,7 @@ import HubAttributesCard from "./HubAttributesCard";
 import {currentHubAtom, editAtom, isHubAdminAtom} from "../../state/hub";
 import RegionSelectorPanel from "../RegionSelectorPanel";
 import MembersForm, {Mode} from "../MembersForm";
+import ProjectConnectionsCard from "./ProjectConnectionsCard";
 
 export default function HubMain() {
     const currentHub = useAtomValue(currentHubAtom)
@@ -45,6 +46,7 @@ export default function HubMain() {
                     <HubAttributesCard/>
                     <RegionInfoCard/>
                     <LinksCard/>
+                    <ProjectConnectionsCard/>
                     {isAdmin && <Button
                         label="Edit"
                         style={{textAlign: 'center'}}

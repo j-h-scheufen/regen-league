@@ -123,8 +123,8 @@ export default function MembersForm({orgId, roles, initialCandidates, performAdd
     }
 
     return (
-        <Card pad="small">
-            <CardHeader pad="small">Members</CardHeader>
+        <Card pad="small" margin={{vertical: "small"}}>
+            <CardHeader justify="center"><Text size="large">Members</Text></CardHeader>
             <CardBody>
                 <Box pad="small" margin={{bottom: "small"}}>
                     <Form<NewMember>

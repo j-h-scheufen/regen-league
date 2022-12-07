@@ -30,9 +30,7 @@ export default function HubMain() {
             {edit ? (
                 <Box width="large">
                     <HubAttributesForm
-                        hub={currentHub}
-                        onSubmit={() => setEdit(false)}
-                        onCancel={() => setEdit(false)}/>
+                        hub={currentHub}/>
                     <RegionSelectorPanel
                         ownerId={currentHub.id}/>
                     <LinksForm

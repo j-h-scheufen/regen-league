@@ -111,8 +111,8 @@ export default function ProjectConnectionsForm({ hubId }: Props) {
     }
 
     return (
-        <Card pad="small">
-            <CardHeader pad="small">Manage Projects</CardHeader>
+        <Card pad="small" margin={{vertical: "small"}}>
+            <CardHeader justify="center"><Text size="large">Projects</Text></CardHeader>
             <CardBody>
                     <Box pad="small" margin={{bottom: "small"}}>
                         <Form<ProjectHolder>

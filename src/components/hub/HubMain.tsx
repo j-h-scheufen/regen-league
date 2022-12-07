@@ -9,11 +9,12 @@ import MembersCard from "../MembersCard";
 import HubAttributesCard from "./HubAttributesCard";
 import {currentHubAtom, editAtom, hubMemberCandidatesAtom, isHubAdminAtom} from "../../state/hub";
 import RegionSelectorPanel from "../RegionSelectorPanel";
-import MembersForm, {Mode} from "../MembersForm";
+import MembersForm from "../MembersForm";
 import ProjectConnectionsCard from "./ProjectConnectionsCard";
 import ProjectConnectionsForm from "./ProjectConnectionsForm";
 import {waitForAll} from "jotai/utils";
-import {hubRolesAtom, projectRolesAtom} from "../../state/global";
+import {hubRolesAtom} from "../../state/global";
+import {addHubMembership, removeHubMembership} from "../../utils/supabase";
 
 export default function HubMain() {
     const [hubRoles, initialHubCandidates] = useAtomValue(waitForAll([hubRolesAtom, hubMemberCandidatesAtom]))
@@ -38,9 +39,10 @@ export default function HubMain() {
                         ownerId={currentHub.id}/>
                     <MembersForm
                         orgId={currentHub.id}
-                        mode={Mode.HUB}
                         roles={hubRoles}
-                        initialCandidates={initialHubCandidates}/>
+                        initialCandidates={initialHubCandidates}
+                        performAdd={addHubMembership}
+                        performDelete={removeHubMembership}/>
                     <ProjectConnectionsForm
                         hubId={currentHub.id}/>
                     <Button

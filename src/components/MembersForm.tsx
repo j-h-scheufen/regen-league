@@ -13,26 +13,20 @@ import {
 } from 'grommet'
 import React, {useCallback} from "react";
 import {FormTrash} from "grommet-icons";
-import {useSupabaseClient} from "@supabase/auth-helpers-react";
+import {SupabaseClient, useSupabaseClient} from "@supabase/auth-helpers-react";
 import {atom, useAtom, useAtomValue} from "jotai";
 import {useHydrateAtoms} from "jotai/utils";
 
 import {memberDetailsAtom} from "../state/global";
 import {MemberDetails, Profile, Role} from "../utils/types";
-import {
-    addHubMembership,
-    addProjectMembership, getUserProfile,
-    removeHubMembership,
-    removeProjectMembership
-} from "../utils/supabase";
-import {or} from "multiformats/bases/base";
+import {getUserProfile} from "../utils/supabase";
 
 type Props = {
     orgId: string
-    mode: string
     roles: Array<Role>
     initialCandidates: Array<Profile>
-
+    performAdd: (client: SupabaseClient, orgId: string, userId: string, roleId: number) => Promise<MemberDetails>
+    performDelete: (client: SupabaseClient, orgId: string, userId: string) => Promise<void>
 }
 
 type NewMember = {
@@ -40,13 +34,7 @@ type NewMember = {
     roleId: number
 }
 
-export const enum Mode {
-    HUB = 'hub',
-    PROJECT = 'project'
-}
-
 const emptyNewMember = {roleId: 0, userId: ''}
-const modeAtom = atom<Mode>(Mode.HUB)
 const deleteMemberAtom = atom<MemberDetails | null>(null)
 const newMemberAtom = atom<NewMember>({...emptyNewMember})
 const loadingAtom = atom<boolean>(false)
@@ -54,10 +42,9 @@ const memberCandidatesAtom = atom<Array<Profile>>(new Array<Profile>())
 const displayCandidatesAtom = atom<Array<Profile>>(new Array<Profile>())
 const availableRolesAtom = atom<Array<Role>>(new Array<Role>())
 
-export default function MembersForm({orgId, mode, roles, initialCandidates}: Props) {
+export default function MembersForm({orgId, roles, initialCandidates, performAdd, performDelete}: Props) {
     const [members, setMembers] = useAtom(memberDetailsAtom)
     useHydrateAtoms([
-        [modeAtom, mode],
         [memberCandidatesAtom, initialCandidates],
         [displayCandidatesAtom, initialCandidates],
         [availableRolesAtom, roles]] as const)
@@ -79,11 +66,7 @@ export default function MembersForm({orgId, mode, roles, initialCandidates}: Pro
         if (deleteMember) {
             try {
                 setLoading(true)
-                if (mode == Mode.HUB)
-                    await removeHubMembership(client, orgId, deleteMember.userId)
-                else if (mode == Mode.PROJECT)
-                    await removeProjectMembership(client, orgId, deleteMember.userId)
-
+                await performDelete(client, orgId, deleteMember.userId)
                 const newMembers = members.filter(item => item.userId !== deleteMember.userId)
                 const newCandidate = await getUserProfile(client, deleteMember.userId)
                 if (memberCandidates && newCandidate) {
@@ -98,17 +81,14 @@ export default function MembersForm({orgId, mode, roles, initialCandidates}: Pro
                 setLoading(false)
             }
         }
-    }, [mode, client, orgId, deleteMember, members, memberCandidates, setLoading, setMembers, setDeleteMember, updateMemberCandidatesState])
+    }, [client, orgId, deleteMember, members, memberCandidates, performDelete, setLoading, setMembers, setDeleteMember, updateMemberCandidatesState])
 
     const addNewMember =  useCallback(async () => {
         if(newMember) {
             try {
                 setLoading(true)
                 let memberDetails: any = undefined
-                if (mode == Mode.HUB)
-                    memberDetails = await addHubMembership(client, orgId, newMember.userId, newMember.roleId)
-                else if (mode == Mode.PROJECT)
-                    memberDetails = await addProjectMembership(client, orgId, newMember.userId, newMember.roleId)
+                memberDetails = await performAdd(client, orgId, newMember.userId, newMember.roleId)
                 if (memberDetails) {
                     members.push(memberDetails)
                     if (memberCandidates) {
@@ -126,7 +106,7 @@ export default function MembersForm({orgId, mode, roles, initialCandidates}: Pro
                 setLoading(false)
             }
         }
-    }, [mode, client, orgId, newMember, members, memberCandidates, setLoading, setMembers, setNewMember, updateMemberCandidatesState])
+    }, [client, orgId, newMember, members, memberCandidates, performAdd, setLoading, setMembers, setNewMember, updateMemberCandidatesState])
 
     const MemberRow = (member: MemberDetails) => {
         return (

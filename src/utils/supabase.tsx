@@ -23,6 +23,7 @@ type DbLinkInsert = Database['public']['Tables']['links']['Insert']
 type DbProject = Database['public']['Tables']['projects']['Row']
 type DbHubMember = Database['public']['Tables']['hub_members']['Row']
 type DbProjectMember = Database['public']['Tables']['project_members']['Row']
+type DbHubProject = Database['public']['Tables']['projects_to_hubs']['Row']
 
 export type DbContext = {
     client: SupabaseClient
@@ -523,4 +524,22 @@ export async function updateRegionAssociations(
         throw error
     }
     return getRegionAssociations(client, ownerId)
+}
+
+export async function addProjectToHub(client: SupabaseClient, hubId: string, projectId: string) {
+    const updates: DbHubProject = {hub_id: hubId, project_id: projectId}
+    const {data, error} = await client.from('projects_to_hubs').insert(updates)
+    if (error) {
+        console.error('Unable to add project ID '+projectId+' to hub ID '+hubId+'. Error: '+error.message)
+        throw error
+    }
+}
+
+
+export async function removeProjectFromHub(client: SupabaseClient, hubId: string, projectId: string) {
+    const {data, error} = await client.from('projects_to_hubs').delete().match({hub_id: hubId, project_id: projectId})
+    if (error) {
+        console.error('Unable to remove project ID '+projectId+' from hub ID '+hubId+'. Error: '+error.message)
+        throw error
+    }
 }

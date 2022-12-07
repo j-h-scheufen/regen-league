@@ -3,11 +3,11 @@ import React from "react";
 import {useAtomValue} from "jotai";
 import Link from "next/link";
 
-import {projectsAtom} from "../../state/global";
+import {hubProjectsAtom} from "../../state/hub";
 import {Project} from "../../utils/types";
 
 export default function ProjectConnectionsCard() {
-    const projects = useAtomValue(projectsAtom)
+    const projects = useAtomValue(hubProjectsAtom)
 
     const ProjectRow = (item: Project) => {
         return (

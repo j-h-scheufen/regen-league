@@ -10,12 +10,14 @@ export const isHubAdminAtom = atom<boolean>(false)
 
 export const currentHubAtom = atom<Hub | null>(null)
 
-export const hubMemberCandidates = atom<Promise<Array<Profile>>>( async (get) => {
+export const hubMemberCandidatesAtom = atom<Promise<Array<Profile>>>( async (get) => {
     const hub = get(currentHubAtom)
     return hub ? getNonHubMembers(get(dbClientAtom), hub.id) : new Array<Profile>()
 })
 
-export const hubProjectCandidates = atom<Promise<Array<Project>>>(async (get) => {
+export const hubProjectCandidatesAtom = atom<Promise<Array<Project>>>(async (get) => {
     const hub = get(currentHubAtom)
     return hub ? getNonProjectsForHub(get(dbClientAtom), hub.id) : new Array<Project>()
 })
+
+export const hubProjectsAtom = atom<Array<Project>>(new Array<Project>())

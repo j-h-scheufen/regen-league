@@ -15,9 +15,9 @@ import React, {useCallback} from "react";
 import {FormTrash} from "grommet-icons";
 import {useSupabaseClient} from "@supabase/auth-helpers-react";
 import {atom, useAtom, useAtomValue} from "jotai";
-import {waitForAll} from "jotai/utils";
+import {useHydrateAtoms} from "jotai/utils";
 
-import {hubRolesAtom, memberDetailsAtom, projectRolesAtom} from "../state/global";
+import {memberDetailsAtom} from "../state/global";
 import {MemberDetails, Profile, Role} from "../utils/types";
 import {
     addHubMembership,
@@ -25,12 +25,14 @@ import {
     removeHubMembership,
     removeProjectMembership
 } from "../utils/supabase";
-import {hubMemberCandidates} from "../state/hub";
-import {projectMemberCandidates} from "../state/project";
+import {or} from "multiformats/bases/base";
 
 type Props = {
     orgId: string
     mode: string
+    roles: Array<Role>
+    initialCandidates: Array<Profile>
+
 }
 
 type NewMember = {
@@ -44,36 +46,87 @@ export const enum Mode {
 }
 
 const emptyNewMember = {roleId: 0, userId: ''}
+const modeAtom = atom<Mode>(Mode.HUB)
 const deleteMemberAtom = atom<MemberDetails | null>(null)
 const newMemberAtom = atom<NewMember>({...emptyNewMember})
 const loadingAtom = atom<boolean>(false)
-const memberCandidatesAtom = atom<Array<Profile> | null>(null)
-const availableRolesAtom = atom<Array<Role> | null>(null)
+const memberCandidatesAtom = atom<Array<Profile>>(new Array<Profile>())
+const displayCandidatesAtom = atom<Array<Profile>>(new Array<Profile>())
+const availableRolesAtom = atom<Array<Role>>(new Array<Role>())
 
-export default function MembersForm({orgId, mode}: Props) {
-    const [hubRoles, projectRoles] = useAtomValue(waitForAll([hubRolesAtom, projectRolesAtom]))
-    const [memberCandidates, setMemberCandidates] = useAtom(memberCandidatesAtom)
-    const [availableRoles, setAvailableRoles] = useAtom(availableRolesAtom)
-    const initialHubMembers = useAtomValue(hubMemberCandidates)
-    const initialProjectMembers = useAtomValue(projectMemberCandidates)
+export default function MembersForm({orgId, mode, roles, initialCandidates}: Props) {
     const [members, setMembers] = useAtom(memberDetailsAtom)
+    useHydrateAtoms([
+        [modeAtom, mode],
+        [memberCandidatesAtom, initialCandidates],
+        [displayCandidatesAtom, initialCandidates],
+        [availableRolesAtom, roles]] as const)
+
+    const [memberCandidates, setMemberCandidates] = useAtom(memberCandidatesAtom)
+    const [displayCandidates, setDisplayCandidates] = useAtom(displayCandidatesAtom)
     const [deleteMember, setDeleteMember] = useAtom(deleteMemberAtom)
     const [newMember, setNewMember] = useAtom(newMemberAtom)
     const [loading, setLoading] = useAtom(loadingAtom)
+    const availableRoles = useAtomValue(availableRolesAtom)
     const client = useSupabaseClient()
 
-    if (mode == Mode.HUB) {
-        if (!memberCandidates)
-            setMemberCandidates(initialHubMembers)
-        if (!availableRoles)
-            setAvailableRoles(hubRoles)
-    }
-    else if (mode == Mode.PROJECT) {
-        if (!memberCandidates)
-            setMemberCandidates(initialProjectMembers)
-        if (!availableRoles)
-            setAvailableRoles(projectRoles)
-    }
+    const updateMemberCandidatesState = useCallback((members: Array<Profile>) => {
+        setMemberCandidates(members)
+        setDisplayCandidates(members)
+    }, [setMemberCandidates, setDisplayCandidates])
+
+    const handleMemberDelete = useCallback( async () => {
+        if (deleteMember) {
+            try {
+                setLoading(true)
+                if (mode == Mode.HUB)
+                    await removeHubMembership(client, orgId, deleteMember.userId)
+                else if (mode == Mode.PROJECT)
+                    await removeProjectMembership(client, orgId, deleteMember.userId)
+
+                const newMembers = members.filter(item => item.userId !== deleteMember.userId)
+                const newCandidate = await getUserProfile(client, deleteMember.userId)
+                if (memberCandidates && newCandidate) {
+                    memberCandidates.push(newCandidate)
+                    updateMemberCandidatesState([...memberCandidates])
+                }
+                setMembers([...newMembers])
+                setDeleteMember(null)
+            } catch (error) {
+                alert('Unable to delete member ID: ' + deleteMember.userId + '. Message: ' + JSON.stringify(error))
+            } finally {
+                setLoading(false)
+            }
+        }
+    }, [mode, client, orgId, deleteMember, members, memberCandidates, setLoading, setMembers, setDeleteMember, updateMemberCandidatesState])
+
+    const addNewMember =  useCallback(async () => {
+        if(newMember) {
+            try {
+                setLoading(true)
+                let memberDetails: any = undefined
+                if (mode == Mode.HUB)
+                    memberDetails = await addHubMembership(client, orgId, newMember.userId, newMember.roleId)
+                else if (mode == Mode.PROJECT)
+                    memberDetails = await addProjectMembership(client, orgId, newMember.userId, newMember.roleId)
+                if (memberDetails) {
+                    members.push(memberDetails)
+                    if (memberCandidates) {
+                        const newCandidates = memberCandidates.filter((p) => p.id != memberDetails.userId)
+                        updateMemberCandidatesState([...newCandidates])
+                    }
+                    setMembers([...members])
+                    setNewMember(emptyNewMember)
+                }
+            }
+            catch (error) {
+                alert('Unable to create new link. Message: '+JSON.stringify(error))
+            }
+            finally {
+                setLoading(false)
+            }
+        }
+    }, [mode, client, orgId, newMember, members, memberCandidates, setLoading, setMembers, setNewMember, updateMemberCandidatesState])
 
     const MemberRow = (member: MemberDetails) => {
         return (
@@ -89,59 +142,6 @@ export default function MembersForm({orgId, mode}: Props) {
         )
     }
 
-    const handleMemberDelete = useCallback(async () => {
-        if (deleteMember) {
-            try {
-                setLoading(true)
-                if (mode == Mode.HUB)
-                    await removeHubMembership(client, orgId, deleteMember.userId)
-                else if (mode == Mode.PROJECT)
-                    await removeProjectMembership(client, orgId, deleteMember.userId)
-
-                const newMembers = members.filter(item => item.userId !== deleteMember.userId)
-                const newCandidate = await getUserProfile(client, deleteMember.userId)
-                if (memberCandidates && newCandidate) {
-                    memberCandidates.push(newCandidate)
-                    setMemberCandidates([...memberCandidates])
-                }
-                setMembers([...newMembers])
-                setDeleteMember(null)
-            } catch (error) {
-                alert('Unable to delete member ID: ' + deleteMember.userId + '. Message: ' + JSON.stringify(error))
-            } finally {
-                setLoading(false)
-            }
-        }
-    }, [deleteMember, members, client, orgId, mode, memberCandidates, setDeleteMember, setMembers, setMemberCandidates, setLoading])
-
-    const addNewMember = useCallback( async () => {
-        if(newMember) {
-            try {
-                setLoading(true)
-                let memberDetails: any = undefined
-                if (mode == Mode.HUB)
-                    memberDetails = await addHubMembership(client, orgId, newMember.userId, newMember.roleId)
-                else if (mode == Mode.PROJECT)
-                    memberDetails = await addProjectMembership(client, orgId, newMember.userId, newMember.roleId)
-                if (memberDetails) {
-                    members.push(memberDetails)
-                    if (memberCandidates) {
-                        const newCandidates = memberCandidates.filter((p) => p.id != memberDetails.userId)
-                        setMemberCandidates([...newCandidates])
-                    }
-                    setMembers([...members])
-                    setNewMember(emptyNewMember)
-                }
-            }
-            catch (error) {
-                alert('Unable to create new link. Message: '+JSON.stringify(error))
-            }
-            finally {
-                setLoading(false)
-            }
-        }
-    }, [members, client, newMember, orgId, mode, memberCandidates, setMemberCandidates, setMembers, setNewMember, setLoading])
-
     return (
         <Card pad="small">
             <CardHeader pad="small">Members</CardHeader>
@@ -152,13 +152,13 @@ export default function MembersForm({orgId, mode}: Props) {
                         onChange={(nextValue) => setNewMember(nextValue)}
                         onSubmit={() => addNewMember()}>
                         <Box direction="row">
-                            <FormField name="userId" htmlFor="candidateSelectId" label="Candidates" width="100%" required>
+                            <FormField name="userId" htmlFor="candidateSelectId" label="Candidate" width="100%" required>
                                 <Select
                                     id="candidateSelectId"
                                     name="userId"
                                     valueKey={{ key: 'id', reduce: true }}
                                     labelKey={(profile) => profile.username || profile.id}
-                                    options={memberCandidates || []}
+                                    options={displayCandidates || []}
                                     onSearch={(text) => {
                                                   // The line below escapes regular expression special characters:
                                                   // [ \ ^ $ . | ? * + ( )
@@ -168,7 +168,7 @@ export default function MembersForm({orgId, mode}: Props) {
                                                   // characters, errors will appear in the console
                                                   const exp = new RegExp(escapedText, 'i');
                                                   if (memberCandidates)
-                                                      setMemberCandidates(memberCandidates.filter((p) => exp.test(p.username || p.id)));
+                                                      setDisplayCandidates(memberCandidates.filter((p) => exp.test(p.username || p.id)));
                                                 }}
                                 />
                             </FormField>

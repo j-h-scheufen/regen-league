@@ -1,5 +1,6 @@
 import {GetServerSidePropsContext, InferGetServerSidePropsType} from "next";
 import {Provider as JotaiProvider} from "jotai";
+import {Suspense} from "react";
 
 import {
     getHubData,
@@ -9,9 +10,10 @@ import {
     isUserHubAdmin,
     getRegionAssociations, getProjectsForHub
 } from "../../utils/supabase";
-import {currentHubAtom, isHubAdminAtom} from "../../state/hub";
+import {currentHubAtom, hubProjectsAtom, isHubAdminAtom} from "../../state/hub";
 import HubMain from "../../components/hub/HubMain";
-import {linkDetailsAtom, memberDetailsAtom, projectsAtom, regionAssociationsAtom} from "../../state/global";
+import {linkDetailsAtom, memberDetailsAtom, regionAssociationsAtom} from "../../state/global";
+import SuspenseSpinner from "../../components/utils/SuspenseSpinner";
 
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
     const hubId = ctx.params?.id as string
@@ -45,12 +47,14 @@ export default function HubPage({ hub, members, links, regionAssociations, proje
       [isHubAdminAtom, isHubAdmin],
       [linkDetailsAtom, links],
       [regionAssociationsAtom, regionAssociations],
-      [projectsAtom, projects],
+      [hubProjectsAtom, projects],
       [memberDetailsAtom, members]] as const;
 
   return (
       <JotaiProvider initialValues={initialPageState}>
-        <HubMain/>
+          <Suspense fallback={<SuspenseSpinner/>}> {/* Required to avoid infinite loop with async atoms that were not preloaded */}
+              <HubMain/>
+          </Suspense>
       </JotaiProvider>
   )
 }

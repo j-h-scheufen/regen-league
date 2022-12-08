@@ -181,22 +181,22 @@ export async function getCustomCatalog(client: SupabaseClient): Promise<RegionCa
 }
 
 async function getStandardCatalog(client: SupabaseClient, tablePrefix: string, labels: Array<string>): Promise<RegionCatalog> {
-    const result1 = await client.from(tablePrefix+'_regions_1').select('*')
+    const result1 = await client.from(tablePrefix+'_regions_1').select('*').order('name')
     if (result1.error) {
         console.error('Unable to retrieve regions level 1 with table prefix: '+tablePrefix+'. Error: ' + result1.error.message)
         throw result1.error
     }
-    const result2 = await client.from(tablePrefix+'_regions_2').select('*')
+    const result2 = await client.from(tablePrefix+'_regions_2').select('*').order('name')
     if (result2.error) {
         console.error('Unable to retrieve regions level 2 with table prefix: '+tablePrefix+'. Error: ' + result2.error.message)
         throw result2.error
     }
-    const result3 = await client.from(tablePrefix+'_regions_3').select('*')
+    const result3 = await client.from(tablePrefix+'_regions_3').select('*').order('name')
     if (result3.error) {
         console.error('Unable to retrieve regions level 3 with table prefix: '+tablePrefix+'. Error: ' + result3.error.message)
         throw result3.error
     }
-    const result4 = await client.from(tablePrefix+'_regions_4').select('*')
+    const result4 = await client.from(tablePrefix+'_regions_4').select('*').order('name')
     if (result4.error) {
         console.error('Unable to retrieve regions level 4 with table prefix: '+tablePrefix+'. Error: ' + result4.error.message)
         throw result4.error

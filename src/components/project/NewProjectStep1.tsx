@@ -31,10 +31,10 @@ export default function NewProjectStep1() {
 
             if (error)
                 throw error
-            alert('Project created with ID '+data)
+
             return data
         } catch (error) {
-            alert('Error creating the project! Message: '+JSON.stringify(error))
+            console.error('Error creating the project! Message: '+JSON.stringify(error))
             console.log(error)
         } finally {
             setLoading(false)
@@ -51,7 +51,7 @@ export default function NewProjectStep1() {
                     <FormField width="100%" name="name" htmlFor="nameId" label="Name" required>
                         <TextInput id="nameId" name="name" type="name" value={name} onChange={event => setName(event.target.value)}/>
                     </FormField>
-                    <FormField width="100%" name="description" htmlFor="descriptionId" label="Description" required>
+                    <FormField width="100%" name="description" htmlFor="descriptionId" label="Description">
                         <TextInput id="descriptionId" name="description" type="text" value={description} onChange={event => setDescription(event.target.value)}/>
                     </FormField>
                 <Box direction="row" gap="medium" width="50%" margin={{ horizontal: 'auto', top: 'large' }}>

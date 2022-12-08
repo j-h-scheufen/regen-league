@@ -1,27 +1,14 @@
 import React, {useCallback, useEffect} from "react";
-import {deepFreeze} from "grommet/utils"
 import {Github, Login, Menu as MenuIcon, Twitter} from "grommet-icons";
-import {Anchor, Box, Grommet, Header, Heading, Main, Menu, Nav, type ThemeType} from 'grommet'
+import {Anchor, Box, Grommet, Header, Heading, Main, Menu, Nav} from 'grommet'
 import {useRouter} from "next/router";
-import {atom, useAtom, useAtomValue} from "jotai";
+import {useAtom, useAtomValue} from "jotai";
 import {useSession, useSupabaseClient, useUser} from "@supabase/auth-helpers-react";
 
 import {getUserProfile} from "../utils/supabase";
 import {currentAvatarUrlAtom, currentUserProfileAtom} from "../state/global";
 import ProfileAvatar from "./profile/ProfileAvatar";
-
-const theme: ThemeType = {
-    global: {
-        font: {
-            family: 'RobotoRegular',
-            size: '18px',
-            height: '20px',
-        },
-        colors: {
-            "brand": "#01a982",
-        }
-  },
-}
+import {globalTheme} from "./Styles";
 
 type LayoutProps = React.PropsWithChildren<{
   title?: string
@@ -64,7 +51,7 @@ export default function Layout({ title = 'Regen League', children }: LayoutProps
     }
 
     return (
-        <Grommet theme={theme}>
+        <Grommet theme={globalTheme}>
             <Box direction="column" flex>
                 <Header justify="between">
                     <Box pad="medium">

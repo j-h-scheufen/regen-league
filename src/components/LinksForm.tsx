@@ -94,7 +94,7 @@ export default function LinksForm({ ownerId }: Props) {
 
     return (
         <Card pad="small">
-            {/*<CardHeader pad="small">Links</CardHeader>*/}
+            <CardHeader justify="center"><Text size="large">Links</Text></CardHeader>
             <CardBody>
                     <Box pad="small" margin={{bottom: "small"}}>
                         <Form<NewLink>

@@ -1,12 +1,12 @@
 import {
     Box,
-    BoxProps,
     Button, Card, CardBody, CardHeader,
     Form,
     FormField, TextArea,
     TextInput,
+    Text,
 } from 'grommet'
-import {PropsWithChildren, useCallback} from 'react'
+import {useCallback} from 'react'
 import {useSupabaseClient, useUser} from "@supabase/auth-helpers-react";
 
 import {Database} from "../../utils/database.types";
@@ -23,15 +23,14 @@ import {currentHubAtom} from "../../state/hub";
 
 type Props = {
     hub: Hub
-    onSubmit: () => void
-    onCancel: () => void
 }
 
 const emptyHub: Hub = {description: '', id: '', name: ''}
 const editHubAtom = atom<Hub>(emptyHub)
 const loadingAtom = atom<boolean>(false)
+const dirtyAtom = atom<boolean>(false)
 
-export default function HubForm({hub, onSubmit, onCancel}: Props) {
+export default function HubAttributesForm({hub}: Props) {
     if(!hub)
         throw Error('This component requires a hub')
     useHydrateAtoms([[editHubAtom, {...hub}]] as const)
@@ -39,6 +38,7 @@ export default function HubForm({hub, onSubmit, onCancel}: Props) {
     const user = useUser()
     const [editHub, setEditHub] = useAtom(editHubAtom)
     const [loading, setLoading] = useAtom(loadingAtom)
+    const [isDirty, setDirty] = useAtom(dirtyAtom)
     const [currentHub, setCurrentHub] = useAtom(currentHubAtom)
 
     const updateHub = useCallback( async () => {
@@ -65,27 +65,32 @@ export default function HubForm({hub, onSubmit, onCancel}: Props) {
     }, [currentHub, editHub, setCurrentHub, supabase, setLoading])
 
     return (
-        <Card pad="small">
+        <Card pad="small" margin={{vertical: "small"}}>
+            <CardHeader justify="center"><Text size="large">Hub Attributes</Text></CardHeader>
             <CardBody>
-                <Form<Hub>
-                value={editHub}
-                onChange={(nextValue) => setEditHub(nextValue)}
-                onSubmit={() => {
-                    updateHub().then(() => {
-                        onSubmit()
-                    })
-                }}>
-                    <FormField name="name" htmlFor="nameId" label="Name" required>
-                        <TextInput id="nameId" name="name" type="name"/>
-                    </FormField>
-                    <FormField name="description" htmlFor="descriptionId" label="Description" required>
-                        <TextArea id="descriptionId" name="description" rows={5}/>
-                    </FormField>
-                    <Box direction="row" gap="medium" justify="end" margin={{ right: "small", vertical: 'medium' }}>
-                        <Button secondary label={loading ? 'Loading ...' : 'Done'} disabled={loading} onClick={() => onCancel()}/>
-                        <Button type="submit" primary label={loading ? 'Loading ...' : 'Update'} disabled={loading}/>
-                    </Box>
-                </Form>
+                <Box pad="small">
+                    <Form<Hub>
+                    value={editHub}
+                    onChange={(nextValue) => {
+                        setEditHub(nextValue)
+                        setDirty(true)
+                    }}
+                    onSubmit={() => {
+                        updateHub().then(() => {
+                            setDirty(false)
+                        })
+                    }}>
+                        <FormField name="name" htmlFor="nameId" label="Name" required>
+                            <TextInput id="nameId" name="name" type="name"/>
+                        </FormField>
+                        <FormField name="description" htmlFor="descriptionId" label="Description">
+                            <TextArea id="descriptionId" name="description" rows={5}/>
+                        </FormField>
+                        <Box direction="row" gap="medium" justify="end" margin={{ right: "small", vertical: 'medium' }}>
+                            <Button type="submit" primary label={loading ? 'Loading ...' : 'Update'} disabled={loading || !isDirty}/>
+                        </Box>
+                    </Form>
+                </Box>
             </CardBody>
         </Card>
     )

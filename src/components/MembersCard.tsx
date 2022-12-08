@@ -9,8 +9,8 @@ export default function MembersCard() {
     const members = useAtomValue(memberDetailsAtom)
 
     return (
-        <Card pad="small">
-            <CardHeader pad="small" justify="start"><Text>{members.length} Member{members.length != 1?'s':''}</Text></CardHeader>
+        <Card pad="small" margin={{vertical: "small"}}>
+            <CardHeader justify="center"><Text size="large">{members.length} Member{members.length != 1?'s':''}</Text></CardHeader>
             <CardBody>
                 <Box direction="row">
                     {members.map((member, index) =>
@@ -19,7 +19,9 @@ export default function MembersCard() {
                             profileId={member.userId}
                             name={member.username}
                             avatarURL={member.avatarURL}
-                            linkTo={'/profile/'+member.userId}/>
+                            linkTo={'/profile/'+member.userId}
+                            role={member.roleName}
+                        />
                     )}
                 </Box>
             </CardBody>

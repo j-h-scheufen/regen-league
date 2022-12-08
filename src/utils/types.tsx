@@ -1,9 +1,17 @@
 
+export enum UserStatus {
+    ONBOARDING,
+    ACTIVE,
+    BLOCKED,
+    DELETED
+}
+
 export type Profile = {
     id: string,
     username: string,
     avatarFilename?: string,
     avatarURL?: string
+    status: UserStatus
 }
 
 export type Hub = {
@@ -74,8 +82,10 @@ export type RegionAssociations = {
 export type RegionInfo = Array<RegionNode>
 
 export type RegionCatalog = {
+    labels: Array<string>
     level1: Array<RegionNode>
     level2: Array<RegionNode>
     level3: Array<RegionNode>
     level4: Array<RegionNode>
 }
+

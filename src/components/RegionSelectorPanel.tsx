@@ -1,12 +1,12 @@
-import {Box, Card, CardBody, Form, Button} from 'grommet'
+import {Box, Card, CardBody, Form, Button, CardHeader, Text} from 'grommet'
 import {useAtomValue, Provider as JotaiProvider, atom, useAtom} from "jotai";
 import {waitForAll} from "jotai/utils";
 import {useCallback} from "react";
 import {useSupabaseClient} from "@supabase/auth-helpers-react";
 
 import {customCatalogAtom, epaCatalogAtom, oneEarthCatalogAtom, regionAssociationsAtom} from "../state/global";
-import {RegionInfo, RegionNode} from "../utils/types";
-import RegionInfoSelector, {selectionAtom} from "./project/RegionInfoSelector";
+import {RegionInfo} from "../utils/types";
+import RegionInfoSelector, {selectionAtom} from "./RegionInfoSelector";
 import {updateRegionAssociations} from "../utils/supabase";
 
 type Props = {
@@ -64,58 +64,55 @@ export default function RegionSelectorPanel({ ownerId }: Props) {
 
         const newRegions = await updateRegionAssociations(client, ownerId!, oeRegion, epaRegion, customRegion)
         setAssociations(newRegions)
-        console.log("AFTER UPDATE: "+JSON.stringify(newRegions))
     }, [client, oeSelection, epaSelection, customSelection, setAssociations, ownerId])
 
     return (
-        <Card pad="medium">
-            {/*<CardHeader pad="small">Region Info</CardHeader>*/}
-            <CardBody direction="column">
-                <Form
-                    onSubmit={() => {
-                        updateRegions();
-                        setDirty(false)
-                    }}>
-                    <JotaiProvider initialValues={[[selectionAtom, associations?.oneEarth || null]] as const}>
-                        <RegionInfoSelector
-                            title="One Earth"
-                            regions={[oeCatalog.level1, oeCatalog.level2, oeCatalog.level3]}
-                            labels={['Realm', 'Subrealm', 'Bioregion']}
-                            onChange={(update) => {
-                                setOeSelection(update)
-                                setDirty(true)
-                            }}
-                        />
-                    </JotaiProvider>
-                    <JotaiProvider initialValues={[[selectionAtom, associations?.epa || null]] as const}>
-                        <RegionInfoSelector
-                            title="EPA"
-                            regions={[epaCatalog.level1, epaCatalog.level2]}
-                            labels={['Level 1', 'Level 2']}
-                            onChange={(update) => {
-                                setEpaSelection(update)
-                                setDirty(true)
-                            }}
-                        />
-                    </JotaiProvider>
-                    <JotaiProvider initialValues={[[selectionAtom, associations?.custom || null]] as const}>
-                        <RegionInfoSelector
-                            title="Other"
-                            regions={[customCatalog.level1]}
-                            labels={[]}
-                            onChange={(update) => {
-                                setCustomSelection(update)
-                                setDirty(true)
-                            }}
-                        />
-                    </JotaiProvider>
-                    {isDirty && (
+        <Card pad="small" margin={{vertical: "small"}}>
+            <CardHeader justify="center"><Text size="large">Region Settings</Text></CardHeader>
+            <CardBody>
+                <Box pad="small">
+                    <Form
+                        onSubmit={() => {
+                            updateRegions().then(() => setDirty(false))
+                        }}>
+                        <JotaiProvider initialValues={[[selectionAtom, associations?.oneEarth || null]] as const}>
+                            <RegionInfoSelector
+                                title="One Earth"
+                                regions={[oeCatalog.level1, oeCatalog.level2, oeCatalog.level3, oeCatalog.level4]}
+                                labels={['Realm', 'Subrealm', 'Bioregion', 'Ecoregion']}
+                                onChange={(update) => {
+                                    setOeSelection(update)
+                                    setDirty(true)
+                                }}
+                            />
+                        </JotaiProvider>
+                        <JotaiProvider initialValues={[[selectionAtom, associations?.epa || null]] as const}>
+                            <RegionInfoSelector
+                                title="EPA"
+                                regions={[epaCatalog.level1, epaCatalog.level2]}
+                                labels={['Level 1', 'Level 2']}
+                                onChange={(update) => {
+                                    setEpaSelection(update)
+                                    setDirty(true)
+                                }}
+                            />
+                        </JotaiProvider>
+                        <JotaiProvider initialValues={[[selectionAtom, associations?.custom || null]] as const}>
+                            <RegionInfoSelector
+                                title="Other"
+                                regions={[customCatalog.level1]}
+                                labels={[]}
+                                onChange={(update) => {
+                                    setCustomSelection(update)
+                                    setDirty(true)
+                                }}
+                            />
+                        </JotaiProvider>
                         <Box direction="row" gap="medium" justify="end" margin={{ right: "small", vertical: 'medium' }}>
-                            <Button type="reset" label={loading ? 'Loading ...' : 'Reset'} disabled={loading} onClick={() => {}}/>
-                            <Button type="submit" primary label={loading ? 'Loading ...' : 'Update'} disabled={loading}/>
+                            <Button type="submit" primary label={loading ? 'Loading ...' : 'Update'} disabled={loading || !isDirty}/>
                         </Box>
-                    )}
-                </Form>
+                    </Form>
+                </Box>
             </CardBody>
         </Card>
     )

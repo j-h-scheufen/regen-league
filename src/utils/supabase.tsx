@@ -15,16 +15,15 @@ import {
     Project,
     LinkType,
     RegionNode,
-    RegionAssociations, Role
+    RegionAssociations, Role, UserStatus
 } from "./types";
 
 type DbHub = Database['public']['Tables']['hubs']['Row']
 type DbLinkInsert = Database['public']['Tables']['links']['Insert']
 type DbProject = Database['public']['Tables']['projects']['Row']
-type DbProjectRole = Database['public']['Tables']['project_roles']['Row']
-type DbHubRole = Database['public']['Tables']['hub_roles']['Row']
 type DbHubMember = Database['public']['Tables']['hub_members']['Row']
 type DbProjectMember = Database['public']['Tables']['project_members']['Row']
+type DbHubProject = Database['public']['Tables']['projects_to_hubs']['Row']
 
 export type DbContext = {
     client: SupabaseClient
@@ -47,8 +46,9 @@ function createMemberDetails(client: SupabaseClient, userId: string, username: s
     return member
 }
 
-function createProfile(client: SupabaseClient, id: string, username: string, avatarFilename: string): Profile {
+function createProfile(client: SupabaseClient, id: string, username: string, avatarFilename: string, status: UserStatus): Profile {
     const p: Profile = {
+        status: status,
         id: id,
         username: username,
         avatarFilename: avatarFilename,
@@ -118,6 +118,24 @@ export async function getHubsForUser(client: SupabaseClient, userId: string): Pr
     return data as Array<MembershipItem>
 }
 
+export async function getProjectsForHub(client: SupabaseClient, hubId: string): Promise<Array<Project>> {
+    const {data, error} = await client.rpc('get_hub_projects', {hub_id: hubId})
+    if (error) {
+        console.error('Unable to retrieve projects for hub ID ' + hubId + '. Error: ' + error.message)
+        throw error
+    }
+    return data || new Array<Project>()
+}
+
+export async function getNonProjectsForHub(client: SupabaseClient, hubId: string): Promise<Array<Project>> {
+    const {data, error} = await client.rpc('get_non_hub_projects', {hub_id: hubId})
+    if (error) {
+        console.error('Unable to retrieve project candidates for hub ID ' + hubId + '. Error: ' + error.message)
+        throw error
+    }
+    return data || new Array<Project>()
+}
+
 async function getRegionInfo(client: SupabaseClient, regionId: number | string, level: number, tablePrefix: string): Promise<RegionInfo> {
     const tablename = 'get_'+tablePrefix+'_region_info_l'+level
     const {data, error} = await client.rpc(tablename, {region_id: regionId}).single()
@@ -150,44 +168,35 @@ export async function getRegionAssociations(client: SupabaseClient, ownerId: str
     return associations
 }
 
-export async function getCustomRegion(client: SupabaseClient, id: string): Promise<RegionNode> {
-    const {data, error} = await client.from('custom_regions').select('*').eq('id', id).single()
-    if (error) {
-        console.error('Unable to retrieve custom region ID. Error: ' + error.message)
-        throw error
-    }
-    return {id: data.id, link: data.link, name: data.name, level: 0}
-}
-
 export async function getOneEarthCatalog(client: SupabaseClient): Promise<RegionCatalog> {
-    return getStandardCatalog(client, 'oe')
+    return getStandardCatalog(client, 'oe', ['Realm','Subrealm','Bioregion','Ecoregion'])
 }
 
 export async function getEPACatalog(client: SupabaseClient): Promise<RegionCatalog> {
-    return getStandardCatalog(client, 'epa')
+    return getStandardCatalog(client, 'epa', ['Level I','Level II','Level III','Level IV'])
 }
 
 export async function getCustomCatalog(client: SupabaseClient): Promise<RegionCatalog> {
-    return getStandardCatalog(client, 'rl')
+    return getStandardCatalog(client, 'rl', ['Bioregion','Bioregion','Bioregion','Bioregion'])
 }
 
-async function getStandardCatalog(client: SupabaseClient, tablePrefix: string): Promise<RegionCatalog> {
-    const result1 = await client.from(tablePrefix+'_regions_1').select('*')
+async function getStandardCatalog(client: SupabaseClient, tablePrefix: string, labels: Array<string>): Promise<RegionCatalog> {
+    const result1 = await client.from(tablePrefix+'_regions_1').select('*').order('name')
     if (result1.error) {
         console.error('Unable to retrieve regions level 1 with table prefix: '+tablePrefix+'. Error: ' + result1.error.message)
         throw result1.error
     }
-    const result2 = await client.from(tablePrefix+'_regions_2').select('*')
+    const result2 = await client.from(tablePrefix+'_regions_2').select('*').order('name')
     if (result2.error) {
         console.error('Unable to retrieve regions level 2 with table prefix: '+tablePrefix+'. Error: ' + result2.error.message)
         throw result2.error
     }
-    const result3 = await client.from(tablePrefix+'_regions_3').select('*')
+    const result3 = await client.from(tablePrefix+'_regions_3').select('*').order('name')
     if (result3.error) {
         console.error('Unable to retrieve regions level 3 with table prefix: '+tablePrefix+'. Error: ' + result3.error.message)
         throw result3.error
     }
-    const result4 = await client.from(tablePrefix+'_regions_4').select('*')
+    const result4 = await client.from(tablePrefix+'_regions_4').select('*').order('name')
     if (result4.error) {
         console.error('Unable to retrieve regions level 4 with table prefix: '+tablePrefix+'. Error: ' + result4.error.message)
         throw result4.error
@@ -206,7 +215,7 @@ async function getStandardCatalog(client: SupabaseClient, tablePrefix: string): 
         return {id: entry.id, name: entry.name, level: 4, description: entry.description || '', parentId: entry.parent_id}
     })
 
-    return {level1, level2, level3, level4}
+    return {labels, level1, level2, level3, level4}
 }
 
 export async function getHubMembers(client: SupabaseClient, hubId: string): Promise<Array<MemberDetails>> {
@@ -216,18 +225,7 @@ export async function getHubMembers(client: SupabaseClient, hubId: string): Prom
         throw error
     }
     return data ? data.map((dbMember) => {
-        const newItem: MemberDetails = {
-            userId: dbMember.user_id,
-            username: dbMember.username,
-            avatarFilename: dbMember.avatar_filename,
-            roleName: dbMember.role_name,
-            avatarURL: ''
-        }
-        if (newItem.avatarFilename) {
-            const urlResult = client.storage.from('avatars').getPublicUrl(newItem.avatarFilename)
-            newItem.avatarURL = urlResult.data.publicUrl
-        }
-        return newItem
+        return createMemberDetails(client, dbMember.user_id, dbMember.username, dbMember.avatar_filename, dbMember.role_name)
     }) : new Array<MemberDetails>()
 }
 
@@ -238,12 +236,7 @@ export async function getProjectMembers(client: SupabaseClient, projectId: strin
         throw error
     }
     return data ? data.map((dbMember) => {
-        const newMember = createMemberDetails(dbMember.user_id, dbMember.username, dbMember.avatar_filename, dbMember.role_name, '')
-        if (newMember.avatarFilename) {
-            const urlResult = client.storage.from('avatars').getPublicUrl(newMember.avatarFilename)
-            newMember.avatarURL = urlResult.data.publicUrl
-        }
-        return newMember
+        return createMemberDetails(client, dbMember.user_id, dbMember.username, dbMember.avatar_filename, dbMember.role_name)
     }) : new Array<MemberDetails>()
 }
 
@@ -254,7 +247,7 @@ export async function getNonHubMembers(client: SupabaseClient, hubId: string): P
         throw error
     }
     return data ? data.map((dbProfile) => {
-        return createProfile(client, dbProfile.user_id, dbProfile.username, dbProfile.avatar_filename)
+        return createProfile(client, dbProfile.user_id, dbProfile.username, dbProfile.avatar_filename, dbProfile.status)
     }) : new Array<Profile>()
 }
 
@@ -265,7 +258,7 @@ export async function getNonProjectMembers(client: SupabaseClient, projectId: st
         throw error
     }
     return data ? data.map((dbProfile) => {
-        return createProfile(client, dbProfile.user_id, dbProfile.username, dbProfile.avatar_filename)
+        return createProfile(client, dbProfile.user_id, dbProfile.username, dbProfile.avatar_filename, dbProfile.status)
     }) : new Array<Profile>()
 }
 
@@ -287,7 +280,7 @@ export async function addHubMembership(client: SupabaseClient, hubId: string, us
 
 export async function addProjectMembership(client: SupabaseClient, projectId: string, userId: string, roleId: number): Promise<MemberDetails> {
     const updates: DbProjectMember = {project_id: projectId, role_id: roleId, user_id: userId}
-    const {data, error} = await client.from('hub_members').upsert(updates).select('*')
+    const {data, error} = await client.from('project_members').upsert(updates).select('*')
     if (error) {
         console.error('Unable to add membership for project ID '+projectId+' and user ID '+userId+'. Error: '+error.message)
         throw error
@@ -318,7 +311,7 @@ export async function removeProjectMembership(client: SupabaseClient, projectId:
 }
 
 export async function getProjectRoles(client: SupabaseClient): Promise<Array<Role>> {
-    const {data, error} = await client.from('project_roles').select('*')
+    const {data, error} = await client.from('project_roles').select('*').order('name')
     if (error) {
         console.error('Unable to retrieve project roles. Error: '+error.message)
         throw error
@@ -327,7 +320,7 @@ export async function getProjectRoles(client: SupabaseClient): Promise<Array<Rol
 }
 
 export async function getHubRoles(client: SupabaseClient): Promise<Array<Role>> {
-    const {data, error} = await client.from('hub_roles').select('*')
+    const {data, error} = await client.from('hub_roles').select('*').order('name')
     if (error) {
         console.error('Unable to retrieve hub roles. Error: '+error.message)
         throw error
@@ -392,23 +385,13 @@ export async function getUserProfile(client: SupabaseClient, userId: string): Pr
         throw error
     }
     if (data) {
-        const newItem: Profile = {
-            id: data.id,
-            avatarFilename: data.avatar_filename,
-            avatarURL: '',
-            username: data.username
-        }
-        if (data.avatar_filename) {
-            const urlResult = client.storage.from('avatars').getPublicUrl(data.avatar_filename)
-            newItem.avatarURL = urlResult.data.publicUrl
-        }
-        return newItem
+        return createProfile(client, data.id, data.username, data.avatar_filename, data.status)
     }
     return null
 }
 
 export async function getHubs(client: SupabaseClient): Promise<Array<Hub>> {
-    const {data, error} = await client.from('hubs').select('*')
+    const {data, error} = await client.from('hubs').select('*').order('name')
     if (error) {
         console.error('Unable to retrieve hubs. Error: '+error.message)
         throw error
@@ -427,7 +410,7 @@ export async function getHubs(client: SupabaseClient): Promise<Array<Hub>> {
 }
 
 export async function getProjects(client: SupabaseClient): Promise<Array<Project>> {
-    const {data, error} = await client.from('projects').select('*')
+    const {data, error} = await client.from('projects').select('*').order('name')
     if (error) {
         console.error('Unable to retrieve projects. Error: '+error.message)
         throw error
@@ -525,4 +508,22 @@ export async function updateRegionAssociations(
         throw error
     }
     return getRegionAssociations(client, ownerId)
+}
+
+export async function addProjectToHub(client: SupabaseClient, hubId: string, projectId: string) {
+    const updates: DbHubProject = {hub_id: hubId, project_id: projectId}
+    const {data, error} = await client.from('projects_to_hubs').insert(updates)
+    if (error) {
+        console.error('Unable to add project ID '+projectId+' to hub ID '+hubId+'. Error: '+error.message)
+        throw error
+    }
+}
+
+
+export async function removeProjectFromHub(client: SupabaseClient, hubId: string, projectId: string) {
+    const {data, error} = await client.from('projects_to_hubs').delete().match({hub_id: hubId, project_id: projectId})
+    if (error) {
+        console.error('Unable to remove project ID '+projectId+' from hub ID '+hubId+'. Error: '+error.message)
+        throw error
+    }
 }

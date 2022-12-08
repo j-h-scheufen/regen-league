@@ -71,7 +71,7 @@ export default function CurrentUserProfile({ profile, hubs, projects, editMode }
                 <Box width="large">
                     <Box direction="column" alignSelf="center">
                         <ProfileAvatar profileId={currentProfile?.id} avatarURL={currentProfile?.avatarURL} size="large"/>
-                        <Heading size="medium" margin="small" alignSelf="center">{profile.username || profile.id}</Heading>
+                        <Heading size="medium" margin="small" alignSelf="center">{currentProfile?.username || currentProfile?.id}</Heading>
                     </Box>
                     <Box>
                         <ProfileAttributesCard profile={currentProfile!}/>

@@ -132,18 +132,21 @@ export interface Database {
           created_at: string | null
           name: string
           description: string | null
+          created_by: string
         }
         Insert: {
           id?: string
           created_at?: string | null
           name: string
           description?: string | null
+          created_by: string
         }
         Update: {
           id?: string
           created_at?: string | null
           name?: string
           description?: string | null
+          created_by?: string
         }
       }
       link_types: {
@@ -266,18 +269,21 @@ export interface Database {
           created_at: string
           username: string | null
           avatar_filename: string | null
+          status: number
         }
         Insert: {
           id: string
           created_at?: string
           username?: string | null
           avatar_filename?: string | null
+          status?: number
         }
         Update: {
           id?: string
           created_at?: string
           username?: string | null
           avatar_filename?: string | null
+          status?: number
         }
       }
       project_members: {
@@ -320,18 +326,21 @@ export interface Database {
           name: string
           description: string | null
           id: string
+          created_by: string
         }
         Insert: {
           created_at?: string | null
           name: string
           description?: string | null
           id?: string
+          created_by: string
         }
         Update: {
           created_at?: string | null
           name?: string
           description?: string | null
           id?: string
+          created_by?: string
         }
       }
       projects_to_hubs: {
@@ -481,83 +490,219 @@ export interface Database {
       }
       get_epa_region_info_l1: {
         Args: { region_id: number }
-        Returns: Record<string, unknown>[]
+        Returns: { l1_id: number; l1_name: string; l1_link: string }[]
       }
       get_epa_region_info_l2: {
         Args: { region_id: number }
-        Returns: Record<string, unknown>[]
+        Returns: {
+          l1_id: number
+          l1_name: string
+          l1_link: string
+          l2_id: number
+          l2_name: string
+          l2_link: string
+        }[]
       }
       get_epa_region_info_l3: {
         Args: { region_id: number }
-        Returns: Record<string, unknown>[]
+        Returns: {
+          l1_id: number
+          l1_name: string
+          l1_link: string
+          l2_id: number
+          l2_name: string
+          l2_link: string
+          l3_id: number
+          l3_name: string
+          l3_link: string
+        }[]
       }
       get_epa_region_info_l4: {
         Args: { region_id: number }
-        Returns: Record<string, unknown>[]
+        Returns: {
+          l1_id: number
+          l1_name: string
+          l1_link: string
+          l2_id: number
+          l2_name: string
+          l2_link: string
+          l3_id: number
+          l3_name: string
+          l3_link: string
+          l4_id: number
+          l4_name: string
+          l4_link: string
+        }[]
       }
       get_hub_member: {
         Args: { hub_id: string; user_id: string }
-        Returns: Record<string, unknown>[]
+        Returns: {
+          user_id: string
+          username: string
+          avatar_filename: string
+          role_name: string
+        }[]
       }
       get_hub_members: {
         Args: { hub_id: string }
-        Returns: Record<string, unknown>[]
+        Returns: {
+          user_id: string
+          username: string
+          avatar_filename: string
+          role_name: string
+        }[]
+      }
+      get_hub_projects: {
+        Args: { hub_id: string }
+        Returns: { id: string; name: string; description: string }[]
       }
       get_non_hub_members: {
         Args: { hub_id: string }
-        Returns: Record<string, unknown>[]
+        Returns: {
+          user_id: string
+          username: string
+          avatar_filename: string
+        }[]
+      }
+      get_non_hub_projects: {
+        Args: { hub_id: string }
+        Returns: { id: string; name: string; description: string }[]
       }
       get_non_project_members: {
         Args: { project_id: string }
-        Returns: Record<string, unknown>[]
+        Returns: {
+          user_id: string
+          username: string
+          avatar_filename: string
+        }[]
       }
       get_oe_region_info_l1: {
         Args: { region_id: number }
-        Returns: Record<string, unknown>[]
+        Returns: { l1_id: number; l1_name: string; l1_link: string }[]
       }
       get_oe_region_info_l2: {
         Args: { region_id: number }
-        Returns: Record<string, unknown>[]
+        Returns: {
+          l1_id: number
+          l1_name: string
+          l1_link: string
+          l2_id: number
+          l2_name: string
+          l2_link: string
+        }[]
       }
       get_oe_region_info_l3: {
         Args: { region_id: number }
-        Returns: Record<string, unknown>[]
+        Returns: {
+          l1_id: number
+          l1_name: string
+          l1_link: string
+          l2_id: number
+          l2_name: string
+          l2_link: string
+          l3_id: number
+          l3_name: string
+          l3_link: string
+        }[]
       }
       get_oe_region_info_l4: {
         Args: { region_id: number }
-        Returns: Record<string, unknown>[]
+        Returns: {
+          l1_id: number
+          l1_name: string
+          l1_link: string
+          l2_id: number
+          l2_name: string
+          l2_link: string
+          l3_id: number
+          l3_name: string
+          l3_link: string
+          l4_id: number
+          l4_name: string
+          l4_link: string
+        }[]
       }
       get_project_member: {
         Args: { project_id: string; user_id: string }
-        Returns: Record<string, unknown>[]
+        Returns: {
+          user_id: string
+          username: string
+          avatar_filename: string
+          role_name: string
+        }[]
       }
       get_project_members: {
         Args: { project_id: string }
-        Returns: Record<string, unknown>[]
+        Returns: {
+          user_id: string
+          username: string
+          avatar_filename: string
+          role_name: string
+        }[]
       }
       get_rl_region_info_l1: {
         Args: { region_id: string }
-        Returns: Record<string, unknown>[]
+        Returns: { l1_id: string; l1_name: string; l1_link: string }[]
       }
       get_rl_region_info_l2: {
         Args: { region_id: string }
-        Returns: Record<string, unknown>[]
+        Returns: {
+          l1_id: string
+          l1_name: string
+          l1_link: string
+          l2_id: string
+          l2_name: string
+          l2_link: string
+        }[]
       }
       get_rl_region_info_l3: {
         Args: { region_id: string }
-        Returns: Record<string, unknown>[]
+        Returns: {
+          l1_id: string
+          l1_name: string
+          l1_link: string
+          l2_id: string
+          l2_name: string
+          l2_link: string
+          l3_id: string
+          l3_name: string
+          l3_link: string
+        }[]
       }
       get_rl_region_info_l4: {
         Args: { region_id: string }
-        Returns: Record<string, unknown>[]
+        Returns: {
+          l1_id: string
+          l1_name: string
+          l1_link: string
+          l2_id: string
+          l2_name: string
+          l2_link: string
+          l3_id: string
+          l3_name: string
+          l3_link: string
+          l4_id: string
+          l4_name: string
+          l4_link: string
+        }[]
       }
       get_user_hubs: {
         Args: { user_id: string }
-        Returns: Record<string, unknown>[]
+        Returns: {
+          id: string
+          name: string
+          description: string
+          role: string
+        }[]
       }
       get_user_projects: {
         Args: { user_id: string }
-        Returns: Record<string, unknown>[]
+        Returns: {
+          id: string
+          name: string
+          description: string
+          role: string
+        }[]
       }
     }
     Enums: {

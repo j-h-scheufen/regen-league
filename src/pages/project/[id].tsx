@@ -1,49 +1,57 @@
-import {GetServerSidePropsContext} from "next";
-import {atom} from "jotai";
-import {Box, Heading} from "grommet";
+import {GetServerSidePropsContext, InferGetServerSidePropsType} from "next";
 
-import {getLinksData, getProjectData, getProjectMembers, getServerClient} from "../../utils/supabase";
-import LinksCard from "../../components/LinksCard";
-import MembersCard from "../../components/MembersCard";
-import ProjectAttributesCard from "../../components/project/ProjectAttributesCard";
-import {LinkDetails, MemberDetails, Project} from "../../utils/types";
-
-type PageProps = {
-  project: Project
-  members: Array<MemberDetails>
-  links: Array<LinkDetails>
-}
-
-const isAdminAtom = atom<boolean>(false)
+import {
+    getProjectData,
+    getProjectMembers,
+    getLinksData,
+    getRegionAssociations,
+    getServerClient,
+    isUserProjectAdmin
+} from "../../utils/supabase";
+import {currentProjectAtom, isProjectAdminAtom} from "../../state/project";
+import ProjectMain from "../../components/project/ProjectMain";
+import {linkDetailsAtom, memberDetailsAtom, regionAssociationsAtom} from "../../state/global";
+import SuspenseSpinner from "../../components/utils/SuspenseSpinner";
+import {Provider as JotaiProvider} from "jotai";
+import {Suspense} from "react";
 
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
-  const projectId = ctx.params?.id as string
-  const {client} = await getServerClient(ctx)
+    const projectId = ctx.params?.id as string
+    const {client, session} = await getServerClient(ctx)
+    const projectData = await getProjectData(client, projectId)
+    const associationsData = await getRegionAssociations(client, projectId)
+    const membersData = await getProjectMembers(client, projectId);
+    const linksData = await getLinksData(client, projectId)
+    const isAdmin = session?.user ? await isUserProjectAdmin(client, session.user.id, projectId) : false
 
-  const projectData = await getProjectData(client, projectId)
-  const membersData = await getProjectMembers(client, projectId)
-  const linksData = await getLinksData(client, projectId)
-
-  return {
-    props: {
-      project: projectData,
-      members: membersData,
-      links: linksData
-    },
-  }
+    return {
+        props: {
+            key: projectId,
+            project: projectData,
+            members: membersData,
+            links: linksData,
+            regionAssociations: associationsData,
+            isAdmin: isAdmin,
+        }
+    }
 }
 
-export default function HubDetails({ project, members, links }: PageProps) {
+export default function ProjectPage({ project, members, links, regionAssociations, isAdmin }: InferGetServerSidePropsType<typeof getServerSideProps>) {
+    if (!project)
+        throw Error("A hub is required for this component")
 
-  return (
-      <Box width="large">
-        <Box direction="row" alignSelf="center">
-          <Heading size="medium" margin="small" alignSelf="center">{project.name}</Heading>
-        </Box>
-        <MembersCard/>
-        <ProjectAttributesCard project={project}/>
-        <LinksCard/>
-      </Box>
-  )
+    const initialPageState = [
+        [currentProjectAtom, project],
+        [isProjectAdminAtom, isAdmin],
+        [linkDetailsAtom, links],
+        [regionAssociationsAtom, regionAssociations],
+        [memberDetailsAtom, members]] as const;
 
+    return (
+        <JotaiProvider initialValues={initialPageState}>
+            <Suspense fallback={<SuspenseSpinner/>}> {/* Required to avoid infinite loop with async atoms that were not preloaded */}
+                <ProjectMain/>
+            </Suspense>
+        </JotaiProvider>
+    )
 }

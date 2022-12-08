@@ -1,5 +1,4 @@
 import {List} from "grommet";
-import {User} from "@supabase/auth-helpers-react";
 import {useRouter} from "next/router";
 
 import {Hub} from "../../utils/types";
@@ -15,8 +14,8 @@ export default function HubsList({hubs}: Props) {
         <List data={hubs} pad="medium"
           primaryKey='name'
           secondaryKey='description'
-          onClickItem={(event: {item?: Hub}) => { // @ts-ignore
-              router.push("/hub/"+event.item.id)}}>
+          onClickItem={(event: {item?: Hub}) => {
+              router.push("/hub/"+event.item?.id)}}>
         </List>
     )
 }

@@ -14,7 +14,7 @@ type Props = {
     onCancel: () => void
 }
 
-const emptyProfile: Profile = {avatarFilename: "", avatarURL: "", id: "", username: ""}
+const emptyProfile: Profile = {avatarFilename: "", avatarURL: "", id: "", username: "", status: 0}
 const editProfileAtom = atom<Profile>(emptyProfile)
 const loadingAtom = atom<boolean>(false)
 

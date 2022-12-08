@@ -11,7 +11,7 @@ import {
     Profile,
     RegionAssociations,
     LinkDetails,
-    MemberDetails, Role
+    MemberDetails, Role, Project
 } from "../utils/types";
 import {
     getCustomCatalog,
@@ -25,6 +25,7 @@ import {
 export const dbClientAtom = atom<SupabaseClient>((get) => createBrowserSupabaseClient())
 
 export const currentUserProfileAtom = atom<Profile | null>(null)
+
 export const currentAvatarUrlAtom = atom<string>((get) => get(currentUserProfileAtom)?.avatarURL || '')
 
 export const linkTypesAtom = atom<Promise<Array<LinkType>>>(async (get) => {
@@ -48,9 +49,13 @@ export const oneEarthCatalogAtom = atom<Promise<RegionCatalog>>(async (get) => {
     return getOneEarthCatalog(get(dbClientAtom))
 })
 
+export const oneEarthLabelsAtom = atom<Array<string>>((get) => get(oneEarthCatalogAtom).labels)
+
 export const epaCatalogAtom = atom<Promise<RegionCatalog>>(async (get) => {
     return getEPACatalog(get(dbClientAtom))
 })
+
+export const epaLabelsAtom = atom<Array<string>>((get) => get(epaCatalogAtom).labels)
 
 export const customCatalogAtom = atom<Promise<RegionCatalog>>(async (get) => {
     return getCustomCatalog(get(dbClientAtom))
@@ -65,5 +70,7 @@ export const projectRolesAtom = atom<Promise<Array<Role>>>(async (get) => {
 })
 
 export const regionAssociationsAtom = atom<RegionAssociations | null>(null)
+
 export const linkDetailsAtom = atom<Array<LinkDetails>>(new Array<LinkDetails>())
+
 export const memberDetailsAtom = atom<Array<MemberDetails>>(new Array<MemberDetails>())

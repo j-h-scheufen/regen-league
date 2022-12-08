@@ -2,11 +2,22 @@
 
 Created in service of bioregionalism: https://utopia.org/guide/what-is-a-bioregion-and-which-ones-are-there/
 
-Using bioregion data from the following sources:
+This is essentially a mapping exercise to catalogue the regenerative movement via an app that can permeate the space
+by first letting power users map out what they know in terms of entities, projects and efforts using publicly available information. 
+Actual operators of projects can later claim and take ownership of their profiles, if desired!
+
+Bioregion data from the following sources was used:
 - One Earth Bioregions 2020 framework: https://www.oneearth.org/bioregions/
 - EPA Ecoregions definition: https://www.epa.gov/eco-research/ecoregions-north-america
 
+
 ## Requirements
+
+### General notes on using Supabase
+The app makes use of a lot of stored functions to select data and sometimes to store it. If a table being queried uses RLS
+and there is no rule corresponding rule, the function just returns an empty result and no error. Using the JS API to query
+a table correctly returns an error. This is mentioned here as a warning when working with Supabase. The current behavior
+is considered a bug!
 
 ### Generating types for Supabase
 In order for the code to work, the types need to be exported from the Supabase tables 
@@ -23,7 +34,7 @@ on storage.objects for select
 using ( bucket_id = 'public' );
 ```
 
-2. The app uses stored SQL functions to insert hubs and projects, so it can ensure that an admin is atomically assigned. These functions were allowed access in the following way:
+2. The app uses stored SQL functions to INSERT hubs and projects, e.g. to ensure that an admin is atomically assigned. These functions were authorized in the following way:
 ```
 ALTER DEFAULT PRIVILEGES REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC;
 
@@ -201,6 +212,33 @@ as $$
   WHERE br.id = $1;
 $$;
 
+create or replace function public.get_hub_projects(hub_id uuid)
+returns table (
+  id uuid,
+  name varchar,
+  description text
+)
+language sql
+as $$
+  SELECT p.id, p.name, p.description
+  FROM projects p
+  JOIN projects_to_hubs pth ON (pth.project_id = p.id)
+  WHERE pth.hub_id = $1;
+$$;
+
+create or replace function public.get_non_hub_projects(hub_id uuid)
+returns table (
+  id uuid,
+  name varchar,
+  description text
+)
+language sql
+as $$
+  SELECT p.id, p.name, p.description
+  FROM projects p
+  WHERE p.id NOT IN (SELECT pth.project_id FROM projects_to_hubs pth WHERE pth.hub_id = $1);
+$$;
+
 ```
 
 5. Added ON CASCADE DELETE clause to the profiles table to automatically delete a profile when a user is deleted.
@@ -219,13 +257,41 @@ SELECT con.*
     WHERE 1=1
          AND rel.relname = 'profiles';
 ```
-Then drop and re-add the appropriate constraint. For profiles this was `profiles_id_fkey`
+Then drop and re-add the appropriate constraint. This procedure was used for the following constraints:
 ```
 ALTER TABLE public.profiles
 DROP CONSTRAINT profiles_id_fkey,
 ADD CONSTRAINT profiles_id_fkey
     FOREIGN KEY (id)
     REFERENCES auth.users(id)
+    ON DELETE CASCADE;
+
+ALTER TABLE public.project_members
+DROP CONSTRAINT project_members_project_id_fkey,
+ADD CONSTRAINT project_members_project_id_fkey
+    FOREIGN KEY (project_id)
+    REFERENCES public.projects(id)
+    ON DELETE CASCADE;
+
+ALTER TABLE public.hub_members
+DROP CONSTRAINT hub_members_hub_id_fkey,
+ADD CONSTRAINT hub_members_hub_id_fkey
+    FOREIGN KEY (hub_id)
+    REFERENCES public.hubs(id)
+    ON DELETE CASCADE;    
+
+ALTER TABLE public.projects_to_hubs
+DROP CONSTRAINT projects_to_hubs_project_id_fkey,
+ADD CONSTRAINT projects_to_hubs_project_id_fkey
+    FOREIGN KEY (project_id)
+    REFERENCES public.projects(id)
+    ON DELETE CASCADE;
+    
+ALTER TABLE public.projects_to_hubs
+DROP CONSTRAINT projects_to_hubs_hub_id_fkey,
+ADD CONSTRAINT projects_to_hubs_hub_id_fkey
+    FOREIGN KEY (hub_id)
+    REFERENCES public.hubs(id)
     ON DELETE CASCADE;
 ```
 

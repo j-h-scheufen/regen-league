@@ -33,18 +33,18 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
             links: linksData,
             regionAssociations: associationsData,
             projects: projects,
-            isHubAdmin: isAdmin,
+            isAdmin: isAdmin,
         }
     }
 }
 
-export default function HubPage({ hub, members, links, regionAssociations, projects, isHubAdmin }: InferGetServerSidePropsType<typeof getServerSideProps>) {
+export default function HubPage({ hub, members, links, regionAssociations, projects, isAdmin }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   if (!hub)
     throw Error("A hub is required for this component")
 
   const initialPageState = [
       [currentHubAtom, hub],
-      [isHubAdminAtom, isHubAdmin],
+      [isHubAdminAtom, isAdmin],
       [linkDetailsAtom, links],
       [regionAssociationsAtom, regionAssociations],
       [hubProjectsAtom, projects],

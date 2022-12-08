@@ -6,7 +6,7 @@ import RegionInfoCard from "../RegionInfoCard";
 import LinksCard from "../LinksCard";
 import LinksForm from "../LinksForm";
 import MembersCard from "../MembersCard";
-import HubAttributesCard from "./HubAttributesCard";
+import AttributesCard from "../AttributesCard";
 import {currentHubAtom, editAtom, hubMemberCandidatesAtom, isHubAdminAtom} from "../../state/hub";
 import RegionSelectorPanel from "../RegionSelectorPanel";
 import MembersForm from "../MembersForm";
@@ -61,7 +61,7 @@ export default function HubMain() {
                             onClick={() => setEdit(true)}
                             margin={{vertical: "medium"}}/>}
                             <MembersCard/>
-                            <HubAttributesCard/>
+                            <AttributesCard description={currentHub.description}/>
                             <RegionInfoCard/>
                             <LinksCard/>
                             <ProjectConnectionsCard/>

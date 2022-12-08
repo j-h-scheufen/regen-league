@@ -1,10 +1,11 @@
-import {Box, Card, CardBody, CardHeader, Paragraph, Text, TextArea} from 'grommet'
+import {Box, Card, CardBody, CardHeader, Paragraph, Text} from 'grommet'
 import {useAtomValue} from "jotai";
-import {currentHubAtom} from "../../state/hub";
-import {MainCard} from "../Styles";
+import {currentHubAtom} from "../state/hub";
 
-export default function HubAttributesCard() {
-    const hub = useAtomValue(currentHubAtom)
+type Props = {
+    description: string
+}
+export default function AttributesCard({ description }: Props) {
 
     return (
         <Card pad="small" margin={{vertical: "small"}}>
@@ -15,7 +16,7 @@ export default function HubAttributesCard() {
                         maxLines={20}
                         fill={true}
                         margin={{vertical: "xsmall"}}>
-                            {hub?.description || ''}
+                            {description || ''}
                     </Paragraph>
                 </Box>
             </CardBody>

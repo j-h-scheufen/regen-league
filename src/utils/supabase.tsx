@@ -225,18 +225,7 @@ export async function getHubMembers(client: SupabaseClient, hubId: string): Prom
         throw error
     }
     return data ? data.map((dbMember) => {
-        const newItem: MemberDetails = {
-            userId: dbMember.user_id,
-            username: dbMember.username,
-            avatarFilename: dbMember.avatar_filename,
-            roleName: dbMember.role_name,
-            avatarURL: ''
-        }
-        if (newItem.avatarFilename) {
-            const urlResult = client.storage.from('avatars').getPublicUrl(newItem.avatarFilename)
-            newItem.avatarURL = urlResult.data.publicUrl
-        }
-        return newItem
+        return createMemberDetails(client, dbMember.user_id, dbMember.username, dbMember.avatar_filename, dbMember.role_name)
     }) : new Array<MemberDetails>()
 }
 
@@ -247,12 +236,7 @@ export async function getProjectMembers(client: SupabaseClient, projectId: strin
         throw error
     }
     return data ? data.map((dbMember) => {
-        const newMember = createMemberDetails(dbMember.user_id, dbMember.username, dbMember.avatar_filename, dbMember.role_name, '')
-        if (newMember.avatarFilename) {
-            const urlResult = client.storage.from('avatars').getPublicUrl(newMember.avatarFilename)
-            newMember.avatarURL = urlResult.data.publicUrl
-        }
-        return newMember
+        return createMemberDetails(client, dbMember.user_id, dbMember.username, dbMember.avatar_filename, dbMember.role_name)
     }) : new Array<MemberDetails>()
 }
 
@@ -296,7 +280,7 @@ export async function addHubMembership(client: SupabaseClient, hubId: string, us
 
 export async function addProjectMembership(client: SupabaseClient, projectId: string, userId: string, roleId: number): Promise<MemberDetails> {
     const updates: DbProjectMember = {project_id: projectId, role_id: roleId, user_id: userId}
-    const {data, error} = await client.from('hub_members').upsert(updates).select('*')
+    const {data, error} = await client.from('project_members').upsert(updates).select('*')
     if (error) {
         console.error('Unable to add membership for project ID '+projectId+' and user ID '+userId+'. Error: '+error.message)
         throw error

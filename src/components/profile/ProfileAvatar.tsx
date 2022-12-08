@@ -23,7 +23,7 @@ function ProfileAvatar({profileId, name, avatarURL, size="medium", linkTo, role}
                                 <Avatar
                                     src={url}
                                     size={size!}
-                                    margin="small"
+                                    margin={{horizontal: "small", bottom: "xsmall"}}
                                     round="medium"/>
                                 {(role && role.toUpperCase() == 'ADMIN') && (
                                     <Box background="light-6" pad={{ horizontal: 'xsmall' }} round="small">
@@ -35,7 +35,7 @@ function ProfileAvatar({profileId, name, avatarURL, size="medium", linkTo, role}
         else
             content = (<AnchorWrapper condition={linkTo} url={linkTo}>
                             <Avatar size={size!}
-                                margin="small"
+                                margin={{horizontal: "small", bottom: "xsmall"}}
                                 round="medium">
                                 <UserIcon/>
                             </Avatar>

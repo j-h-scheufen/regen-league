@@ -1,4 +1,4 @@
-import {Box, Card, CardBody, CardHeader, Paragraph, TextArea} from 'grommet'
+import {Box, Card, CardBody, CardHeader, Paragraph, Text, TextArea} from 'grommet'
 import {Hub} from "../../utils/types";
 import {useAtom, useAtomValue} from "jotai";
 import {currentHubAtom} from "../../state/hub";
@@ -8,7 +8,7 @@ export default function HubAttributesCard() {
 
     return (
         <Card pad="small">
-            <CardHeader pad="small">Details</CardHeader>
+            <CardHeader justify="center"><Text size="large">Description</Text></CardHeader>
             <CardBody>
                 <Box width="100%" pad="small">
                     <Paragraph

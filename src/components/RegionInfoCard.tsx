@@ -30,8 +30,8 @@ export default function RegionInfoCard() {
     const associations = useAtomValue(regionAssociationsAtom)
 
     return (
-        <Card pad="medium">
-            {/*<CardHeader pad="small">Region Info</CardHeader>*/}
+        <Card pad="small" margin={{vertical: "small"}}>
+            <CardHeader justify="center"><Text size="large">Region Settings</Text></CardHeader>
             <CardBody direction="column">
                 {(!associations || (
                     (!associations.oneEarth || associations.oneEarth.length === 0) &&

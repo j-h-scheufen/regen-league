@@ -68,19 +68,18 @@ export default function RegionSelectorPanel({ ownerId }: Props) {
 
     return (
         <Card pad="small" margin={{vertical: "small"}}>
-            <CardHeader justify="center"><Text size="large">Location</Text></CardHeader>
+            <CardHeader justify="center"><Text size="large">Region Settings</Text></CardHeader>
             <CardBody>
                 <Box pad="small">
                     <Form
                         onSubmit={() => {
-                            updateRegions();
-                            setDirty(false)
+                            updateRegions().then(() => setDirty(false))
                         }}>
                         <JotaiProvider initialValues={[[selectionAtom, associations?.oneEarth || null]] as const}>
                             <RegionInfoSelector
                                 title="One Earth"
-                                regions={[oeCatalog.level1, oeCatalog.level2, oeCatalog.level3]}
-                                labels={['Realm', 'Subrealm', 'Bioregion']}
+                                regions={[oeCatalog.level1, oeCatalog.level2, oeCatalog.level3, oeCatalog.level4]}
+                                labels={['Realm', 'Subrealm', 'Bioregion', 'Ecoregion']}
                                 onChange={(update) => {
                                     setOeSelection(update)
                                     setDirty(true)

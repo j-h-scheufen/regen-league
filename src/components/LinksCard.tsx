@@ -2,7 +2,7 @@ import {
     Box,
     Card,
     CardBody,
-    CardHeader,
+    CardHeader, Text,
 } from 'grommet'
 import Link from "next/link";
 import {useAtomValue} from "jotai";
@@ -24,8 +24,8 @@ export default function LinksCard() {
     }
 
     return (
-        <Card pad="small">
-            <CardHeader pad="small">Links</CardHeader>
+        <Card pad="small" margin={{vertical: "small"}}>
+            <CardHeader justify="center"><Text size="large">Links</Text></CardHeader>
             <CardBody>
                 {links.map((item, index) => <LinkRow key={index} {...item}/>)}
             </CardBody>

@@ -18,11 +18,11 @@ export default function ProjectConnectionsCard() {
     }
 
     return (
-        <Card pad="small">
-            <CardHeader pad="small" justify="start">Associated Projects</CardHeader>
+        <Card pad="small" margin={{vertical: "small"}}>
+            <CardHeader justify="center"><Text size="large">Associated Projects</Text></CardHeader>
             <CardBody>
                 {projects.length == 0 ? (
-                    <Text>There are currently no projects linked to this hub.</Text>
+                    <Text>There are currently no projects associated with this hub.</Text>
                 ) : (
                     <Box>
                         {projects.map((item, index) => <ProjectRow key={index} {...item}/>)}

@@ -27,45 +27,47 @@ export default function HubMain() {
 
     return (
         <Page align="center">
-            {edit ? (
-                <Box width="large">
-                    <HubAttributesForm
-                        hub={currentHub}/>
-                    <RegionSelectorPanel
-                        ownerId={currentHub.id}/>
-                    <LinksForm
-                        ownerId={currentHub.id}/>
-                    <MembersForm
-                        orgId={currentHub.id}
-                        roles={hubRoles}
-                        initialCandidates={initialHubCandidates}
-                        performAdd={addHubMembership}
-                        performDelete={removeHubMembership}/>
-                    <ProjectConnectionsForm
-                        hubId={currentHub.id}/>
-                    <Button
-                        label="Done"
-                        style={{textAlign: 'center'}}
-                        onClick={() => setEdit(false)}
-                        margin={{top: "medium"}}/>
+            <Box width="large">
+                <Box direction="row" alignSelf="center">
+                    <Heading size="medium" margin="small" alignSelf="center">{currentHub.name}</Heading>
                 </Box>
-            ) : (
-                <Box width="large">
-                    <Box direction="row" alignSelf="center">
-                        <Heading size="medium" margin="small" alignSelf="center">{currentHub.name}</Heading>
+                {edit ? (
+                    <Box>
+                        <Button
+                            label="Done"
+                            style={{textAlign: 'center'}}
+                            onClick={() => setEdit(false)}
+                            margin={{vertical: "medium"}}/>
+                        <HubAttributesForm
+                            hub={currentHub}/>
+                        <RegionSelectorPanel
+                            ownerId={currentHub.id}/>
+                        <LinksForm
+                            ownerId={currentHub.id}/>
+                        <MembersForm
+                            orgId={currentHub.id}
+                            roles={hubRoles}
+                            initialCandidates={initialHubCandidates}
+                            performAdd={addHubMembership}
+                            performDelete={removeHubMembership}/>
+                        <ProjectConnectionsForm
+                            hubId={currentHub.id}/>
                     </Box>
-                    <MembersCard/>
-                    <HubAttributesCard/>
-                    <RegionInfoCard/>
-                    <LinksCard/>
-                    <ProjectConnectionsCard/>
-                    {isAdmin && <Button
-                        label="Edit"
-                        style={{textAlign: 'center'}}
-                        onClick={() => setEdit(true)}
-                        margin={{top: "medium"}}/>}
-                </Box>
-            )}
+                ) : (
+                    <Box>
+                        {isAdmin && <Button
+                            label="Edit"
+                            style={{textAlign: 'center'}}
+                            onClick={() => setEdit(true)}
+                            margin={{vertical: "medium"}}/>}
+                            <MembersCard/>
+                            <HubAttributesCard/>
+                            <RegionInfoCard/>
+                            <LinksCard/>
+                            <ProjectConnectionsCard/>
+                    </Box>
+                )}
+            </Box>
         </Page>
     )
 }

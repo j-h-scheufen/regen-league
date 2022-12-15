@@ -73,7 +73,6 @@ export default function Layout({ title = 'Regen League', children }: LayoutProps
 
                 <Main
                     // flex
-                    pad="medium"
                     fill={false}
                     align="center"
                     overflow="auto"

@@ -3,6 +3,7 @@ import {createBrowserSupabaseClient} from '@supabase/auth-helpers-nextjs'
 import {SessionContextProvider, Session} from '@supabase/auth-helpers-react'
 import type {AppProps} from 'next/app'
 import {Suspense, useState} from "react";
+import "mapbox-gl/dist/mapbox-gl.css"
 
 import '../styles/global.css'
 import Layout from '../components/Layout'

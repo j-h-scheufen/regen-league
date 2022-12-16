@@ -1,16 +1,9 @@
-import {
-    Box,
-    Button, Card, CardBody, CardHeader,
-    Form,
-    FormField, TextArea,
-    TextInput,
-    Text,
-} from 'grommet'
+import {Box, Button, Card, CardBody, CardHeader, Form, FormField, Text, TextArea, TextInput,} from 'grommet'
 import {useCallback} from 'react'
 import {useSupabaseClient, useUser} from "@supabase/auth-helpers-react";
 
 import {Database} from "../../utils/database.types";
-import {Project} from "../../utils/types";
+import {EntityType, Project} from "../../utils/types";
 import {atom, useAtom} from "jotai";
 import {useHydrateAtoms} from "jotai/utils";
 import {currentProjectAtom} from "../../state/project";
@@ -19,7 +12,7 @@ type Props = {
     project: Project
 }
 
-const emptyProject: Project = {description: '', id: '', name: ''}
+const emptyProject: Project = {type: EntityType.PROJECT, description: '', id: '', name: ''}
 const editProjectAtom = atom<Project>(emptyProject)
 const loadingAtom = atom<boolean>(false)
 const dirtyAtom = atom<boolean>(false)

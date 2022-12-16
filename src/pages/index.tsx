@@ -1,5 +1,4 @@
 import {Box, Heading, Paragraph} from 'grommet'
-import GlobalMap from "../components/map/GlobalMap";
 import * as React from "react";
 import dynamic from "next/dynamic";
 import SuspenseSpinner from "../components/utils/SuspenseSpinner";

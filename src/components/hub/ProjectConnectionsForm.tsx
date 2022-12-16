@@ -1,24 +1,12 @@
-import {
-    Box,
-    Card,
-    CardBody,
-    CardHeader,
-    Text,
-    Button,
-    Layer,
-    Heading,
-    Form,
-    FormField,
-    Select
-} from 'grommet'
+import {Box, Button, Card, CardBody, CardHeader, Form, FormField, Heading, Layer, Select, Text} from 'grommet'
 import {FormTrash} from "grommet-icons";
 import Link from "next/link";
 import {atom, useAtom, useAtomValue} from "jotai";
 import {useSupabaseClient} from "@supabase/auth-helpers-react";
 
-import {Project} from "../../utils/types";
-import {removeProjectFromHub, addProjectToHub} from "../../utils/supabase";
-import {hubProjectsAtom, hubProjectCandidatesAtom} from "../../state/hub";
+import {EntityType, Project} from "../../utils/types";
+import {addProjectToHub, removeProjectFromHub} from "../../utils/supabase";
+import {hubProjectCandidatesAtom, hubProjectsAtom} from "../../state/hub";
 import {useCallback} from "react";
 import {useHydrateAtoms} from "jotai/utils";
 
@@ -30,7 +18,7 @@ type ProjectHolder = {
     project: Project
 }
 
-const emptyHolder: ProjectHolder = {project: {description: "", id: "", name: ""}}
+const emptyHolder: ProjectHolder = {project: {description: "", id: "", name: "", type: EntityType.PROJECT}}
 const deleteProjectAtom = atom<Project | null>(null)
 const addProjectAtom = atom<ProjectHolder>(emptyHolder)
 const projectCandidatesAtom = atom<Array<Project>>(new Array<Project>())

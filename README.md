@@ -43,16 +43,37 @@ GRANT EXECUTE ON FUNCTION add_hub TO authenticated;
 GRANT EXECUTE ON FUNCTION add_hub TO service_role;
 GRANT EXECUTE ON FUNCTION add_project TO authenticated;
 GRANT EXECUTE ON FUNCTION add_project TO service_role;
+
+create or replace function public.new_entity_with_user_relation(name varchar, description text, entity_type_id int, role_id uuid, user_id uuid) 
+returns uuid as $$
+declare
+  new_id uuid;
+begin
+  insert into entities(name, description, type_id, created_by)
+  values (
+    new_entity_with_user_relation.name,
+    new_entity_with_user_relation.description,
+    new_entity_with_user_relation.entity_type_id,
+    new_entity_with_user_relation.user_id
+  )
+  returning id into new_id;
+  insert into relationships(entity1_id, entity2_id, role_id)
+  values(new_entity_with_user_relation.user_id, new_id, new_entity_with_user_relation.role_id);
+  return new_id;
+end;$$ language plpgsql;
+
 ```
 
 3. Function handle_new_user
-A trigger and function are being used to ensure a new user automatically gets a profile
+A trigger and function are being used to ensure a new user automatically gets a profile and an entity entry
 ```
 create or replace function public.handle_new_user() 
 returns trigger as $$
 begin
-  insert into public.users (id, email)
-  values (new.id, new.email);
+  insert into public.profiles (id)
+  values (new.id);
+  insert into public.entities (id, name, type_id, created_by)
+  values (new.id, new.id, 4, new.id);
   return new;
 end;
 $$ language plpgsql security definer;
@@ -259,6 +280,20 @@ SELECT con.*
 ```
 Then drop and re-add the appropriate constraint. This procedure was used for the following constraints:
 ```
+ALTER TABLE public.relationships
+DROP CONSTRAINT relationships_entity1_id_fkey,
+ADD CONSTRAINT relationships_entity1_id_fkey
+    FOREIGN KEY (entity1_id)
+    REFERENCES public.entities(id)
+    ON DELETE CASCADE;
+
+ALTER TABLE public.relationships
+DROP CONSTRAINT relationships_entity2_id_fkey,
+ADD CONSTRAINT relationships_entity2_id_fkey
+    FOREIGN KEY (entity2_id)
+    REFERENCES public.entities(id)
+    ON DELETE CASCADE;
+
 ALTER TABLE public.profiles
 DROP CONSTRAINT profiles_id_fkey,
 ADD CONSTRAINT profiles_id_fkey
@@ -266,33 +301,6 @@ ADD CONSTRAINT profiles_id_fkey
     REFERENCES auth.users(id)
     ON DELETE CASCADE;
 
-ALTER TABLE public.project_members
-DROP CONSTRAINT project_members_project_id_fkey,
-ADD CONSTRAINT project_members_project_id_fkey
-    FOREIGN KEY (project_id)
-    REFERENCES public.projects(id)
-    ON DELETE CASCADE;
-
-ALTER TABLE public.hub_members
-DROP CONSTRAINT hub_members_hub_id_fkey,
-ADD CONSTRAINT hub_members_hub_id_fkey
-    FOREIGN KEY (hub_id)
-    REFERENCES public.hubs(id)
-    ON DELETE CASCADE;    
-
-ALTER TABLE public.projects_to_hubs
-DROP CONSTRAINT projects_to_hubs_project_id_fkey,
-ADD CONSTRAINT projects_to_hubs_project_id_fkey
-    FOREIGN KEY (project_id)
-    REFERENCES public.projects(id)
-    ON DELETE CASCADE;
-    
-ALTER TABLE public.projects_to_hubs
-DROP CONSTRAINT projects_to_hubs_hub_id_fkey,
-ADD CONSTRAINT projects_to_hubs_hub_id_fkey
-    FOREIGN KEY (hub_id)
-    REFERENCES public.hubs(id)
-    ON DELETE CASCADE;
 ```
 
 6. Functions joining data across a 4-level region tables to retrieve tuples of data.

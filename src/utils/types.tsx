@@ -1,9 +1,26 @@
+import {Position} from "geojson";
 
 export enum UserStatus {
-    ONBOARDING,
-    ACTIVE,
-    BLOCKED,
-    DELETED
+    ONBOARDING = 1,
+    ACTIVE = 2,
+    BLOCKED = 3,
+    DELETED = 4
+}
+
+export enum EntityType {
+    PROJECT = 1,
+    HUB = 2,
+    PLATFORM = 3,
+    HUMAN = 4
+}
+
+export type Entity = {
+    id: string,
+    name: string,
+    description: string,
+    type: EntityType,
+    position?: Position,
+    polygon?: string | null
 }
 
 export type Profile = {
@@ -14,18 +31,9 @@ export type Profile = {
     status: UserStatus
 }
 
-export type Hub = {
-    id: string,
-    name: string,
-    description: string,
+export type Hub = Entity
 
-}
-
-export type Project = {
-    id: string,
-    name: string,
-    description: string,
-}
+export type Project = Entity
 
 export type MemberDetails = {
     userId: string,
@@ -43,7 +51,7 @@ export type MembershipItem = {
 }
 
 export type Role = {
-    id: number
+    id: string
     name: string
     description: string
 }

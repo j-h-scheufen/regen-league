@@ -9,6 +9,52 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      entities: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          type_id: number
+          created_by: string
+          created_at: string
+          position: number[] | null
+          polygon: Json | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          type_id: number
+          created_by: string
+          created_at?: string
+          position?: number[] | null
+          polygon?: Json | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          type_id?: number
+          created_by?: string
+          created_at?: string
+          position?: number[] | null
+          polygon?: Json | null
+        }
+      }
+      entity_types: {
+        Row: {
+          id: number
+          name: string
+        }
+        Insert: {
+          id?: number
+          name: string
+        }
+        Update: {
+          id?: number
+          name?: string
+        }
+      }
       epa_regions_1: {
         Row: {
           name: string
@@ -139,7 +185,7 @@ export interface Database {
           created_at?: string | null
           name: string
           description?: string | null
-          created_by: string
+          created_by?: string
         }
         Update: {
           id?: string
@@ -333,7 +379,7 @@ export interface Database {
           name: string
           description?: string | null
           id?: string
-          created_by: string
+          created_by?: string
         }
         Update: {
           created_at?: string | null
@@ -384,6 +430,23 @@ export interface Database {
           oe_level?: number | null
           epa_level?: number | null
           rl_level?: number | null
+        }
+      }
+      relationships: {
+        Row: {
+          entity1_id: string
+          entity2_id: string
+          role_id: string
+        }
+        Insert: {
+          entity1_id: string
+          entity2_id: string
+          role_id: string
+        }
+        Update: {
+          entity1_id?: string
+          entity2_id?: string
+          role_id?: string
         }
       }
       rl_regions_1: {
@@ -473,6 +536,26 @@ export interface Database {
           id?: string
           description?: string | null
           parent_id?: string
+        }
+      }
+      roles: {
+        Row: {
+          id: string
+          entity1_type_id: number
+          entity2_type_id: number
+          name: string
+        }
+        Insert: {
+          id?: string
+          entity1_type_id: number
+          entity2_type_id: number
+          name: string
+        }
+        Update: {
+          id?: string
+          entity1_type_id?: number
+          entity2_type_id?: number
+          name?: string
         }
       }
     }
@@ -703,6 +786,16 @@ export interface Database {
           description: string
           role: string
         }[]
+      }
+      new_entity_with_user_relation: {
+        Args: {
+          name: string
+          description: string
+          entity_type_id: number
+          role_id: string
+          user_id: string
+        }
+        Returns: string
       }
     }
     Enums: {

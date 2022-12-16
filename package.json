@@ -17,6 +17,7 @@
     "@supabase/auth-helpers-react": "^0.3.1",
     "@supabase/auth-ui-react": "^0.2.5",
     "@supabase/supabase-js": "^2.0.5",
+    "geojson": "^0.5.0",
     "grommet": "^2.22.0",
     "jotai": "^1.6.2",
     "mapbox-gl": "^2.11.1",

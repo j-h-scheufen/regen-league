@@ -281,16 +281,16 @@ SELECT con.*
 Then drop and re-add the appropriate constraint. This procedure was used for the following constraints:
 ```
 ALTER TABLE public.relationships
-DROP CONSTRAINT relationships_entity1_id_fkey,
-ADD CONSTRAINT relationships_entity1_id_fkey
-    FOREIGN KEY (entity1_id)
+DROP CONSTRAINT relationships_from_id_fkey,
+ADD CONSTRAINT relationships_from_id_fkey
+    FOREIGN KEY (from_id)
     REFERENCES public.entities(id)
     ON DELETE CASCADE;
 
 ALTER TABLE public.relationships
-DROP CONSTRAINT relationships_entity2_id_fkey,
-ADD CONSTRAINT relationships_entity2_id_fkey
-    FOREIGN KEY (entity2_id)
+DROP CONSTRAINT relationships_to_id_fkey,
+ADD CONSTRAINT relationships_to_id_fkey
+    FOREIGN KEY (to_id)
     REFERENCES public.entities(id)
     ON DELETE CASCADE;
 

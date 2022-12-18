@@ -47,7 +47,7 @@ export type MembershipItem = {
     id: string,
     name: string,
     description: string,
-    role: string
+    roleName: string
 }
 
 export type Role = {

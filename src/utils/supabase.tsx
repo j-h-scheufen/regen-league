@@ -84,7 +84,7 @@ export async function getAvatarFilename(session: Session, client: SupabaseClient
 }
 
 export async function isUserHubAdmin(client: SupabaseClient, userId: string, hubId: string) {
-    const {data, error} = await client.from('hub_members').select('hub_roles(name)').eq('hub_id', hubId).eq('user_id', userId).single()
+    const {data, error} = await client.from('relationships').select('hub_roles(name)').eq('hub_id', hubId).eq('user_id', userId).single()
     if (error) {
         console.error('Unable to retrieve member relationship for hub ID ' + hubId + ' and user ' + userId + '. Error: ' + error.message)
         return false
@@ -314,7 +314,7 @@ export async function removeProjectMembership(client: SupabaseClient, projectId:
 }
 
 export async function getProjectRoles(client: SupabaseClient): Promise<Array<Role>> {
-    const {data, error} = await client.from('project_roles').select('*').order('name')
+    const {data, error} = await client.from('roles').select('*').match({from_type: EntityType.HUMAN, to_type: EntityType.PROJECT}).order('name')
     if (error) {
         console.error('Unable to retrieve project roles. Error: '+error.message)
         throw error
@@ -323,7 +323,7 @@ export async function getProjectRoles(client: SupabaseClient): Promise<Array<Rol
 }
 
 export async function getHubRoles(client: SupabaseClient): Promise<Array<Role>> {
-    const {data, error} = await client.from('hub_roles').select('*').order('name')
+    const {data, error} = await client.from('hub_roles').select('*').match({from_type: EntityType.HUMAN, to_type: EntityType.HUB}).order('name')
     if (error) {
         console.error('Unable to retrieve hub roles. Error: '+error.message)
         throw error

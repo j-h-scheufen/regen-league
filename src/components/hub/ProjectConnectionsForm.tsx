@@ -7,8 +7,9 @@ import {useSupabaseClient} from "@supabase/auth-helpers-react";
 import {EntityType, Project} from "../../utils/types";
 import {addProjectToHub, removeProjectFromHub} from "../../utils/supabase";
 import {hubProjectCandidatesAtom, hubProjectsAtom} from "../../state/hub";
-import {useCallback} from "react";
+import React, {useCallback} from "react";
 import {useHydrateAtoms} from "jotai/utils";
+import ConfirmDialog from "../ConfirmDialog";
 
 type Props = {
     hubId: string
@@ -142,38 +143,13 @@ export default function ProjectConnectionsForm({ hubId }: Props) {
                 {projects.map((item, index) => <ProjectRow key={index} {...item}/>)}
             </CardBody>
             {deleteProject && (
-                <Layer
-                    id="deleteLinkModal"
-                    position="center"
-                    onClickOutside={() => setDeleteProject(null)}
-                    onEsc={() => setDeleteProject(null)}
-                    animation="fadeIn"
-                >
-                    <Box pad="medium" gap="small" width="medium">
-                        <Heading level={3} margin="none">Confirm</Heading>
-                        <Text>Are you sure you want to remove this project from the hub?</Text>
-                        <Box
-                            as="footer"
-                            gap="small"
-                            direction="row"
-                            align="center"
-                            justify="end"
-                            pad={{ top: 'medium', bottom: 'small' }}
-                        >
-                            <Button label="Cancel" onClick={() => setDeleteProject(null)} color="dark-3" />
-                            <Button
-                                label={
-                                    <Text color="white">
-                                        <strong>Delete</strong>
-                                    </Text>
-                                }
-                                onClick={() => handleProjectDelete()}
-                                primary
-                                color="status-critical"
-                            />
-                        </Box>
-                    </Box>
-                </Layer>
+                <ConfirmDialog
+                    id="deleteProjectModal"
+                    heading="Confirm"
+                    text="Are you sure you want to remove this project from the hub?"
+                    onCancel={() => setDeleteProject(null)}
+                    onSubmit={handleProjectDelete}
+                />
             )}
         </Card>
     )

@@ -20,6 +20,7 @@ import {useHydrateAtoms} from "jotai/utils";
 import {memberDetailsAtom} from "../state/global";
 import {MemberDetails, Profile, Role} from "../utils/types";
 import {getUserProfile} from "../utils/supabase";
+import ConfirmDialog from "./ConfirmDialog";
 
 type Props = {
     orgId: string
@@ -174,38 +175,13 @@ export default function MembersForm({orgId, roles, initialCandidates, performAdd
                 {members.map((item, index) => <MemberRow key={index} {...item}/>)}
             </CardBody>
             {deleteMember && (
-                <Layer
-                    id="deleteMemberModal"
-                    position="center"
-                    onClickOutside={() => setDeleteMember(null)}
-                    onEsc={() => setDeleteMember(null)}
-                    animation="fadeIn"
-                >
-                    <Box pad="medium" gap="small" width="medium">
-                        <Heading level={3} margin="none">Confirm</Heading>
-                        <Text>Are you sure you want to remove this member?</Text>
-                        <Box
-                            as="footer"
-                            gap="small"
-                            direction="row"
-                            align="center"
-                            justify="end"
-                            pad={{ top: 'medium', bottom: 'small' }}
-                        >
-                            <Button label="Cancel" onClick={() => setDeleteMember(null)} color="dark-3" />
-                            <Button
-                                label={
-                                    <Text color="white">
-                                        <strong>Delete</strong>
-                                    </Text>
-                                }
-                                onClick={() => handleMemberDelete()}
-                                primary
-                                color="status-critical"
-                            />
-                        </Box>
-                    </Box>
-                </Layer>
+                <ConfirmDialog
+                    id="deleteMemberModel"
+                    heading="Confirm"
+                    text="Are you sure you want to remove this member?"
+                    onCancel={() => setDeleteMember(null)}
+                    onSubmit={handleMemberDelete}
+                />
             )}
         </Card>
     )

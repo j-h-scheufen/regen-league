@@ -21,6 +21,7 @@ import {useCallback} from "react";
 import {LinkDetails} from "../utils/types";
 import {deleteLink, insertNewLink} from "../utils/supabase";
 import {linkDetailsAtom, linkTypeIconsAtom, linkTypesAtom} from "../state/global";
+import ConfirmDialog from "./ConfirmDialog";
 
 type Props = {
     ownerId: string
@@ -59,20 +60,21 @@ export default function LinksForm({ ownerId }: Props) {
         )
     }
 
-    const handleLinkDelete = useCallback(async (id: number) => {
-        try {
-            setLoading(true)
-            await deleteLink(client, id)
-            const newLinks = links.filter(item => item.id !== id)
-            setLinks([...newLinks])
+    const handleLinkDelete = useCallback(async () => {
+        if (deleteLinkId) {
+            try {
+                setLoading(true)
+                await deleteLink(client, deleteLinkId)
+                const newLinks = links.filter(item => item.id !== deleteLinkId)
+                setLinks([...newLinks])
+                setDeleteLinkId(null)
+            } catch (error) {
+                console.error('Unable to delete link ID: ' + deleteLinkId + '. Message: ', error)
+            } finally {
+                setLoading(false)
+            }
         }
-        catch (error) {
-            alert('Unable to delete link ID: '+id+'. Message: '+JSON.stringify(error))
-        }
-        finally {
-            setLoading(false)
-        }
-    }, [links, client, setLinks, setLoading])
+    }, [links, client, deleteLinkId, setLinks, setDeleteLinkId, setLoading])
 
     const addNewLink = useCallback( async () => {
         if(newLink) {
@@ -80,8 +82,8 @@ export default function LinksForm({ ownerId }: Props) {
                 setLoading(true)
                 const linkDetails = await insertNewLink(client, newLink.url, newLink.typeId, ownerId!)
                 links.push(linkDetails)
-                setNewLink(emptyNewLink)
                 setLinks([...links])
+                setNewLink(emptyNewLink)
             }
             catch (error) {
                 alert('Unable to create new link. Message: '+JSON.stringify(error))
@@ -127,41 +129,13 @@ export default function LinksForm({ ownerId }: Props) {
                 {links.map((item, index) => <LinkRow key={index} {...item}/>)}
             </CardBody>
             {deleteLinkId && (
-                <Layer
-                    id="deleteLinkModal"
-                    position="center"
-                    onClickOutside={() => setDeleteLinkId(null)}
-                    onEsc={() => setDeleteLinkId(null)}
-                    animation="fadeIn"
-                >
-                    <Box pad="medium" gap="small" width="medium">
-                        <Heading level={3} margin="none">Confirm</Heading>
-                        <Text>Are you sure you want to delete this link?</Text>
-                        <Box
-                            as="footer"
-                            gap="small"
-                            direction="row"
-                            align="center"
-                            justify="end"
-                            pad={{ top: 'medium', bottom: 'small' }}
-                        >
-                            <Button label="Cancel" onClick={() => setDeleteLinkId(null)} color="dark-3" />
-                            <Button
-                                label={
-                                    <Text color="white">
-                                        <strong>Delete</strong>
-                                    </Text>
-                                }
-                                onClick={() => {
-                                    handleLinkDelete(deleteLinkId);
-                                    setDeleteLinkId(null);
-                                }}
-                                primary
-                                color="status-critical"
-                            />
-                        </Box>
-                    </Box>
-                </Layer>
+                <ConfirmDialog
+                    id="deleteLinkModel"
+                    heading="Confirm"
+                    text="Are you sure you want to delete this link?"
+                    onCancel={() => setDeleteLinkId(null)}
+                    onSubmit={handleLinkDelete}
+                />
             )}
         </Card>
     )

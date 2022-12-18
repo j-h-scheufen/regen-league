@@ -434,18 +434,18 @@ export interface Database {
       }
       relationships: {
         Row: {
-          entity1_id: string
-          entity2_id: string
+          from_id: string
+          to_id: string
           role_id: string
         }
         Insert: {
-          entity1_id: string
-          entity2_id: string
+          from_id: string
+          to_id: string
           role_id: string
         }
         Update: {
-          entity1_id?: string
-          entity2_id?: string
+          from_id?: string
+          to_id?: string
           role_id?: string
         }
       }
@@ -541,21 +541,24 @@ export interface Database {
       roles: {
         Row: {
           id: string
-          entity1_type_id: number
-          entity2_type_id: number
+          from_type: number
+          to_type: number
           name: string
+          description: string | null
         }
         Insert: {
           id?: string
-          entity1_type_id: number
-          entity2_type_id: number
+          from_type: number
+          to_type: number
           name: string
+          description?: string | null
         }
         Update: {
           id?: string
-          entity1_type_id?: number
-          entity2_type_id?: number
+          from_type?: number
+          to_type?: number
           name?: string
+          description?: string | null
         }
       }
     }

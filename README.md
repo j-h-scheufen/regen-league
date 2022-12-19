@@ -85,7 +85,7 @@ create trigger on_auth_user_created
 
 4. Special getter functions to perform JOIN queries which are not possible via the supabase-js functionality
 ```
-create or replace function public.get_hub_member(hub_id uuid, user_id uuid)
+create or replace function public.get_user_member(user_id uuid, entity_id uuid)
 returns table (
   user_id uuid,
   username varchar,
@@ -94,15 +94,15 @@ returns table (
 )
 language sql
 as $$
-  SELECT p.id, p.username, p.avatar_filename, hr.name
-  FROM hub_members hm
-  JOIN profiles p ON (hm.user_id = p.id)
-  JOIN hub_roles hr ON (hm.role_id = hr.id)
-  WHERE hm.hub_id = $1
-  AND hm.user_id = $2
+  SELECT p.id, p.username, p.avatar_filename, r.name
+  FROM relationships rs
+  JOIN profiles p ON (rs.from_id = p.id)
+  JOIN roles r ON (rs.role_id = r.id)
+  WHERE rs.from_id = $1
+  AND rs.to_id = $2
 $$;
 
-create or replace function public.get_hub_members(hub_id uuid)
+create or replace function public.get_user_members(entity_id uuid)
 returns table (
   user_id uuid,
   username varchar,
@@ -111,14 +111,14 @@ returns table (
 )
 language sql
 as $$
-  SELECT p.id, p.username, p.avatar_filename, hr.name
-  FROM hub_members hm
-  JOIN profiles p ON (hm.user_id = p.id)
-  JOIN hub_roles hr ON (hm.role_id = hr.id)
-  WHERE hm.hub_id = $1;
+  SELECT p.id, p.username, p.avatar_filename, r.name
+  FROM relationships rs
+  JOIN profiles p ON (rs.from_id = p.id)
+  JOIN roles r ON (rs.role_id = r.id)
+  WHERE rs.to_id = $1;
 $$;
 
-create or replace function public.get_non_hub_members(hub_id uuid)
+create or replace function public.get_user_candidates(entity_id uuid)
 returns table (
   user_id uuid,
   username varchar,
@@ -128,85 +128,73 @@ language sql
 as $$
   SELECT p.id, p.username, p.avatar_filename
   FROM profiles p
-  WHERE p.id NOT IN (SELECT hm.user_id from hub_members hm where hm.hub_id  = $1)
+  WHERE p.id NOT IN (SELECT rs.from_id from relationships rs where rs.to_id  = $1)
 $$;
 
-create or replace function public.get_project_member(project_id uuid, user_id uuid)
-returns table (
-  user_id uuid,
-  username varchar,
-  avatar_filename varchar,
-  role_name varchar
-)
-language sql
-as $$
-  SELECT p.id, p.username, p.avatar_filename, pr.name
-  FROM project_members pm
-  JOIN profiles p ON (pm.user_id = p.id)
-  JOIN project_roles pr ON (pm.role_id = pr.id)
-  WHERE pm.project_id = $1
-  AND pm.user_id = $2;
-$$;
-
-create or replace function public.get_project_members(project_id uuid)
-returns table (
-  user_id uuid,
-  username varchar,
-  avatar_filename varchar,
-  role_name varchar
-)
-language sql
-as $$
-  SELECT p.id, p.username, p.avatar_filename, pr.name
-  FROM project_members pm
-  JOIN profiles p ON (pm.user_id = p.id)
-  JOIN project_roles pr ON (pm.role_id = pr.id)
-  WHERE pm.project_id = $1;
-$$;
-
-create or replace function public.get_non_project_members(project_id uuid)
-returns table (
-  user_id uuid,
-  username varchar,
-  avatar_filename varchar
-)
-language sql
-as $$
-  SELECT p.id, p.username, p.avatar_filename
-  FROM profiles p
-  WHERE p.id NOT IN (SELECT pm.user_id from project_members pm where pm.project_id  = $1)
-$$;
-
-create or replace function public.get_user_projects(user_id uuid)
+create or replace function public.get_entity_target_relations_by_type(from_id uuid, type_id int)
 returns table (
   id uuid,
   name varchar,
   description text,
+  type_id int,
   role varchar
 )
 language sql
 as $$
-  select p.id, p.name, p.description, pr.name as role
-  from project_members pm
-  join project_roles pr on (pm.role_id = pr.id)
-  join projects p on (p.id = pm.project_id)
-  where pm.user_id = $1
+  select e.id, e.name, e.description, $2 as type_id, r.name as role
+  from relationships rs
+  join roles r on (rs.role_id = r.id)
+  join entities e on (rs.to_id = e.id)
+  where rs.from_id = $1
+  and e.type_id = $2
 $$;
 
-create or replace function public.get_user_hubs(user_id uuid)
+create or replace function public.get_entity_source_relations_by_type(to_id uuid, type_id int)
 returns table (
   id uuid,
   name varchar,
   description text,
+  type_id int,
   role varchar
 )
 language sql
 as $$
-  select h.id, h.name, h.description, hr.name as role
-  from hub_members hm
-  join hub_roles hr on (hm.role_id = hr.id)
-  join hubs h on (h.id = hm.hub_id)
-  where hm.user_id = $1
+  select e.id, e.name, e.description, $2 as type_id, r.name as role
+  from relationships rs
+  join roles r on (rs.role_id = r.id)
+  join entities e on (rs.from_id = e.id)
+  where rs.to_id = $1
+  and e.type_id = $2
+$$;
+
+create or replace function public.get_entity_target_candidates_by_type(from_id uuid, type_id int)
+returns table (
+  id uuid,
+  name varchar,
+  description text,
+  type_id int
+)
+language sql
+as $$
+  SELECT e.id, e.name, e.description, $2 as type_id
+  FROM entities e
+  WHERE e.id NOT IN (SELECT to_id FROM relationships rs WHERE rs.from_id = $1)
+  AND e.type_id = $2
+$$;
+
+create or replace function public.get_entity_source_candidates_by_type(to_id uuid, type_id int)
+returns table (
+  id uuid,
+  name varchar,
+  description text,
+  type_id int
+)
+language sql
+as $$
+  SELECT e.id, e.name, e.description, $2 as type_id
+  FROM entities e
+  WHERE e.id NOT IN (SELECT from_id FROM relationships rs WHERE rs.to_id = $1)
+  AND e.type_id = $2
 $$;
 
 create or replace function public.get_bioregion_data(bioregion_id int)
@@ -231,33 +219,6 @@ as $$
   JOIN oe_subrealms sr ON (br.subrealm_id = sr.id)
   JOIN oe_realms r ON (sr.realm_id = r.id)
   WHERE br.id = $1;
-$$;
-
-create or replace function public.get_hub_projects(hub_id uuid)
-returns table (
-  id uuid,
-  name varchar,
-  description text
-)
-language sql
-as $$
-  SELECT p.id, p.name, p.description
-  FROM projects p
-  JOIN projects_to_hubs pth ON (pth.project_id = p.id)
-  WHERE pth.hub_id = $1;
-$$;
-
-create or replace function public.get_non_hub_projects(hub_id uuid)
-returns table (
-  id uuid,
-  name varchar,
-  description text
-)
-language sql
-as $$
-  SELECT p.id, p.name, p.description
-  FROM projects p
-  WHERE p.id NOT IN (SELECT pth.project_id FROM projects_to_hubs pth WHERE pth.hub_id = $1);
 $$;
 
 ```

@@ -566,13 +566,43 @@ export interface Database {
       [_ in never]: never
     }
     Functions: {
-      add_hub: {
-        Args: { name: string; description: string; firstadmin: string }
-        Returns: string
+      get_entity_source_candidates_by_type: {
+        Args: { to_id: string; type_id: number }
+        Returns: {
+          id: string
+          name: string
+          description: string
+          type_id: number
+        }[]
       }
-      add_project: {
-        Args: { name: string; description: string; firstadmin: string }
-        Returns: string
+      get_entity_source_relations_by_type: {
+        Args: { to_id: string; type_id: number }
+        Returns: {
+          id: string
+          name: string
+          description: string
+          type_id: number
+          role: string
+        }[]
+      }
+      get_entity_target_candidates_by_type: {
+        Args: { from_id: string; type_id: number }
+        Returns: {
+          id: string
+          name: string
+          description: string
+          type_id: number
+        }[]
+      }
+      get_entity_target_relations_by_type: {
+        Args: { from_id: string; type_id: number }
+        Returns: {
+          id: string
+          name: string
+          description: string
+          type_id: number
+          role: string
+        }[]
       }
       get_epa_region_info_l1: {
         Args: { region_id: number }
@@ -618,48 +648,6 @@ export interface Database {
           l4_id: number
           l4_name: string
           l4_link: string
-        }[]
-      }
-      get_hub_member: {
-        Args: { hub_id: string; user_id: string }
-        Returns: {
-          user_id: string
-          username: string
-          avatar_filename: string
-          role_name: string
-        }[]
-      }
-      get_hub_members: {
-        Args: { hub_id: string }
-        Returns: {
-          user_id: string
-          username: string
-          avatar_filename: string
-          role_name: string
-        }[]
-      }
-      get_hub_projects: {
-        Args: { hub_id: string }
-        Returns: { id: string; name: string; description: string }[]
-      }
-      get_non_hub_members: {
-        Args: { hub_id: string }
-        Returns: {
-          user_id: string
-          username: string
-          avatar_filename: string
-        }[]
-      }
-      get_non_hub_projects: {
-        Args: { hub_id: string }
-        Returns: { id: string; name: string; description: string }[]
-      }
-      get_non_project_members: {
-        Args: { project_id: string }
-        Returns: {
-          user_id: string
-          username: string
-          avatar_filename: string
         }[]
       }
       get_oe_region_info_l1: {
@@ -708,24 +696,6 @@ export interface Database {
           l4_link: string
         }[]
       }
-      get_project_member: {
-        Args: { project_id: string; user_id: string }
-        Returns: {
-          user_id: string
-          username: string
-          avatar_filename: string
-          role_name: string
-        }[]
-      }
-      get_project_members: {
-        Args: { project_id: string }
-        Returns: {
-          user_id: string
-          username: string
-          avatar_filename: string
-          role_name: string
-        }[]
-      }
       get_rl_region_info_l1: {
         Args: { region_id: string }
         Returns: { l1_id: string; l1_name: string; l1_link: string }[]
@@ -772,22 +742,30 @@ export interface Database {
           l4_link: string
         }[]
       }
-      get_user_hubs: {
-        Args: { user_id: string }
+      get_user_candidates: {
+        Args: { entity_id: string }
         Returns: {
-          id: string
-          name: string
-          description: string
-          role: string
+          user_id: string
+          username: string
+          avatar_filename: string
         }[]
       }
-      get_user_projects: {
-        Args: { user_id: string }
+      get_user_member: {
+        Args: { user_id: string; entity_id: string }
         Returns: {
-          id: string
-          name: string
-          description: string
-          role: string
+          user_id: string
+          username: string
+          avatar_filename: string
+          role_name: string
+        }[]
+      }
+      get_user_members: {
+        Args: { entity_id: string }
+        Returns: {
+          user_id: string
+          username: string
+          avatar_filename: string
+          role_name: string
         }[]
       }
       new_entity_with_user_relation: {

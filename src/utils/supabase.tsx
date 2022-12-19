@@ -9,7 +9,7 @@ import {
     EntityType,
     Hub,
     LinkDetails,
-    LinkType,
+    LinkType, LocationEntity,
     MemberDetails,
     MembershipItem,
     Profile,
@@ -23,18 +23,16 @@ import {
 } from "./types";
 
 type DbLinkInsert = Database['public']['Tables']['links']['Insert']
-type DbHubMember = Database['public']['Tables']['hub_members']['Row']
-type DbProjectMember = Database['public']['Tables']['project_members']['Row']
-type DbHubProject = Database['public']['Tables']['projects_to_hubs']['Row']
+type DbRelationship = Database['public']['Tables']['relationships']['Row']
 type DbEntity = Database['public']['Tables']['entities']['Row']
 
 export type DbContext = {
-    client: SupabaseClient
+    client: SupabaseClient<Database>
     session: Session | null
 }
 
 // Helper Functions
-function createMemberDetails(client: SupabaseClient, userId: string, username: string, avatarFilename: string, role: string): MemberDetails {
+function createMemberDetails(client: SupabaseClient<Database>, userId: string, username: string, avatarFilename: string, role: string): MemberDetails {
     const member: MemberDetails = {
         userId: userId,
         username: username,
@@ -49,7 +47,7 @@ function createMemberDetails(client: SupabaseClient, userId: string, username: s
     return member
 }
 
-function createProfile(client: SupabaseClient, id: string, username: string, avatarFilename: string, status: UserStatus): Profile {
+function createProfile(client: SupabaseClient<Database>, id: string, username: string, avatarFilename: string, status: UserStatus): Profile {
     const p: Profile = {
         status: status,
         id: id,
@@ -73,38 +71,18 @@ export const getServerClient = async (ctx: GetServerSidePropsContext): Promise<D
     return { client, session }
 }
 
-export async function getAvatarFilename(session: Session, client: SupabaseClient): Promise<String> {
-    if (session) { // make sure we have a logged-in user for RLS
-        const {data, error} = await client.from('profiles').select('avatar_filename').single()
-        if (error)
-            throw error
-        return data ? data.avatar_filename : ''
-    }
-    return ''
-}
-
-export async function isUserHubAdmin(client: SupabaseClient, userId: string, hubId: string) {
-    const {data, error} = await client.from('relationships').select('hub_roles(name)').eq('hub_id', hubId).eq('user_id', userId).single()
+export async function isUserEntityAdmin(client: SupabaseClient<Database>, userId: string, entityId: string) {
+    const {data, error} = await client.from('relationships').select('roles(name)').match({from_id: userId, to_id: entityId}).single()
     if (error) {
-        console.error('Unable to retrieve member relationship for hub ID ' + hubId + ' and user ' + userId + '. Error: ' + error.message)
+        console.error('Unable to retrieve member relationship for hub ID ' + entityId + ' and user ' + userId + '. Error: ' + error.message)
         return false
     }
-    const result = data as {hub_roles: {name: string}}
-    return result.hub_roles.name.toUpperCase() == 'ADMIN'
+    const result = data as {roles: {name: string}}
+    return result.roles.name.toUpperCase() == 'ADMIN'
 }
 
-export async function isUserProjectAdmin(client: SupabaseClient, userId: string, projectId: string) {
-    const {data, error} = await client.from('project_members').select('project_roles(name)').eq('project_id', projectId).eq('user_id', userId).single()
-    if (error) {
-        console.error('Unable to retrieve member relationship for project ID ' + projectId + ' and user ' + userId + '. Error: ' + error.message)
-        return false
-    }
-    const result = data as {project_roles: {name: string}}
-    return result.project_roles.name.toUpperCase() == 'ADMIN'
-}
-
-export async function getProjectsForUser(client: SupabaseClient, userId: string): Promise<Array<MembershipItem>> {
-    const {data, error} = await client.rpc('get_user_projects', {user_id: userId})
+export async function getProjectsForUser(client: SupabaseClient<Database>, userId: string): Promise<Array<MembershipItem>> {
+    const {data, error} = await client.rpc('get_entity_target_relations_by_type', {from_id: userId, type_id: EntityType.PROJECT})
     if (error) {
         console.error('Unable to retrieve projects for profile ' + userId + '. Error: ' + error.message)
         throw error
@@ -112,8 +90,8 @@ export async function getProjectsForUser(client: SupabaseClient, userId: string)
     return data as Array<MembershipItem>
 }
 
-export async function getHubsForUser(client: SupabaseClient, userId: string): Promise<Array<MembershipItem>> {
-    const {data, error} = await client.rpc('get_user_hubs', {user_id: userId})
+export async function getHubsForUser(client: SupabaseClient<Database>, userId: string): Promise<Array<MembershipItem>> {
+    const {data, error} = await client.rpc('get_entity_target_relations_by_type', {from_id: userId, type_id: EntityType.HUB})
     if (error) {
         console.error('Unable to retrieve hubs for profile ' + userId + '. Error: ' + error.message)
         throw error
@@ -121,25 +99,29 @@ export async function getHubsForUser(client: SupabaseClient, userId: string): Pr
     return data as Array<MembershipItem>
 }
 
-export async function getProjectsForHub(client: SupabaseClient, hubId: string): Promise<Array<Project>> {
-    const {data, error} = await client.rpc('get_hub_projects', {hub_id: hubId})
+export async function getProjectsForHub(client: SupabaseClient<Database>, hubId: string): Promise<Array<Entity>> {
+    const {data, error} = await client.rpc('get_entity_source_relations_by_type', {to_id: hubId, type_id: EntityType.PROJECT})
     if (error) {
         console.error('Unable to retrieve projects for hub ID ' + hubId + '. Error: ' + error.message)
         throw error
     }
-    return data || new Array<Project>()
+    return data ? data.map((item) => {
+        return {id: item.id, name: item.name, description: item.description, type: item.type_id}
+    }) : new Array<Entity>()
 }
 
-export async function getNonProjectsForHub(client: SupabaseClient, hubId: string): Promise<Array<Project>> {
-    const {data, error} = await client.rpc('get_non_hub_projects', {hub_id: hubId})
+export async function getNonProjectsForHub(client: SupabaseClient<Database>, hubId: string): Promise<Array<Project>> {
+    const {data, error} = await client.rpc('get_entity_source_candidates_by_type', {to_id: hubId, type_id: EntityType.PROJECT})
     if (error) {
         console.error('Unable to retrieve project candidates for hub ID ' + hubId + '. Error: ' + error.message)
         throw error
     }
-    return data || new Array<Project>()
+    return data ? data.map((item) => {
+        return {id: item.id, name: item.name, description: item.description, type: item.type_id}
+    }) : new Array<Entity>()
 }
 
-async function getRegionInfo(client: SupabaseClient, regionId: number | string, level: number, tablePrefix: string): Promise<RegionInfo> {
+async function getRegionInfo(client: SupabaseClient<Database>, regionId: number | string, level: number, tablePrefix: string): Promise<RegionInfo> {
     const tablename = 'get_'+tablePrefix+'_region_info_l'+level
     const {data, error} = await client.rpc(tablename, {region_id: regionId}).single()
     if (error) {
@@ -156,7 +138,7 @@ async function getRegionInfo(client: SupabaseClient, regionId: number | string, 
     return result
 }
 
-export async function getRegionAssociations(client: SupabaseClient, ownerId: string): Promise<RegionAssociations> {
+export async function getRegionAssociations(client: SupabaseClient<Database>, ownerId: string): Promise<RegionAssociations> {
     const {data, error} = await client.from('region_associations').select('*').eq('owner_id', ownerId)
     if (error) {
         console.error('Unable to retrieve region associations from owner ID ' + ownerId + '. Error: ' + error.message)
@@ -183,7 +165,7 @@ export async function getCustomCatalog(client: SupabaseClient): Promise<RegionCa
     return getStandardCatalog(client, 'rl', ['Bioregion','Bioregion','Bioregion','Bioregion'])
 }
 
-async function getStandardCatalog(client: SupabaseClient, tablePrefix: string, labels: Array<string>): Promise<RegionCatalog> {
+async function getStandardCatalog(client: SupabaseClient<Database>, tablePrefix: string, labels: Array<string>): Promise<RegionCatalog> {
     const result1 = await client.from(tablePrefix+'_regions_1').select('*').order('name')
     if (result1.error) {
         console.error('Unable to retrieve regions level 1 with table prefix: '+tablePrefix+'. Error: ' + result1.error.message)
@@ -221,10 +203,10 @@ async function getStandardCatalog(client: SupabaseClient, tablePrefix: string, l
     return {labels, level1, level2, level3, level4}
 }
 
-export async function getHubMembers(client: SupabaseClient, hubId: string): Promise<Array<MemberDetails>> {
-    const {data, error} = await client.rpc('get_hub_members', {hub_id: hubId})
+export async function getUserMembers(client: SupabaseClient<Database>, entityId: string): Promise<Array<MemberDetails>> {
+    const {data, error} = await client.rpc('get_user_members', {entity_id: entityId})
     if (error) {
-        console.error('Unable to retrieve members for hub '+hubId+'. Error: '+error.message)
+        console.error('Unable to retrieve members for entity '+entityId+'. Error: '+error.message)
         throw error
     }
     return data ? data.map((dbMember) => {
@@ -232,21 +214,10 @@ export async function getHubMembers(client: SupabaseClient, hubId: string): Prom
     }) : new Array<MemberDetails>()
 }
 
-export async function getProjectMembers(client: SupabaseClient, projectId: string): Promise<Array<MemberDetails>> {
-    const {data, error} = await client.rpc('get_project_members', {project_id: projectId})
+export async function getUserCandidates(client: SupabaseClient<Database>, entityId: string): Promise<Array<Profile>> {
+    const {data, error} = await client.rpc('get_user_candidates', {entity_id: entityId})
     if (error) {
-        console.error('Unable to retrieve members for project '+projectId+'. Error: '+error.message)
-        throw error
-    }
-    return data ? data.map((dbMember) => {
-        return createMemberDetails(client, dbMember.user_id, dbMember.username, dbMember.avatar_filename, dbMember.role_name)
-    }) : new Array<MemberDetails>()
-}
-
-export async function getNonHubMembers(client: SupabaseClient, hubId: string): Promise<Array<Profile>> {
-    const {data, error} = await client.rpc('get_non_hub_members', {hub_id: hubId})
-    if (error) {
-        console.error('Unable to retrieve non-members for hub '+hubId+'. Error: '+error.message)
+        console.error('Unable to retrieve non-members for entity '+entityId+'. Error: '+error.message)
         throw error
     }
     return data ? data.map((dbProfile) => {
@@ -254,63 +225,20 @@ export async function getNonHubMembers(client: SupabaseClient, hubId: string): P
     }) : new Array<Profile>()
 }
 
-export async function getNonProjectMembers(client: SupabaseClient, projectId: string): Promise<Array<Profile>> {
-    const {data, error} = await client.rpc('get_non_project_members', {project_id: projectId})
+export async function addUserMembership(client: SupabaseClient<Database>, entityId: string, userId: string, roleId: string): Promise<MemberDetails> {
+    const updates: DbRelationship = {from_id: userId, to_id: entityId, role_id: roleId}
+    const {data, error} = await client.from('relationships').upsert(updates).select('*')
     if (error) {
-        console.error('Unable to retrieve non-members for project '+projectId+'. Error: '+error.message)
+        console.error('Unable to add user membership for entity ID '+entityId+' and user ID '+userId+'. Error: '+error.message)
         throw error
     }
-    return data ? data.map((dbProfile) => {
-        return createProfile(client, dbProfile.user_id, dbProfile.username, dbProfile.avatar_filename, dbProfile.status)
-    }) : new Array<Profile>()
-}
-
-export async function addHubMembership(client: SupabaseClient, hubId: string, userId: string, roleId: number): Promise<MemberDetails> {
-    const updates: DbHubMember = {hub_id: hubId, role_id: roleId, user_id: userId}
-    const {data, error} = await client.from('hub_members').upsert(updates).select('*')
-    if (error) {
-        console.error('Unable to add membership for hub ID '+hubId+' and user ID '+userId+'. Error: '+error.message)
-        throw error
-    }
-    const memberResult = await client.rpc('get_hub_member', {hub_id: hubId, user_id: userId}).single()
+    const memberResult = await client.rpc('get_user_member', {entity_id: entityId, user_id: userId}).single()
     if (memberResult.error) {
-        console.error('Unable to retrieve member details for hub ID '+hubId+' and user ID '+userId+'. Error: '+memberResult.error.message)
+        console.error('Unable to retrieve user member details for entity ID '+entityId+' and user ID '+userId+'. Error: '+memberResult.error.message)
         throw error
     }
     const result = memberResult.data
     return createMemberDetails(client, result.user_id, result.username, result.avatar_filename, result.role_name)
-}
-
-export async function addProjectMembership(client: SupabaseClient, projectId: string, userId: string, roleId: number): Promise<MemberDetails> {
-    const updates: DbProjectMember = {project_id: projectId, role_id: roleId, user_id: userId}
-    const {data, error} = await client.from('project_members').upsert(updates).select('*')
-    if (error) {
-        console.error('Unable to add membership for project ID '+projectId+' and user ID '+userId+'. Error: '+error.message)
-        throw error
-    }
-    const memberResult = await client.rpc('get_project_member', {project_id: projectId, user_id: userId}).single()
-    if (memberResult.error) {
-        console.error('Unable to retrieve member details for project ID '+projectId+' and user ID '+userId+'. Error: '+memberResult.error.message)
-        throw error
-    }
-    const result = memberResult.data
-    return createMemberDetails(client, result.user_id, result.username, result.avatar_filename, result.role_name)
-}
-
-export async function removeHubMembership(client: SupabaseClient, hubId: string, userId: string) {
-    const {error} = await client.from('hub_members').delete().match({hub_id: hubId, user_id: userId})
-    if (error) {
-        console.error('Unable to remove membership for hub ID '+hubId+' and user ID '+userId+'. Error: '+error.message)
-        throw error
-    }
-}
-
-export async function removeProjectMembership(client: SupabaseClient, projectId: string, userId: string) {
-    const {error} = await client.from('project_members').delete().match({project_id: projectId, user_id: userId})
-    if (error) {
-        console.error('Unable to remove membership for hub ID '+projectId+' and user ID '+userId+'. Error: '+error.message)
-        throw error
-    }
 }
 
 export async function getProjectRoles(client: SupabaseClient): Promise<Array<Role>> {
@@ -323,7 +251,7 @@ export async function getProjectRoles(client: SupabaseClient): Promise<Array<Rol
 }
 
 export async function getHubRoles(client: SupabaseClient): Promise<Array<Role>> {
-    const {data, error} = await client.from('hub_roles').select('*').match({from_type: EntityType.HUMAN, to_type: EntityType.HUB}).order('name')
+    const {data, error} = await client.from('roles').select('*').match({from_type: EntityType.HUMAN, to_type: EntityType.HUB}).order('name')
     if (error) {
         console.error('Unable to retrieve hub roles. Error: '+error.message)
         throw error
@@ -331,7 +259,7 @@ export async function getHubRoles(client: SupabaseClient): Promise<Array<Role>> 
     return data || new Array<Role>()
 }
 
-export async function getLinksData(client: SupabaseClient, objectId: string): Promise<Array<LinkDetails>> {
+export async function getLinksData(client: SupabaseClient<Database>, objectId: string): Promise<Array<LinkDetails>> {
     const {data, error} = await client.from('links').select('*').eq('owner_id', objectId)
     if (error) {
         console.error('Unable to retrieve links for owner ID '+objectId+'. Error: '+error.message)
@@ -347,8 +275,8 @@ export async function getLinksData(client: SupabaseClient, objectId: string): Pr
     }) : new Array<LinkDetails>()
 }
 
-export async function getHubData(client: SupabaseClient, hubId: string): Promise<Hub | null> {
-    const {data, error} = await client.from('hubs').select('*').eq('id', hubId).single()
+export async function getHubData(client: SupabaseClient<Database>, hubId: string): Promise<Hub | null> {
+    const {data, error} = await client.from('entities').select('*').eq('id', hubId).single()
     if (error) {
         console.error('Unable to retrieve data for hub ID '+hubId+'. Error: '+error.message)
         throw error
@@ -356,7 +284,7 @@ export async function getHubData(client: SupabaseClient, hubId: string): Promise
     return data || null
 }
 
-export async function getProjectData(client: SupabaseClient, projectId: string): Promise<Project | null> {
+export async function getProjectData(client: SupabaseClient<Database>, projectId: string): Promise<Project | null> {
     const {data, error} = await client.from('entities').select('*').eq('id', projectId).single()
     if (error) {
         console.error('Unable to retrieve data for project ID '+projectId+'. Error: '+error.message)
@@ -365,7 +293,7 @@ export async function getProjectData(client: SupabaseClient, projectId: string):
     return data || null
 }
 
-export async function getUserProfile(client: SupabaseClient, userId: string): Promise<Profile | null> {
+export async function getUserProfile(client: SupabaseClient<Database>, userId: string): Promise<Profile | null> {
     const {data, error} = await client.from('profiles').select('*').eq('id', userId).single() // uses policy
     if (error) {
         console.error('Unable to retrieve profile data for user ID '+userId+'. Error: '+error.message)
@@ -377,7 +305,7 @@ export async function getUserProfile(client: SupabaseClient, userId: string): Pr
     return null
 }
 
-export async function updateAvatarFile(client: SupabaseClient, profileId: string, filename: string, file: any): Promise<{filename: string, url: string}> {
+export async function updateAvatarFile(client: SupabaseClient<Database>, profileId: string, filename: string, file: any): Promise<{filename: string, url: string}> {
     const { error: uploadError } = await client.storage
         .from('avatars')
         .upload(filename, file, { upsert: true })
@@ -398,7 +326,7 @@ export async function updateAvatarFile(client: SupabaseClient, profileId: string
     return {filename: filename, url: data?.publicUrl || ''}
 }
 
-export async function deleteLink(client: SupabaseClient, linkId: number) {
+export async function deleteLink(client: SupabaseClient<Database>, linkId: number) {
     const {error} = await client.from('links').delete().eq('id', linkId)
     if (error) {
         console.log('Error deleting link ID: '+linkId+'. Error: '+error.message)
@@ -413,7 +341,7 @@ export async function insertNewLink(client: SupabaseClient<Database>, url: strin
         console.log('Error insert a new link: '+JSON.stringify(newDbLink)+'. Error: '+error.message)
         throw error
     }
-    const newLink: LinkDetails = {id: data.id, typeId: data.type_id, url: url}
+    const newLink: LinkDetails = {id: data!.id, typeId: data!.type_id, url: url}
     return newLink
 }
 
@@ -430,7 +358,7 @@ export async function getLinkTypes(client: SupabaseClient): Promise<Array<LinkTy
 // Parameter choices: An undefined value = no change, don't update.
 // a NULL value = update table, set to NULL = delete
 export async function updateRegionAssociations(
-    client: SupabaseClient,
+    client: SupabaseClient<Database>,
     ownerId: string,
     oeRegion: RegionNode | null | undefined,
     epaRegion:RegionNode | null | undefined,
@@ -459,25 +387,24 @@ export async function updateRegionAssociations(
     return getRegionAssociations(client, ownerId)
 }
 
-export async function addProjectToHub(client: SupabaseClient, hubId: string, projectId: string) {
-    const updates: DbHubProject = {hub_id: hubId, project_id: projectId}
-    const {data, error} = await client.from('projects_to_hubs').insert(updates)
+export async function addRelationship(client: SupabaseClient<Database>, fromId: string, toId: string, roleId: string) {
+    const updates: DbRelationship = {from_id: fromId, to_id: toId, role_id: roleId}
+    const {data, error} = await client.from('relationships').insert(updates)
     if (error) {
-        console.error('Unable to add project ID '+projectId+' to hub ID '+hubId+'. Error: '+error.message)
+        console.error('Unable to add relation from ID '+fromId+' to ID '+toId+' with role '+roleId+'. Error: '+error.message)
         throw error
     }
 }
 
-
-export async function removeProjectFromHub(client: SupabaseClient, hubId: string, projectId: string) {
-    const {data, error} = await client.from('projects_to_hubs').delete().match({hub_id: hubId, project_id: projectId})
+export async function removeRelationship(client: SupabaseClient<Database>, fromId: string, toId: string) {
+    const {data, error} = await client.from('relationships').delete().match({from_id: fromId, to_id: toId})
     if (error) {
-        console.error('Unable to remove project ID '+projectId+' from hub ID '+hubId+'. Error: '+error.message)
+        console.error('Unable to remove relationship from ID '+fromId+' to ID '+toId+'. Error: '+error.message)
         throw error
     }
 }
 
-export async function getEntitiesWithType(client: SupabaseClient, type: EntityType): Promise<Array<Entity>> {
+export async function getEntitiesByType(client: SupabaseClient<Database>, type: EntityType): Promise<Array<LocationEntity>> {
     const {data, error} = await client.from('entities').select('*').eq('type_id', type).order('name')
     if (error) {
         console.error('Unable to retrieve entities of type '+type+'. Error: '+error.message)
@@ -485,7 +412,7 @@ export async function getEntitiesWithType(client: SupabaseClient, type: EntityTy
     }
     if (data) {
         return data.map((item: DbEntity) => {
-            const e: Entity = {
+            const e: LocationEntity = {
                 id: item.id,
                 name: item.name,
                 description: item.description || '',
@@ -496,13 +423,13 @@ export async function getEntitiesWithType(client: SupabaseClient, type: EntityTy
             return e
         })
     }
-    return new Array<Entity>()
+    return new Array<LocationEntity>()
 }
 
 export async function getHubs(client: SupabaseClient): Promise<Array<Hub>> {
-    return getEntitiesWithType(client, EntityType.HUB)
+    return getEntitiesByType(client, EntityType.HUB)
 }
 
 export async function getProjects(client: SupabaseClient): Promise<Array<Project>> {
-    return getEntitiesWithType(client, EntityType.PROJECT)
+    return getEntitiesByType(client, EntityType.PROJECT)
 }

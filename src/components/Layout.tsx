@@ -87,7 +87,6 @@ export default function Layout({ title = 'Regen League', children }: LayoutProps
                 </Header>
 
                 <Main
-                    // flex
                     fill={false}
                     align="center"
                     overflow="auto"

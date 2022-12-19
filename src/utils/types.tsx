@@ -19,6 +19,13 @@ export type Entity = {
     name: string,
     description: string,
     type: EntityType,
+}
+
+export type LocationEntity = {
+    id: string,
+    name: string,
+    description: string,
+    type: EntityType,
     position?: Position,
     polygon?: string | null
 }
@@ -31,9 +38,16 @@ export type Profile = {
     status: UserStatus
 }
 
-export type Hub = Entity
+export type Hub = LocationEntity
 
-export type Project = Entity
+export type Project = LocationEntity
+
+export type RelationDetails = {
+    fromId: string,
+    toId: string,
+    roleId: string,
+    roleName: string,
+}
 
 export type MemberDetails = {
     userId: string,

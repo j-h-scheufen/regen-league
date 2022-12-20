@@ -122,11 +122,12 @@ create or replace function public.get_user_candidates(entity_id uuid)
 returns table (
   user_id uuid,
   username varchar,
-  avatar_filename varchar
+  avatar_filename varchar,
+  status int
 )
 language sql
 as $$
-  SELECT p.id, p.username, p.avatar_filename
+  SELECT p.id, p.username, p.avatar_filename, p.status
   FROM profiles p
   WHERE p.id NOT IN (SELECT rs.from_id from relationships rs where rs.to_id  = $1)
 $$;

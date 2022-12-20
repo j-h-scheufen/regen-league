@@ -6,14 +6,12 @@ import {
     CardHeader,
     Form,
     FormField,
-    Heading,
-    Layer,
     Select,
     Text,
 } from 'grommet'
 import React, {useCallback} from "react";
 import {FormTrash} from "grommet-icons";
-import {SupabaseClient, useSupabaseClient} from "@supabase/auth-helpers-react";
+import {useSupabaseClient} from "@supabase/auth-helpers-react";
 import {atom, useAtom, useAtomValue} from "jotai";
 import {useHydrateAtoms} from "jotai/utils";
 
@@ -26,16 +24,16 @@ type Props = {
     orgId: string
     roles: Array<Role>
     initialCandidates: Array<Profile>
-    performAdd: (client: SupabaseClient, orgId: string, userId: string, roleId: number) => Promise<MemberDetails>
-    performDelete: (client: SupabaseClient, orgId: string, userId: string) => Promise<void>
+    performAdd: (userId: string, roleId: string) => Promise<MemberDetails>
+    performDelete: (userId: string) => Promise<void>
 }
 
 type NewMember = {
     userId: string
-    roleId: number
+    roleId: string
 }
 
-const emptyNewMember = {roleId: 0, userId: ''}
+const emptyNewMember = {roleId: '', userId: ''}
 const deleteMemberAtom = atom<MemberDetails | null>(null)
 const newMemberAtom = atom<NewMember>({...emptyNewMember})
 const loadingAtom = atom<boolean>(false)
@@ -67,7 +65,7 @@ export default function MembersForm({orgId, roles, initialCandidates, performAdd
         if (deleteMember) {
             try {
                 setLoading(true)
-                await performDelete(client, orgId, deleteMember.userId)
+                await performDelete(deleteMember.userId)
                 const newMembers = members.filter(item => item.userId !== deleteMember.userId)
                 const newCandidate = await getUserProfile(client, deleteMember.userId)
                 if (memberCandidates && newCandidate) {
@@ -82,14 +80,14 @@ export default function MembersForm({orgId, roles, initialCandidates, performAdd
                 setLoading(false)
             }
         }
-    }, [client, orgId, deleteMember, members, memberCandidates, performDelete, setLoading, setMembers, setDeleteMember, updateMemberCandidatesState])
+    }, [client, deleteMember, members, memberCandidates, performDelete, setLoading, setMembers, setDeleteMember, updateMemberCandidatesState])
 
     const addNewMember =  useCallback(async () => {
         if(newMember) {
             try {
                 setLoading(true)
                 let memberDetails: any = undefined
-                memberDetails = await performAdd(client, orgId, newMember.userId, newMember.roleId)
+                memberDetails = await performAdd(newMember.userId, newMember.roleId)
                 if (memberDetails) {
                     members.push(memberDetails)
                     if (memberCandidates) {
@@ -107,7 +105,7 @@ export default function MembersForm({orgId, roles, initialCandidates, performAdd
                 setLoading(false)
             }
         }
-    }, [client, orgId, newMember, members, memberCandidates, performAdd, setLoading, setMembers, setNewMember, updateMemberCandidatesState])
+    }, [newMember, members, memberCandidates, performAdd, setLoading, setMembers, setNewMember, updateMemberCandidatesState])
 
     const MemberRow = (member: MemberDetails) => {
         return (

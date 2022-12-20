@@ -12,16 +12,27 @@ import RegionSelectorPanel from "../RegionSelectorPanel";
 import MembersForm from "../MembersForm";
 import {waitForAll} from "jotai/utils";
 import {projectRolesAtom} from "../../state/global";
-import {addProjectMembership, removeProjectMembership} from "../../utils/supabase";
+import {addRelationship, getUserMember, removeRelationship} from "../../utils/supabase";
+import {useSupabaseClient} from "@supabase/auth-helpers-react";
 
 export default function ProjectMain() {
     const [projectRoles, initialProjectCandidates] = useAtomValue(waitForAll([projectRolesAtom, projectMemberCandidatesAtom]))
     const currentProject = useAtomValue(currentProjectAtom)
     const isAdmin = useAtomValue(isProjectAdminAtom)
     const [edit, setEdit] = useAtom(editAtom)
+    const client = useSupabaseClient()
 
     if (!currentProject)
         throw Error('No project object detected in app state!')
+
+    const performAdd = async (userId: string, roleId: string) => {
+        await addRelationship(client, userId, currentProject.id, roleId)
+        return getUserMember(client, userId, currentProject.id)
+    }
+
+    const performDelete = async (userId: string) => {
+        return removeRelationship(client, userId, currentProject.id)
+    }
 
     return (
         <Page align="center">
@@ -46,8 +57,8 @@ export default function ProjectMain() {
                             orgId={currentProject.id}
                             roles={projectRoles}
                             initialCandidates={initialProjectCandidates}
-                            performAdd={addProjectMembership}
-                            performDelete={removeProjectMembership}/>
+                            performAdd={performAdd}
+                            performDelete={performDelete}/>
                     </Box>
                 ) : (
                     <Box>

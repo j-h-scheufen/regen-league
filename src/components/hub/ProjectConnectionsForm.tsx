@@ -1,15 +1,16 @@
-import {Box, Button, Card, CardBody, CardHeader, Form, FormField, Heading, Layer, Select, Text} from 'grommet'
+import {Box, Button, Card, CardBody, CardHeader, Form, FormField, Select, Text} from 'grommet'
 import {FormTrash} from "grommet-icons";
 import Link from "next/link";
 import {atom, useAtom, useAtomValue} from "jotai";
 import {useSupabaseClient} from "@supabase/auth-helpers-react";
 
 import {EntityType, Project} from "../../utils/types";
-import {addProjectToHub, removeProjectFromHub} from "../../utils/supabase";
+import {addRelationship, removeRelationship} from "../../utils/supabase";
 import {hubProjectCandidatesAtom, hubProjectsAtom} from "../../state/hub";
 import React, {useCallback} from "react";
 import {useHydrateAtoms} from "jotai/utils";
 import ConfirmDialog from "../ConfirmDialog";
+import {rolesAtom} from "../../state/global";
 
 type Props = {
     hubId: string
@@ -27,6 +28,7 @@ const displayCandidatesAtom = atom<Array<Project>>(new Array<Project>())
 const loadingAtom = atom<boolean>(false)
 
 export default function ProjectConnectionsForm({ hubId }: Props) {
+    const rolesDictionary = useAtomValue(rolesAtom)
     const initialProjectCandidates = useAtomValue(hubProjectCandidatesAtom)
     const [projects, setProjects] = useAtom(hubProjectsAtom)
     useHydrateAtoms([
@@ -40,7 +42,6 @@ export default function ProjectConnectionsForm({ hubId }: Props) {
     const [loading, setLoading] = useAtom(loadingAtom)
     const client = useSupabaseClient()
 
-
     const updateProjectCandidatesState = useCallback((projects: Array<Project>) => {
         setProjectCandidates(projects)
         setDisplayCandidates(projects)
@@ -51,7 +52,7 @@ export default function ProjectConnectionsForm({ hubId }: Props) {
             const id = deleteProject.id
             try {
                 setLoading(true)
-                await removeProjectFromHub(client, hubId, id)
+                await removeRelationship(client, id, hubId)
                 const newProjects = projects.filter(item => item.id !== id)
                 setProjects([...newProjects])
                 projectCandidates.push(deleteProject)
@@ -70,7 +71,7 @@ export default function ProjectConnectionsForm({ hubId }: Props) {
             const id = addProject.project.id
             try {
                 setLoading(true)
-                await addProjectToHub(client, hubId, id)
+                await addRelationship(client, id, hubId, 'ssdf') //rolesDictionary[{fromType: EntityType.PROJECT, toType: EntityType.HUB}])
                 const newCandidates = projectCandidates.filter(item => item.id !== id)
                 projects.push(addProject.project)
                 setProjects([...projects])

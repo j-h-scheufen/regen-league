@@ -7,7 +7,7 @@ import "mapbox-gl/dist/mapbox-gl.css"
 
 import '../styles/global.css'
 import Layout from '../components/Layout'
-import {customCatalogAtom, epaCatalogAtom, linkTypesAtom, oneEarthCatalogAtom} from "../state/global";
+import {customCatalogAtom, epaCatalogAtom, linkTypesAtom, oneEarthCatalogAtom, rolesAtom} from "../state/global";
 import SuspenseSpinner from "../components/utils/SuspenseSpinner";
 
 export default function App({ Component, pageProps}: AppProps<{
@@ -19,6 +19,7 @@ export default function App({ Component, pageProps}: AppProps<{
     const GlobalStatePreloader = () => {
         // place async atoms here that you want to load early
         useAtomValue(linkTypesAtom)
+        // useAtomValue(rolesAtom)
         useAtomValue(oneEarthCatalogAtom)
         useAtomValue(epaCatalogAtom)
         useAtomValue(customCatalogAtom)

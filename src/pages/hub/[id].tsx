@@ -4,11 +4,12 @@ import {Suspense} from "react";
 
 import {
     getHubData,
-    getHubMembers,
     getLinksData,
     getServerClient,
-    isUserHubAdmin,
-    getRegionAssociations, getProjectsForHub
+    getRegionAssociations,
+    getProjectsForHub,
+    getUserMembers,
+    isUserEntityAdmin
 } from "../../utils/supabase";
 import {currentHubAtom, hubProjectsAtom, isHubAdminAtom} from "../../state/hub";
 import HubMain from "../../components/hub/HubMain";
@@ -20,10 +21,12 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
     const {client, session} = await getServerClient(ctx)
     const hubData = await getHubData(client, hubId)
     const associationsData = await getRegionAssociations(client, hubId)
-    const membersData = await getHubMembers(client, hubId);
+    const membersData = await getUserMembers(client, hubId);
     const linksData = await getLinksData(client, hubId)
     const projects = await getProjectsForHub(client, hubId)
-    const isAdmin = session?.user ? await isUserHubAdmin(client, session.user.id, hubId) : false
+    const isAdmin = session?.user ? await isUserEntityAdmin(client, session.user.id, hubId) : false
+
+    console.log('ADMIN: ', isAdmin)
 
     return {
         props: {

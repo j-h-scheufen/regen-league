@@ -748,6 +748,7 @@ export interface Database {
           user_id: string
           username: string
           avatar_filename: string
+          status: number
         }[]
       }
       get_user_member: {

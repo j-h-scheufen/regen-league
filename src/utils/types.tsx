@@ -57,10 +57,7 @@ export type MemberDetails = {
     avatarURL?: string
 }
 
-export type MembershipItem = {
-    id: string,
-    name: string,
-    description: string,
+export type EntityMember = Entity & {
     roleName: string
 }
 
@@ -80,6 +77,13 @@ export type LinkType = {
     id: number
     name: string
 }
+
+export type RoleKey = {
+    fromType: EntityType,
+    toType: EntityType
+}
+
+export type RolesDictionary = Map<RoleKey, Array<Role>>
 
 export type IconDictionary = Record<number, JSX.Element>
 

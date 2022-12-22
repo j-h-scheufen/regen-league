@@ -9,6 +9,134 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      del_hub_members: {
+        Row: {
+          hub_id: string
+          user_id: string
+          role_id: number
+        }
+        Insert: {
+          hub_id: string
+          user_id: string
+          role_id: number
+        }
+        Update: {
+          hub_id?: string
+          user_id?: string
+          role_id?: number
+        }
+      }
+      del_hub_roles: {
+        Row: {
+          id: number
+          name: string
+          description: string | null
+        }
+        Insert: {
+          id?: number
+          name: string
+          description?: string | null
+        }
+        Update: {
+          id?: number
+          name?: string
+          description?: string | null
+        }
+      }
+      del_hubs: {
+        Row: {
+          id: string
+          created_at: string | null
+          name: string
+          description: string | null
+          created_by: string
+        }
+        Insert: {
+          id?: string
+          created_at?: string | null
+          name: string
+          description?: string | null
+          created_by?: string
+        }
+        Update: {
+          id?: string
+          created_at?: string | null
+          name?: string
+          description?: string | null
+          created_by?: string
+        }
+      }
+      del_project_members: {
+        Row: {
+          user_id: string
+          role_id: number
+          project_id: string
+        }
+        Insert: {
+          user_id: string
+          role_id: number
+          project_id: string
+        }
+        Update: {
+          user_id?: string
+          role_id?: number
+          project_id?: string
+        }
+      }
+      del_project_roles: {
+        Row: {
+          id: number
+          name: string | null
+          description: string | null
+        }
+        Insert: {
+          id?: number
+          name?: string | null
+          description?: string | null
+        }
+        Update: {
+          id?: number
+          name?: string | null
+          description?: string | null
+        }
+      }
+      del_projects: {
+        Row: {
+          created_at: string | null
+          name: string
+          description: string | null
+          id: string
+          created_by: string
+        }
+        Insert: {
+          created_at?: string | null
+          name: string
+          description?: string | null
+          id?: string
+          created_by?: string
+        }
+        Update: {
+          created_at?: string | null
+          name?: string
+          description?: string | null
+          id?: string
+          created_by?: string
+        }
+      }
+      del_projects_to_hubs: {
+        Row: {
+          project_id: string
+          hub_id: string
+        }
+        Insert: {
+          project_id: string
+          hub_id: string
+        }
+        Update: {
+          project_id?: string
+          hub_id?: string
+        }
+      }
       entities: {
         Row: {
           id: string
@@ -136,63 +264,6 @@ export interface Database {
           link?: string | null
           id?: number
           parent_id?: number
-        }
-      }
-      hub_members: {
-        Row: {
-          hub_id: string
-          user_id: string
-          role_id: number
-        }
-        Insert: {
-          hub_id: string
-          user_id: string
-          role_id: number
-        }
-        Update: {
-          hub_id?: string
-          user_id?: string
-          role_id?: number
-        }
-      }
-      hub_roles: {
-        Row: {
-          id: number
-          name: string
-          description: string | null
-        }
-        Insert: {
-          id?: number
-          name: string
-          description?: string | null
-        }
-        Update: {
-          id?: number
-          name?: string
-          description?: string | null
-        }
-      }
-      hubs: {
-        Row: {
-          id: string
-          created_at: string | null
-          name: string
-          description: string | null
-          created_by: string
-        }
-        Insert: {
-          id?: string
-          created_at?: string | null
-          name: string
-          description?: string | null
-          created_by?: string
-        }
-        Update: {
-          id?: string
-          created_at?: string | null
-          name?: string
-          description?: string | null
-          created_by?: string
         }
       }
       link_types: {
@@ -330,77 +401,6 @@ export interface Database {
           username?: string | null
           avatar_filename?: string | null
           status?: number
-        }
-      }
-      project_members: {
-        Row: {
-          user_id: string
-          role_id: number
-          project_id: string
-        }
-        Insert: {
-          user_id: string
-          role_id: number
-          project_id: string
-        }
-        Update: {
-          user_id?: string
-          role_id?: number
-          project_id?: string
-        }
-      }
-      project_roles: {
-        Row: {
-          id: number
-          name: string | null
-          description: string | null
-        }
-        Insert: {
-          id?: number
-          name?: string | null
-          description?: string | null
-        }
-        Update: {
-          id?: number
-          name?: string | null
-          description?: string | null
-        }
-      }
-      projects: {
-        Row: {
-          created_at: string | null
-          name: string
-          description: string | null
-          id: string
-          created_by: string
-        }
-        Insert: {
-          created_at?: string | null
-          name: string
-          description?: string | null
-          id?: string
-          created_by?: string
-        }
-        Update: {
-          created_at?: string | null
-          name?: string
-          description?: string | null
-          id?: string
-          created_by?: string
-        }
-      }
-      projects_to_hubs: {
-        Row: {
-          project_id: string
-          hub_id: string
-        }
-        Insert: {
-          project_id: string
-          hub_id: string
-        }
-        Update: {
-          project_id?: string
-          hub_id?: string
         }
       }
       region_associations: {

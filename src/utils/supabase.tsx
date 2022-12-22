@@ -6,19 +6,22 @@ import {Session} from "@supabase/auth-helpers-react";
 import {Database} from "./database.types";
 import {
     Entity,
+    EntityMember,
     EntityType,
     Hub,
     LinkDetails,
-    LinkType, LocationEntity,
+    LinkType,
+    LocationEntity,
     MemberDetails,
-    EntityMember,
     Profile,
     Project,
     RegionAssociations,
     RegionCatalog,
     RegionInfo,
     RegionNode,
-    Role, RoleKey, RolesDictionary,
+    Role,
+    RoleKey,
+    RolesDictionary,
     UserStatus
 } from "./types";
 
@@ -85,13 +88,12 @@ function createEntities(dbEntities: Array<DbEntity>): Array<Entity> {
 }
 
 function createEntity(dbEntity: DbEntity): Entity {
-    const entity: Entity = {
+    return {
         id: dbEntity.id,
         name: dbEntity.name,
         description: dbEntity.description || '',
         type: dbEntity.type_id
     }
-    return entity
 
 }
 
@@ -265,7 +267,7 @@ export async function getUserMembers(client: SupabaseClient<Database>, entityId:
     }
     return data ? data.map((dbMember) => {
         // @ts-ignore
-        const result = data as {user_id: string, username: string, avatar_filename: string, role_name: string}
+        const result = dbMember as {user_id: string, username: string, avatar_filename: string, role_name: string}
         return createMemberDetails(client, result.user_id, result.username, result.avatar_filename, result.role_name)
     }) : new Array<MemberDetails>()
 }
@@ -380,8 +382,7 @@ export async function insertNewLink(client: SupabaseClient<Database>, url: strin
         console.log('Error insert a new link: '+JSON.stringify(newDbLink)+'. Error: '+error.message)
         throw error
     }
-    const newLink: LinkDetails = {id: data!.id, typeId: data!.type_id, url: url}
-    return newLink
+    return {id: data!.id, typeId: data!.type_id, url: url}
 }
 
 export async function getLinkTypes(client: SupabaseClient): Promise<Array<LinkType>> {

@@ -1,6 +1,6 @@
 import React, {useCallback, useEffect} from "react";
-import {Github, Login, Menu as MenuIcon, Twitter} from "grommet-icons";
-import {Anchor, Box, Button, Grommet, Header, Heading, Layer, Main, Menu, Nav, Text} from 'grommet'
+import {Login, Menu as MenuIcon} from "grommet-icons";
+import {Anchor, Box, Button, Grommet, Header, Heading, Layer, Main, Menu, Text} from 'grommet'
 import {useRouter} from "next/router";
 import {atom, useAtom, useAtomValue} from "jotai";
 import {useSession, useSupabaseClient, useUser} from "@supabase/auth-helpers-react";
@@ -33,25 +33,34 @@ export default function Layout({ title = 'Regen League', children }: LayoutProps
     const [currentProfile, setCurrentProfile] = useAtom(currentUserProfileAtom)
     const [showLogin, setShowLogin] = useAtom(showLoginAtom)
 
-    const populateProfile = useCallback(async () => {
-        if (session && !currentProfile) {
-            const profile = await getUserProfile(client, session.user.id)
-            if (profile) {
-                setCurrentProfile(profile)
-            }
+    const populateProfile = useCallback(async (userId: string) => {
+        const profile = await getUserProfile(client, userId)
+        if (profile) {
+            setCurrentProfile(profile)
         }
-    }, [session, client, setCurrentProfile, currentProfile])
+    }, [client, setCurrentProfile])
 
     useEffect(() => {
-        populateProfile()
-    }, [session, populateProfile])
+        client.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_OUT') {
+                setCurrentProfile(null);
+                router.push("/")
+            }
+            else if (event === 'SIGNED_IN' && session) {
+                populateProfile(session.user.id).then(() => setShowLogin(false))
+            }
+        })
+    }, [client, router, populateProfile, setCurrentProfile, setShowLogin])
 
     const menuItems = [
         { label: 'Hubs', onClick: () => {router.push("/hubs")} },
         { label: 'Projects', onClick: () => {router.push("/projects")} }
     ]
     if (session) {
-        menuItems.push({ label: 'Logout', onClick: () => {client.auth.signOut(); setCurrentProfile(null); router.push("/")} })
+        menuItems.push({
+            label: 'Logout',
+            onClick: () => client.auth.signOut()
+        })
     }
 
     return (
@@ -70,19 +79,21 @@ export default function Layout({ title = 'Regen League', children }: LayoutProps
                         <Heading size="medium" textAlign="center">Regen League</Heading>
                     </Box>
                     <Box pad="medium" flex>
-                        {session ? (<UserAvatar/>) : (
-                            <Button
-                                label={
-                                    <Text color="white">
-                                        <strong>Login</strong>
-                                    </Text>
-                                }
-                                onClick={() => setShowLogin(true)}
-                                primary
-                                color="brand"
-                            />
-
-                        )}
+                        {session ?
+                            (<UserAvatar/>) :
+                            (
+                                <Button
+                                    label={
+                                        <Text color="white">
+                                            <strong>Login</strong>
+                                        </Text>
+                                    }
+                                    onClick={() => setShowLogin(true)}
+                                    primary
+                                    color="brand"
+                                />
+                            )
+                        }
                     </Box>
                 </Header>
 
@@ -96,7 +107,7 @@ export default function Layout({ title = 'Regen League', children }: LayoutProps
                   {children}
                 </Main>
 
-                {showLogin && (
+                {showLogin && !currentProfile && (
                     <Layer
                         id="loginDialogModal"
                         position="center"
@@ -105,7 +116,11 @@ export default function Layout({ title = 'Regen League', children }: LayoutProps
                         animation="fadeIn"
                     >
                         <Box pad="medium">
-                            <Auth supabaseClient={client} appearance={{ theme: ThemeSupa }} theme="dark"/>
+                            <Auth
+                                supabaseClient={client}
+                                appearance={{ theme: ThemeSupa }}
+                                theme="dark"
+                            />
                         </Box>
                     </Layer>
 

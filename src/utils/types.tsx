@@ -21,14 +21,14 @@ export type Entity = {
     type: EntityType,
 }
 
-export type LocationEntity = {
-    id: string,
-    name: string,
-    description: string,
-    type: EntityType,
+export type LocationEntity = Entity & {
     position?: Position,
     polygon?: string | null
 }
+
+export type Hub = LocationEntity
+
+export type Project = LocationEntity
 
 export type Profile = {
     id: string,
@@ -37,10 +37,6 @@ export type Profile = {
     avatarURL?: string
     status: UserStatus
 }
-
-export type Hub = LocationEntity
-
-export type Project = LocationEntity
 
 export type RelationDetails = {
     fromId: string,
@@ -115,3 +111,9 @@ export type RegionCatalog = {
     level4: Array<RegionNode>
 }
 
+//#########################
+// Type Guards
+
+export function isLocationEntity(e: Entity | LocationEntity): e is LocationEntity {
+    return (e as LocationEntity).position !== undefined;
+}

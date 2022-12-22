@@ -8,7 +8,7 @@ import {
     Entity,
     EntityMember,
     EntityType,
-    Hub,
+    Hub, isLocationEntity,
     LinkDetails,
     LinkType,
     LocationEntity,
@@ -24,6 +24,7 @@ import {
     RolesDictionary,
     UserStatus
 } from "./types";
+import {en} from "@supabase/auth-ui-react";
 
 type DbLinkInsert = Database['public']['Tables']['links']['Insert']
 type DbRelationship = Database['public']['Tables']['relationships']['Row']
@@ -492,4 +493,22 @@ export async function getRolesDictionary(client: SupabaseClient<Database>): Prom
         })
     }
     return result
+}
+
+export async function updateEntity(client: SupabaseClient<Database>, entity: Entity | LocationEntity) {
+    let updates = {
+        name: entity.name,
+        description: entity.description
+    }
+    if (isLocationEntity(entity)) {
+        updates = {...updates, ...{
+            position: entity.position,
+            polygon: entity.polygon
+        }}
+    }
+    const {error} = await client.from('entities').update(updates).eq('id', entity.id)
+    if (error) {
+        console.log('Error updating entity ID '+entity.id)
+        throw error
+    }
 }

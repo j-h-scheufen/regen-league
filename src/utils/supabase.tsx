@@ -106,18 +106,18 @@ export const getServerClient = async (ctx: GetServerSidePropsContext): Promise<D
     return { client, session }
 }
 
-export async function isUserEntityAdmin(client: SupabaseClient<Database>, userId: string, entityId: string) {
+export async function isUserEntityAdmin(client: SupabaseClient<Database>, userId: string, entityId: string): Promise<boolean> {
     const {data, error} = await client.from('relationships').select('roles(name)').match({from_id: userId, to_id: entityId})
     if (error) {
         console.error('Unable to retrieve member relationship for hub ID ' + entityId + ' and user ' + userId + '. Error: ' + error.message)
         return false
     }
-    console.log('ROLES: ', data)
-    data?.forEach((role: {roles: any}) => {
-        if (role.roles.name.toUpperCase() == 'ADMIN' )
-            return true;
+    const adminRole = data.find(role => {
+        if (role?.roles && !Array.isArray(role.roles) )
+            return role.roles.name.toUpperCase() == 'ADMIN';
+        return false
     })
-    return false
+    return adminRole !== undefined
 }
 
 export async function getProjectsForUser(client: SupabaseClient<Database>, userId: string): Promise<Array<EntityMember>> {

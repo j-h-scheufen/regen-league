@@ -72,11 +72,11 @@ export default function HubMain() {
                             style={{textAlign: 'center'}}
                             onClick={() => setEdit(true)}
                             margin={{vertical: "medium"}}/>}
-                            <MembersCard/>
-                            <AttributesCard description={currentHub.description}/>
-                            <RegionInfoCard/>
-                            <LinksCard/>
-                            <ProjectConnectionsCard/>
+                        <MembersCard/>
+                        <AttributesCard description={currentHub.description}/>
+                        <RegionInfoCard/>
+                        <LinksCard/>
+                        <ProjectConnectionsCard/>
                     </Box>
                 )}
             </Box>

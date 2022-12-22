@@ -26,8 +26,6 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
     const projects = await getProjectsForHub(client, hubId)
     const isAdmin = session?.user ? await isUserEntityAdmin(client, session.user.id, hubId) : false
 
-    console.log('ADMIN: ', isAdmin)
-
     return {
         props: {
             key: hubId,

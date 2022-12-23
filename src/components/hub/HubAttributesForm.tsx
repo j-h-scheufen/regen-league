@@ -1,19 +1,13 @@
-import {
-    Box,
-    Button, Card, CardBody, CardHeader,
-    Form,
-    FormField, TextArea,
-    TextInput,
-    Text,
-} from 'grommet'
+import {Box, Button, Card, CardBody, CardHeader, Form, FormField, Text, TextArea, TextInput,} from 'grommet'
 import {useCallback} from 'react'
-import {useSupabaseClient, useUser} from "@supabase/auth-helpers-react";
+import {useSupabaseClient} from "@supabase/auth-helpers-react";
 
 import {Database} from "../../utils/database.types";
-import {Hub} from "../../utils/types";
+import {EntityType, Hub} from "../../utils/types";
 import {atom, useAtom} from "jotai";
 import {useHydrateAtoms} from "jotai/utils";
 import {currentHubAtom} from "../../state/hub";
+import {updateEntity} from "../../utils/supabase";
 
 // const FormSection = ({ children, ...rest }: PropsWithChildren<BoxProps>) => (
 //     <Box direction="row" gap="medium" justify="center" margin={{ bottom: 'medium' }} {...rest}>
@@ -25,7 +19,7 @@ type Props = {
     hub: Hub
 }
 
-const emptyHub: Hub = {description: '', id: '', name: ''}
+const emptyHub: Hub = {type: EntityType.HUB, description: '', id: '', name: ''}
 const editHubAtom = atom<Hub>(emptyHub)
 const loadingAtom = atom<boolean>(false)
 const dirtyAtom = atom<boolean>(false)
@@ -34,8 +28,7 @@ export default function HubAttributesForm({hub}: Props) {
     if(!hub)
         throw Error('This component requires a hub')
     useHydrateAtoms([[editHubAtom, {...hub}]] as const)
-    const supabase = useSupabaseClient<Database>()
-    const user = useUser()
+    const client = useSupabaseClient<Database>()
     const [editHub, setEditHub] = useAtom(editHubAtom)
     const [loading, setLoading] = useAtom(loadingAtom)
     const [isDirty, setDirty] = useAtom(dirtyAtom)
@@ -44,25 +37,15 @@ export default function HubAttributesForm({hub}: Props) {
     const updateHub = useCallback( async () => {
         try {
             setLoading(true)
-            const updates = {
-                name: editHub.name,
-                description: editHub.description
-            }
-            const {error} = await supabase.from('hubs').update(updates).eq('id', editHub.id)
-            if (error) {
-                console.log('Error updating hub ID '+editHub.id)
-                throw error
-            }
-            if (currentHub) {
-                setCurrentHub({...currentHub, name: editHub.name, description: editHub.description})
-            }
+            await updateEntity(client, editHub)
+            setCurrentHub({...currentHub, ...editHub})
         } catch (error) {
             console.error(error)
             throw error
         } finally {
             setLoading(false)
         }
-    }, [currentHub, editHub, setCurrentHub, supabase, setLoading])
+    }, [currentHub, editHub, setCurrentHub, client, setLoading])
 
     return (
         <Card pad="small" margin={{vertical: "small"}}>

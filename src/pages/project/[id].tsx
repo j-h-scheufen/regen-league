@@ -2,11 +2,11 @@ import {GetServerSidePropsContext, InferGetServerSidePropsType} from "next";
 
 import {
     getProjectData,
-    getProjectMembers,
-    getLinksData,
+    getLinksForEntity,
     getRegionAssociations,
     getServerClient,
-    isUserProjectAdmin
+    getUserMembers,
+    isUserEntityAdmin,
 } from "../../utils/supabase";
 import {currentProjectAtom, isProjectAdminAtom} from "../../state/project";
 import ProjectMain from "../../components/project/ProjectMain";
@@ -20,9 +20,9 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
     const {client, session} = await getServerClient(ctx)
     const projectData = await getProjectData(client, projectId)
     const associationsData = await getRegionAssociations(client, projectId)
-    const membersData = await getProjectMembers(client, projectId);
-    const linksData = await getLinksData(client, projectId)
-    const isAdmin = session?.user ? await isUserProjectAdmin(client, session.user.id, projectId) : false
+    const membersData = await getUserMembers(client, projectId);
+    const linksData = await getLinksForEntity(client, projectId)
+    const isAdmin = session?.user ? await isUserEntityAdmin(client, session.user.id, projectId) : false
 
     return {
         props: {

@@ -1,6 +1,6 @@
 import {useSupabaseClient, useUser} from "@supabase/auth-helpers-react";
 import {Box} from "grommet";
-import {Auth, ThemeSupa} from "@supabase/auth-ui-react";
+import {Auth, ThemeSupa, ThemeMinimal} from "@supabase/auth-ui-react";
 import {useRouter} from "next/router";
 
 export default function Login() {
@@ -14,7 +14,7 @@ export default function Login() {
 
   return (
       <Box align="center" direction="column" pad="medium">
-          <Auth supabaseClient={supabase} appearance={{ theme: ThemeSupa }} theme="dark"/>
+          <Auth supabaseClient={supabase} appearance={{ theme: ThemeMinimal }} theme="dark"/>
       </Box>
   )
 

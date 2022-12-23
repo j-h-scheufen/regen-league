@@ -1,25 +1,19 @@
-import {
-    Box,
-    Button, Card, CardBody, CardHeader,
-    Form,
-    FormField, TextArea,
-    TextInput,
-    Text,
-} from 'grommet'
+import {Box, Button, Card, CardBody, CardHeader, Form, FormField, Text, TextArea, TextInput,} from 'grommet'
 import {useCallback} from 'react'
-import {useSupabaseClient, useUser} from "@supabase/auth-helpers-react";
+import {useSupabaseClient} from "@supabase/auth-helpers-react";
 
 import {Database} from "../../utils/database.types";
-import {Project} from "../../utils/types";
+import {EntityType, Project} from "../../utils/types";
 import {atom, useAtom} from "jotai";
 import {useHydrateAtoms} from "jotai/utils";
 import {currentProjectAtom} from "../../state/project";
+import {updateEntity} from "../../utils/supabase";
 
 type Props = {
     project: Project
 }
 
-const emptyProject: Project = {description: '', id: '', name: ''}
+const emptyProject: Project = {type: EntityType.PROJECT, description: '', id: '', name: ''}
 const editProjectAtom = atom<Project>(emptyProject)
 const loadingAtom = atom<boolean>(false)
 const dirtyAtom = atom<boolean>(false)
@@ -28,8 +22,7 @@ export default function ProjectAttributesForm({project}: Props) {
     if(!project)
         throw Error('This component requires a project')
     useHydrateAtoms([[editProjectAtom, {...project}]] as const)
-    const supabase = useSupabaseClient<Database>()
-    const user = useUser()
+    const client = useSupabaseClient<Database>()
     const [editProject, setEditProject] = useAtom(editProjectAtom)
     const [loading, setLoading] = useAtom(loadingAtom)
     const [isDirty, setDirty] = useAtom(dirtyAtom)
@@ -38,25 +31,15 @@ export default function ProjectAttributesForm({project}: Props) {
     const updateProject = useCallback( async () => {
         try {
             setLoading(true)
-            const updates = {
-                name: editProject.name,
-                description: editProject.description
-            }
-            const {error} = await supabase.from('projects').update(updates).eq('id', editProject.id)
-            if (error) {
-                console.log('Error updating project ID '+editProject.id)
-                throw error
-            }
-            if (currentProject) {
-                setCurrentProject({...currentProject, name: editProject.name, description: editProject.description})
-            }
+            await updateEntity(client, editProject)
+            setCurrentProject({...currentProject, ...editProject})
         } catch (error) {
             console.error(error)
             throw error
         } finally {
             setLoading(false)
         }
-    }, [currentProject, editProject, setCurrentProject, supabase, setLoading])
+    }, [currentProject, editProject, setCurrentProject, client, setLoading])
 
     return (
         <Card pad="small" margin={{vertical: "small"}}>

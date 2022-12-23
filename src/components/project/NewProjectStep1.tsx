@@ -9,7 +9,7 @@ import { useState } from 'react'
 import {Session, useSession, useSupabaseClient, useUser} from "@supabase/auth-helpers-react";
 
 import { Database } from "../../utils/database.types";
-import {Project} from "../../utils/types";
+import {EntityType, Project} from "../../utils/types";
 import {useRouter} from "next/router";
 
 export default function NewProjectStep1() {
@@ -27,7 +27,7 @@ export default function NewProjectStep1() {
         try {
             setLoading(true)
 
-            const { data, error } = await supabase.rpc('add_project', { name: name, description: description, firstadmin: session.user.id })
+            const { data, error } = await supabase.rpc('new_entity_with_user_relation', { name: name, description: description, entity_type_id: EntityType.PROJECT, role_id: "TODO", user_id: session.user.id })
 
             if (error)
                 throw error

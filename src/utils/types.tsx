@@ -1,10 +1,34 @@
+import {Position} from "geojson";
 
 export enum UserStatus {
-    ONBOARDING,
-    ACTIVE,
-    BLOCKED,
-    DELETED
+    ONBOARDING = 1,
+    ACTIVE = 2,
+    BLOCKED = 3,
+    DELETED = 4
 }
+
+export enum EntityType {
+    PROJECT = 1,
+    HUB = 2,
+    PLATFORM = 3,
+    HUMAN = 4
+}
+
+export type Entity = {
+    id: string,
+    name: string,
+    description: string,
+    type: EntityType,
+}
+
+export type LocationEntity = Entity & {
+    position?: Position,
+    polygon?: string | null
+}
+
+export type Hub = LocationEntity
+
+export type Project = LocationEntity
 
 export type Profile = {
     id: string,
@@ -14,17 +38,11 @@ export type Profile = {
     status: UserStatus
 }
 
-export type Hub = {
-    id: string,
-    name: string,
-    description: string,
-
-}
-
-export type Project = {
-    id: string,
-    name: string,
-    description: string,
+export type RelationDetails = {
+    fromId: string,
+    toId: string,
+    roleId: string,
+    roleName: string,
 }
 
 export type MemberDetails = {
@@ -35,15 +53,12 @@ export type MemberDetails = {
     avatarURL?: string
 }
 
-export type MembershipItem = {
-    id: string,
-    name: string,
-    description: string,
-    role: string
+export type EntityMember = Entity & {
+    roleName: string
 }
 
 export type Role = {
-    id: number
+    id: string
     name: string
     description: string
 }
@@ -58,6 +73,9 @@ export type LinkType = {
     id: number
     name: string
 }
+
+// The keys are the stringified array denoting a relationship from type x to type y, e.g. [4,2] = human -> hub
+export type RolesDictionary = Map<string, Array<Role>>
 
 export type IconDictionary = Record<number, JSX.Element>
 
@@ -89,3 +107,9 @@ export type RegionCatalog = {
     level4: Array<RegionNode>
 }
 
+//#########################
+// Type Guards
+
+export function isLocationEntity(e: Entity | LocationEntity): e is LocationEntity {
+    return (e as LocationEntity).position !== undefined;
+}

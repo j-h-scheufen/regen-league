@@ -9,7 +9,7 @@ import {useState} from 'react'
 import {Session, useSession, useSupabaseClient} from "@supabase/auth-helpers-react";
 
 import {Database} from "../../utils/database.types";
-import {Hub} from "../../utils/types";
+import {EntityType, Hub} from "../../utils/types";
 import {useRouter} from "next/router";
 
 export default function NewHubStep1() {
@@ -27,7 +27,7 @@ export default function NewHubStep1() {
         try {
             setLoading(true)
 
-            const { data, error } = await supabase.rpc('add_hub', { name: hubName, description: hubDescription, firstadmin: session.user.id })
+            const { data, error } = await supabase.rpc('new_entity_with_user_relation', { name: hubName, description: hubDescription, entity_type_id: EntityType.HUB, role_id: "TODO", user_id: session.user.id })
 
             if (error)
                 throw error

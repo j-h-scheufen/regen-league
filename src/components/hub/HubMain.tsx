@@ -14,16 +14,28 @@ import ProjectConnectionsCard from "./ProjectConnectionsCard";
 import ProjectConnectionsForm from "./ProjectConnectionsForm";
 import {waitForAll} from "jotai/utils";
 import {hubRolesAtom} from "../../state/global";
-import {addHubMembership, removeHubMembership} from "../../utils/supabase";
+import {addRelationship, getUserMember, removeRelationship} from "../../utils/supabase";
+import {SupabaseClient, useSupabaseClient} from "@supabase/auth-helpers-react";
+import {MemberDetails} from "../../utils/types";
 
 export default function HubMain() {
     const [hubRoles, initialHubCandidates] = useAtomValue(waitForAll([hubRolesAtom, hubMemberCandidatesAtom]))
     const currentHub = useAtomValue(currentHubAtom)
     const isAdmin = useAtomValue(isHubAdminAtom)
     const [edit, setEdit] = useAtom(editAtom)
+    const client = useSupabaseClient()
 
     if (!currentHub)
         throw Error('No hub object detected in app state!')
+
+    const performAdd = async (userId: string, roleId: string) => {
+        await addRelationship(client, userId, currentHub.id, roleId)
+        return getUserMember(client, userId, currentHub.id)
+    }
+
+    const performDelete = async (userId: string) => {
+        return removeRelationship(client, userId, currentHub.id)
+    }
 
     return (
         <Page align="center">
@@ -48,8 +60,8 @@ export default function HubMain() {
                             orgId={currentHub.id}
                             roles={hubRoles}
                             initialCandidates={initialHubCandidates}
-                            performAdd={addHubMembership}
-                            performDelete={removeHubMembership}/>
+                            performAdd={performAdd}
+                            performDelete={performDelete}/>
                         <ProjectConnectionsForm
                             hubId={currentHub.id}/>
                     </Box>
@@ -60,11 +72,11 @@ export default function HubMain() {
                             style={{textAlign: 'center'}}
                             onClick={() => setEdit(true)}
                             margin={{vertical: "medium"}}/>}
-                            <MembersCard/>
-                            <AttributesCard description={currentHub.description}/>
-                            <RegionInfoCard/>
-                            <LinksCard/>
-                            <ProjectConnectionsCard/>
+                        <MembersCard/>
+                        <AttributesCard description={currentHub.description}/>
+                        <RegionInfoCard/>
+                        <LinksCard/>
+                        <ProjectConnectionsCard/>
                     </Box>
                 )}
             </Box>

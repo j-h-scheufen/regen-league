@@ -1,7 +1,7 @@
 import { atom } from 'jotai'
 
 import {Hub, Profile, Project} from "../utils/types";
-import {getNonHubMembers, getNonProjectsForHub} from "../utils/supabase";
+import {getProjectCandidatesForHub, getUserCandidates} from "../utils/supabase";
 import {dbClientAtom} from "./global";
 
 export const editAtom = atom<boolean>(false)
@@ -12,12 +12,12 @@ export const currentHubAtom = atom<Hub | null>(null)
 
 export const hubMemberCandidatesAtom = atom<Promise<Array<Profile>>>( async (get) => {
     const hub = get(currentHubAtom)
-    return hub ? getNonHubMembers(get(dbClientAtom), hub.id) : new Array<Profile>()
+    return hub ? getUserCandidates(get(dbClientAtom), hub.id) : new Array<Profile>()
 })
 
 export const hubProjectCandidatesAtom = atom<Promise<Array<Project>>>(async (get) => {
     const hub = get(currentHubAtom)
-    return hub ? getNonProjectsForHub(get(dbClientAtom), hub.id) : new Array<Project>()
+    return hub ? getProjectCandidatesForHub(get(dbClientAtom), hub.id) : new Array<Project>()
 })
 
 export const hubProjectsAtom = atom<Array<Project>>(new Array<Project>())

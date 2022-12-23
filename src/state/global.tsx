@@ -11,7 +11,7 @@ import {
     Profile,
     RegionAssociations,
     LinkDetails,
-    MemberDetails, Role, Project
+    MemberDetails, Role, RolesDictionary
 } from "../utils/types";
 import {
     getCustomCatalog,
@@ -19,7 +19,7 @@ import {
     getHubRoles,
     getLinkTypes,
     getOneEarthCatalog,
-    getProjectRoles
+    getProjectRoles, getRolesDictionary
 } from "../utils/supabase";
 
 export const dbClientAtom = atom<SupabaseClient>((get) => createBrowserSupabaseClient())
@@ -30,6 +30,10 @@ export const currentAvatarUrlAtom = atom<string>((get) => get(currentUserProfile
 
 export const linkTypesAtom = atom<Promise<Array<LinkType>>>(async (get) => {
     return getLinkTypes(get(dbClientAtom))
+})
+
+export const rolesAtom = atom<Promise<RolesDictionary>>(async (get) => {
+    return getRolesDictionary(get(dbClientAtom))
 })
 
 export const linkTypeIconsAtom = atom<IconDictionary>((get) => {

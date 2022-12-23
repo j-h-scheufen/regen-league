@@ -74,12 +74,8 @@ export type LinkType = {
     name: string
 }
 
-export type RoleKey = {
-    fromType: EntityType,
-    toType: EntityType
-}
-
-export type RolesDictionary = Map<RoleKey, Array<Role>>
+// The keys are the stringified array denoting a relationship from type x to type y, e.g. [4,2] = human -> hub
+export type RolesDictionary = Map<string, Array<Role>>
 
 export type IconDictionary = Record<number, JSX.Element>
 

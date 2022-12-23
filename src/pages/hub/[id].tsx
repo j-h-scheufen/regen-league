@@ -4,7 +4,7 @@ import {Suspense} from "react";
 
 import {
     getHubData,
-    getLinksData,
+    getLinksForEntity,
     getServerClient,
     getRegionAssociations,
     getProjectsForHub,
@@ -22,7 +22,7 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
     const hubData = await getHubData(client, hubId)
     const associationsData = await getRegionAssociations(client, hubId)
     const membersData = await getUserMembers(client, hubId);
-    const linksData = await getLinksData(client, hubId)
+    const linksData = await getLinksForEntity(client, hubId)
     const projects = await getProjectsForHub(client, hubId)
     const isAdmin = session?.user ? await isUserEntityAdmin(client, session.user.id, hubId) : false
 

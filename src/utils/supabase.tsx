@@ -20,11 +20,9 @@ import {
     RegionInfo,
     RegionNode,
     Role,
-    RoleKey,
     RolesDictionary,
     UserStatus
 } from "./types";
-import {en} from "@supabase/auth-ui-react";
 
 type DbLinkInsert = Database['public']['Tables']['links']['Insert']
 type DbRelationship = Database['public']['Tables']['relationships']['Row']
@@ -304,10 +302,10 @@ export async function getHubRoles(client: SupabaseClient): Promise<Array<Role>> 
     return data || new Array<Role>()
 }
 
-export async function getLinksData(client: SupabaseClient<Database>, objectId: string): Promise<Array<LinkDetails>> {
-    const {data, error} = await client.from('links').select('*').eq('owner_id', objectId)
+export async function getLinksForEntity(client: SupabaseClient<Database>, entityId: string): Promise<Array<LinkDetails>> {
+    const {data, error} = await client.from('links').select('*').eq('owner_id', entityId)
     if (error) {
-        console.error('Unable to retrieve links for owner ID '+objectId+'. Error: '+error.message)
+        console.error('Unable to retrieve links for owner ID '+entityId+'. Error: '+error.message)
         throw error
     }
     return data ? data.map((dbLink) => {
@@ -481,10 +479,10 @@ export async function getRolesDictionary(client: SupabaseClient<Database>): Prom
         console.error('Unable to retrieve roles. Error: '+error.message)
         throw error
     }
-    const result: RolesDictionary = new Map<RoleKey, Array<Role>>()
+    const result: RolesDictionary = new Map<string, Array<Role>>()
     if (data) {
         data.forEach((dbRole: DbRole) => {
-            const roleKey: RoleKey = {fromType: dbRole.from_type, toType: dbRole.to_type}
+            const roleKey = JSON.stringify([dbRole.from_type, dbRole.to_type])
             const role: Role = {id: dbRole.id, name: dbRole.name, description: dbRole.description || ''}
             if (result.has(roleKey))
                 result.set(roleKey, [...result.get(roleKey)!, role])

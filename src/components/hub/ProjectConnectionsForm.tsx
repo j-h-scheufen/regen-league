@@ -71,7 +71,13 @@ export default function ProjectConnectionsForm({ hubId }: Props) {
             const id = addProject.project.id
             try {
                 setLoading(true)
-                await addRelationship(client, id, hubId, 'ssdf') //rolesDictionary[{fromType: EntityType.PROJECT, toType: EntityType.HUB}])
+                const roles = rolesDictionary.get(JSON.stringify([EntityType.PROJECT, EntityType.HUB]))
+                if (!roles || roles.length == 0) {
+                    console.error('No roles found for a relationship from project (type: ' + EntityType.PROJECT + ') to hub (type: ' + EntityType.HUB + ')')
+                    throw Error('Missing data. Unable to proceed')
+                }
+                //TODO The project -> hub relationship is currently hardcoded to the first role as only one should exist.
+                await addRelationship(client, id, hubId, roles[0].id)
                 const newCandidates = projectCandidates.filter(item => item.id !== id)
                 projects.push(addProject.project)
                 setProjects([...projects])
@@ -79,13 +85,14 @@ export default function ProjectConnectionsForm({ hubId }: Props) {
                 updateProjectCandidatesState([...newCandidates])
             }
             catch (error) {
-                alert('Unable to add project with ID '+id+' to hub. Message: '+JSON.stringify(error))
+                console.log('Unable to add project with ID '+id+' to hub. Error: '+JSON.stringify(error))
+                throw error
             }
             finally {
                 setLoading(false)
             }
         }
-    }, [client, hubId, addProject, projects, projectCandidates, setLoading, setProjects, setAddProject, updateProjectCandidatesState])
+    }, [client, hubId, addProject, projects, projectCandidates, rolesDictionary, setLoading, setProjects, setAddProject, updateProjectCandidatesState])
 
     const ProjectRow = (p: Project) => {
         return (

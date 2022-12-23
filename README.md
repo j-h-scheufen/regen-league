@@ -64,25 +64,6 @@ end;$$ language plpgsql;
 
 ```
 
-3. Function handle_new_user
-A trigger and function are being used to ensure a new user automatically gets a profile and an entity entry
-```
-create or replace function public.handle_new_user() 
-returns trigger as $$
-begin
-  insert into public.profiles (id)
-  values (new.id);
-  insert into public.entities (id, name, type_id, created_by)
-  values (new.id, new.id, 4, new.id);
-  return new;
-end;
-$$ language plpgsql security definer;
-
-create trigger on_auth_user_created
-  after insert on auth.users
-  for each row execute procedure public.handle_new_user();
-```
-
 4. Special getter functions to perform JOIN queries which are not possible via the supabase-js functionality
 ```
 create or replace function public.get_user_member(user_id uuid, entity_id uuid)
@@ -129,7 +110,8 @@ language sql
 as $$
   SELECT p.id, p.username, p.avatar_filename, p.status
   FROM profiles p
-  WHERE p.id NOT IN (SELECT rs.from_id from relationships rs where rs.to_id  = $1)
+  JOIN entities e ON (p.id = e.id)
+  WHERE e.id NOT IN (SELECT rs.from_id from relationships rs where rs.to_id  = $1)
 $$;
 
 create or replace function public.get_entity_target_relations_by_type(from_id uuid, type_id int)

@@ -2,7 +2,7 @@ import {GetServerSidePropsContext, InferGetServerSidePropsType} from "next";
 
 import {
     getProjectData,
-    getLinksData,
+    getLinksForEntity,
     getRegionAssociations,
     getServerClient,
     getUserMembers,
@@ -21,7 +21,7 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
     const projectData = await getProjectData(client, projectId)
     const associationsData = await getRegionAssociations(client, projectId)
     const membersData = await getUserMembers(client, projectId);
-    const linksData = await getLinksData(client, projectId)
+    const linksData = await getLinksForEntity(client, projectId)
     const isAdmin = session?.user ? await isUserEntityAdmin(client, session.user.id, projectId) : false
 
     return {

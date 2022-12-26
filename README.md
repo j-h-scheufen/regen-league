@@ -34,16 +34,8 @@ on storage.objects for select
 using ( bucket_id = 'public' );
 ```
 
-2. The app uses stored SQL functions to INSERT hubs and projects, e.g. to ensure that an admin is atomically assigned. These functions were authorized in the following way:
+2. The app uses stored SQL functions to INSERT an entity + a relationship atomically, e.g. to ensure that an admin is atomically assigned.
 ```
-ALTER DEFAULT PRIVILEGES REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC;
-
--- Choose which roles can execute functions
-GRANT EXECUTE ON FUNCTION add_hub TO authenticated;
-GRANT EXECUTE ON FUNCTION add_hub TO service_role;
-GRANT EXECUTE ON FUNCTION add_project TO authenticated;
-GRANT EXECUTE ON FUNCTION add_project TO service_role;
-
 create or replace function public.new_entity_with_user_relation(name varchar, description text, entity_type_id int, role_id uuid, user_id uuid) 
 returns uuid as $$
 declare
@@ -62,9 +54,18 @@ begin
   return new_id;
 end;$$ language plpgsql;
 
+create or replace function public.initiate_user(user_id uuid)
+returns void
+as $$
+  insert into entities(id, name, type_id, created_by)
+  values ($1, $1, 4, $1);
+  insert into profiles(id, status)
+  values($1, 1);
+$$
+language sql;
 ```
 
-4. Special getter functions to perform JOIN queries which are not possible via the supabase-js functionality
+3. Special getter functions to perform JOIN queries which are not possible via the supabase-js functionality
 ```
 create or replace function public.get_user_member(user_id uuid, entity_id uuid)
 returns table (
@@ -206,7 +207,7 @@ $$;
 
 ```
 
-5. Added ON CASCADE DELETE clause to the profiles table to automatically delete a profile when a user is deleted.
+4. Added ON CASCADE DELETE clause to the profiles table to automatically delete a profile when a user is deleted.
 
 The Supabase UI cannot handle defining cascading deletes, so a table either has to be created from scratch via SQL CREATE
 or an existing table can be altered in the following way.
@@ -247,7 +248,7 @@ ADD CONSTRAINT profiles_id_fkey
 
 ```
 
-6. Functions joining data across a 4-level region tables to retrieve tuples of data.
+5. Functions joining data across a 4-level region tables to retrieve tuples of data.
 
 ```
 create or replace function public.get_oe_region_info_l1(region_id int)

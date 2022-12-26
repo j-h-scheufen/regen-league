@@ -337,12 +337,12 @@ export async function getProjectData(client: SupabaseClient<Database>, projectId
 }
 
 export async function getUserProfile(client: SupabaseClient<Database>, userId: string): Promise<Profile | null> {
-    const {data, error} = await client.from('profiles').select('*').eq('id', userId).single() // uses policy
+    const {data, error} = await client.from('profiles').select('*').eq('id', userId)
     if (error) {
         console.error('Unable to retrieve profile data for user ID '+userId+'. Error: '+error.message)
         throw error
     }
-    return data ? createProfile(client, data.id, data.username || '', data.avatar_filename || '', data.status) : null
+    return data?.length > 0 ? createProfile(client, data[0].id, data[0].username || '', data[0].avatar_filename || '', data[0].status) : null
 }
 
 export async function updateAvatarFile(client: SupabaseClient<Database>, profileId: string, filename: string, file: any): Promise<{filename: string, url: string}> {

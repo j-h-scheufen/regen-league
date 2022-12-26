@@ -1,7 +1,5 @@
 import {Box, Heading, Paragraph} from 'grommet'
 import * as React from "react";
-import dynamic from "next/dynamic";
-import SuspenseSpinner from "../components/utils/SuspenseSpinner";
 
 export default function HomePage() {
     return (

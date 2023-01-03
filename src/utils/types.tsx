@@ -1,4 +1,4 @@
-import {Position} from "geojson";
+import {Feature, Geometry, Position} from "geojson";
 
 export enum UserStatus {
     ONBOARDING = 1,
@@ -21,10 +21,12 @@ export type Entity = {
     type: EntityType,
 }
 
-export type LocationEntity = Entity & {
-    position?: Position,
-    polygon?: string | null
+export type GeoLocation = {
+    position?: Position | null,
+    geometry?: Geometry | null
 }
+
+export type LocationEntity = Entity & GeoLocation
 
 export type Hub = LocationEntity
 

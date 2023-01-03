@@ -18,7 +18,7 @@ export interface Database {
           created_by: string
           created_at: string
           position: number[] | null
-          polygon: Json | null
+          geojson: Json | null
         }
         Insert: {
           id?: string
@@ -28,7 +28,7 @@ export interface Database {
           created_by: string
           created_at?: string
           position?: number[] | null
-          polygon?: Json | null
+          geojson?: Json | null
         }
         Update: {
           id?: string
@@ -38,7 +38,7 @@ export interface Database {
           created_by?: string
           created_at?: string
           position?: number[] | null
-          polygon?: Json | null
+          geojson?: Json | null
         }
       }
       entity_types: {

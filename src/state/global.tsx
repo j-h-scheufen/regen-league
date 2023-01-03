@@ -3,6 +3,7 @@ import {Facebook, Github, Instagram, Linkedin, Twitter, Youtube} from "grommet-i
 import {Link as Generic} from "grommet-icons/icons";
 import {createBrowserSupabaseClient} from "@supabase/auth-helpers-nextjs";
 import {SupabaseClient} from "@supabase/supabase-js";
+import {Map as MapboxMap} from "mapbox-gl";
 
 import {
     IconDictionary,
@@ -13,6 +14,7 @@ import {
     LinkDetails,
     MemberDetails, Role, RolesDictionary
 } from "../utils/types";
+
 import {
     getCustomCatalog,
     getEPACatalog,
@@ -78,3 +80,5 @@ export const regionAssociationsAtom = atom<RegionAssociations | null>(null)
 export const linkDetailsAtom = atom<Array<LinkDetails>>(new Array<LinkDetails>())
 
 export const memberDetailsAtom = atom<Array<MemberDetails>>(new Array<MemberDetails>())
+
+export const locationMapAtom = atom<MapboxMap | null>(null)

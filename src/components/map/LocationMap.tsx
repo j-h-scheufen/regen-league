@@ -7,73 +7,82 @@ import * as mapboxgl from "mapbox-gl";
 import {atom, useAtom} from "jotai";
 import {Feature, Position} from "geojson";
 
+import {locationMapAtom} from "../../state/global";
+import {GeoLocation} from "../../utils/types";
+import {AttributionControl, Marker} from "mapbox-gl";
+
 type Props = {
     position?: Position
     zoom?: number
 }
 
-export type GeoSelection = {
-    position?: Position,
-    feature?: Feature
-}
-
-export const currentSelectionAtom = atom<GeoSelection>({})
+export const currentSelectionAtom = atom<GeoLocation>({position: null, geometry: null})
 export const dirtyAtom = atom<boolean>(false)
-const mapAtom = atom<mapboxgl.Map | null>(null)
 
 export default function LocationMap({zoom}: Props) {
-    const [map, setMap] = useAtom(mapAtom)
+    const [map, setMap] = useAtom(locationMapAtom)
     const [selection , setSelection] = useAtom(currentSelectionAtom)
     const [isDirty, setDirty] = useAtom(dirtyAtom)
 
-    const mapNode = useRef(null)
+    const mapNode = useRef<HTMLDivElement | null>(null)
+    const marker = useRef<Marker | null>(null)
 
-    useEffect(() => {
-        const node = mapNode.current
-        // if the window object is not found, that means
-        // the component is rendered on the server
-        // or the dom node is not initialized, then return early
-        if (typeof window === "undefined" || node === null) return
-
-        console.log('Creating a new Map!')
-
+    const createMap = (container: HTMLDivElement): mapboxgl.Map  => {
         const mapboxMap = new mapboxgl.Map({
-            container: node,
+            container: container,
             accessToken: process.env.NEXT_PUBLIC_MAPBOX_TOKEN,
             style: "mapbox://styles/mapbox/streets-v11",
-            center: [0, 0],
+            center: selection.position as [number,number] || [0, 0],
             zoom: zoom || 4,
         });
-
-        mapboxMap.setCenter(selection.position as [number,number])
 
         const geocoder = new MapboxGeocoder({
             accessToken: process.env.NEXT_PUBLIC_MAPBOX_TOKEN,
             types: 'country,region,district,place,locality,neighborhood,address',
-            marker: {
-                color: 'red'
-            },
+            // marker: {color: 'red'},
             enableEventLogging: false,
             mapboxgl: mapboxgl
         });
         geocoder.on('result', (e: {result: Feature & {center: number[]}}) => {
             console.log('Geocoder result: ', e.result)
-            setSelection({position: e.result.center, feature: e.result})
+            setSelection({
+                position: e.result.center,
+                geometry: e.result.geometry})
+            marker.current?.remove()
+            marker.current = new Marker({color: 'red'}).setLngLat(e.result.center as [number,number]).addTo(mapboxMap)
             setDirty(true)
         })
         mapboxMap.on('click', (e) => {
             console.log(`A click event has occurred at ${e.lngLat}`);
-            setSelection({position: [e.lngLat.lng, e.lngLat.lat]})
+            setSelection({
+                position: [e.lngLat.lng, e.lngLat.lat],
+                geometry: {type: 'Point', coordinates: [e.lngLat.lng, e.lngLat.lat]}
+            })
+            marker.current?.remove()
+            marker.current = new Marker({color: 'red'}).setLngLat(e.lngLat).addTo(mapboxMap)
             setDirty(true)
         });
-        mapboxMap.addControl(geocoder, 'top-left');
-        setMap(mapboxMap);
+        mapboxMap.addControl(geocoder, 'top-left')
+        mapboxMap.addControl(new AttributionControl({compact: true}))
+        return mapboxMap
+    }
+
+    useEffect(() => {
+
+        if (typeof window === "undefined" || mapNode.current === null) return
+
+        console.log('Creating a new Map!')
+        const newMap = createMap(mapNode.current)
+        if (selection.position) {
+            marker.current = new Marker({color: 'red'}).setLngLat(selection.position as [number,number]).addTo(newMap)
+        }
+        setMap(newMap)
 
         return () => {
-            console.log('Unmounting Map!')
-            mapboxMap.remove();
-        };
-    }, []);
+            newMap.remove()
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
 
     return <div ref={mapNode} style={{ width: "100%", height: "100%" }} />;
 }

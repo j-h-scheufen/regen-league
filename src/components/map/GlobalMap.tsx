@@ -1,14 +1,15 @@
-import Map, {Marker, PaddingOptions, type ViewState} from "react-map-gl";
+import Map, {Marker, type ViewState} from "react-map-gl";
 import "mapbox-gl/dist/mapbox-gl.css"
 import {useAtom, atom} from "jotai";
 import * as React from "react";
 
-const initialViewportState = {
-    width: '100vw',
-    height: '100vh',
-    latitude: 0,
+const initialViewportState: ViewState = {
     longitude: 0,
-    zoom: 0.5
+    latitude: 0,
+    zoom: 0.5,
+    bearing: 0,
+    pitch: 0,
+    padding: {top: 0, bottom: 0, left: 0, right: 0}
 }
 
 const viewportAtom = atom(initialViewportState)
@@ -28,8 +29,7 @@ export default function GlobalMap() {
             projection="naturalEarth"
             mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
             attributionControl={false}
-        >
-            {/*<Marker longitude={-122.4} latitude={37.8} color="red" />*/}
-        </Map>
+            reuseMaps={true} // keeps the Map in memory and avoids "billable" events for constructing a new MapBox map
+        />
     )
 }

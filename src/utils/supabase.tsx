@@ -86,12 +86,14 @@ function createEntities(dbEntities: Array<DbEntity>): Array<Entity> {
     })
 }
 
-function createEntity(dbEntity: DbEntity): Entity {
+function createEntity(dbEntity: DbEntity): LocationEntity {
     return {
         id: dbEntity.id,
         name: dbEntity.name,
         description: dbEntity.description || '',
-        type: dbEntity.type_id
+        type: dbEntity.type_id,
+        position: dbEntity.position || undefined,
+        // polygon: dbEntity.polygon ? JSON.parse(dbEntity.polygon) : undefined
     }
 
 }

@@ -17,6 +17,8 @@ import {hubRolesAtom} from "../../state/global";
 import {addRelationship, getUserMember, removeRelationship} from "../../utils/supabase";
 import {SupabaseClient, useSupabaseClient} from "@supabase/auth-helpers-react";
 import {MemberDetails} from "../../utils/types";
+import {Position} from "geojson";
+import LocationForm from "./LocationForm";
 
 export default function HubMain() {
     const [hubRoles, initialHubCandidates] = useAtomValue(waitForAll([hubRolesAtom, hubMemberCandidatesAtom]))
@@ -28,13 +30,17 @@ export default function HubMain() {
     if (!currentHub)
         throw Error('No hub object detected in app state!')
 
-    const performAdd = async (userId: string, roleId: string) => {
+    const addMember = async (userId: string, roleId: string) => {
         await addRelationship(client, userId, currentHub.id, roleId)
         return getUserMember(client, userId, currentHub.id)
     }
 
-    const performDelete = async (userId: string) => {
+    const deleteMember = async (userId: string) => {
         return removeRelationship(client, userId, currentHub.id)
+    }
+
+    const updatePosition = async (position: Position) => {
+        return
     }
 
     return (
@@ -52,6 +58,9 @@ export default function HubMain() {
                             margin={{vertical: "medium"}}/>
                         <HubAttributesForm
                             hub={currentHub}/>
+                        <LocationForm
+                            entity={currentHub}
+                            update={updatePosition}/>
                         <RegionSelectorPanel
                             ownerId={currentHub.id}/>
                         <LinksForm
@@ -60,8 +69,8 @@ export default function HubMain() {
                             orgId={currentHub.id}
                             roles={hubRoles}
                             initialCandidates={initialHubCandidates}
-                            performAdd={performAdd}
-                            performDelete={performDelete}/>
+                            performAdd={addMember}
+                            performDelete={deleteMember}/>
                         <ProjectConnectionsForm
                             hubId={currentHub.id}/>
                     </Box>

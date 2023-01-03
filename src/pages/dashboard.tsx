@@ -8,7 +8,7 @@ const DynamicMap = dynamic(() => import("../components/map/GlobalMap"), {
 });
 
 
-export default function HomePage() {
+export default function DashboardPage() {
     return (
         <Box align="center" direction="column">
             <DynamicMap/>

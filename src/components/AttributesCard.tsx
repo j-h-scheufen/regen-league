@@ -1,24 +1,24 @@
 import {Box, Card, CardBody, CardHeader, Paragraph, Text} from 'grommet'
-import {useAtomValue} from "jotai";
-import {currentHubAtom} from "../state/hub";
+import {LocationEntity} from "../utils/types";
 
 type Props = {
-    description: string
+    entity: LocationEntity
 }
-export default function AttributesCard({ description }: Props) {
+export default function AttributesCard({entity}: Props) {
 
     return (
         <Card pad="small" margin={{vertical: "small"}}>
             <CardHeader justify="center"><Text size="large">Description</Text></CardHeader>
-            <CardBody>
+            <CardBody gap="small">
                 <Box width="100%" pad="small">
                     <Paragraph
                         maxLines={20}
                         fill={true}
                         margin={{vertical: "xsmall"}}>
-                            {description || ''}
+                            {entity.description || ''}
                     </Paragraph>
                 </Box>
+                {entity.position && <Text margin={{horizontal: "small"}}>Location: Lng: {entity.position[0]}, Lat: {entity.position[1]}</Text>}
             </CardBody>
         </Card>
     )

@@ -9,134 +9,6 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
-      del_hub_members: {
-        Row: {
-          hub_id: string
-          user_id: string
-          role_id: number
-        }
-        Insert: {
-          hub_id: string
-          user_id: string
-          role_id: number
-        }
-        Update: {
-          hub_id?: string
-          user_id?: string
-          role_id?: number
-        }
-      }
-      del_hub_roles: {
-        Row: {
-          id: number
-          name: string
-          description: string | null
-        }
-        Insert: {
-          id?: number
-          name: string
-          description?: string | null
-        }
-        Update: {
-          id?: number
-          name?: string
-          description?: string | null
-        }
-      }
-      del_hubs: {
-        Row: {
-          id: string
-          created_at: string | null
-          name: string
-          description: string | null
-          created_by: string
-        }
-        Insert: {
-          id?: string
-          created_at?: string | null
-          name: string
-          description?: string | null
-          created_by?: string
-        }
-        Update: {
-          id?: string
-          created_at?: string | null
-          name?: string
-          description?: string | null
-          created_by?: string
-        }
-      }
-      del_project_members: {
-        Row: {
-          user_id: string
-          role_id: number
-          project_id: string
-        }
-        Insert: {
-          user_id: string
-          role_id: number
-          project_id: string
-        }
-        Update: {
-          user_id?: string
-          role_id?: number
-          project_id?: string
-        }
-      }
-      del_project_roles: {
-        Row: {
-          id: number
-          name: string | null
-          description: string | null
-        }
-        Insert: {
-          id?: number
-          name?: string | null
-          description?: string | null
-        }
-        Update: {
-          id?: number
-          name?: string | null
-          description?: string | null
-        }
-      }
-      del_projects: {
-        Row: {
-          created_at: string | null
-          name: string
-          description: string | null
-          id: string
-          created_by: string
-        }
-        Insert: {
-          created_at?: string | null
-          name: string
-          description?: string | null
-          id?: string
-          created_by?: string
-        }
-        Update: {
-          created_at?: string | null
-          name?: string
-          description?: string | null
-          id?: string
-          created_by?: string
-        }
-      }
-      del_projects_to_hubs: {
-        Row: {
-          project_id: string
-          hub_id: string
-        }
-        Insert: {
-          project_id: string
-          hub_id: string
-        }
-        Update: {
-          project_id?: string
-          hub_id?: string
-        }
-      }
       entities: {
         Row: {
           id: string
@@ -146,7 +18,7 @@ export interface Database {
           created_by: string
           created_at: string
           position: number[] | null
-          polygon: Json | null
+          geojson: Json | null
         }
         Insert: {
           id?: string
@@ -156,7 +28,7 @@ export interface Database {
           created_by: string
           created_at?: string
           position?: number[] | null
-          polygon?: Json | null
+          geojson?: Json | null
         }
         Update: {
           id?: string
@@ -166,7 +38,7 @@ export interface Database {
           created_by?: string
           created_at?: string
           position?: number[] | null
-          polygon?: Json | null
+          geojson?: Json | null
         }
       }
       entity_types: {
@@ -768,6 +640,10 @@ export interface Database {
           avatar_filename: string
           role_name: string
         }[]
+      }
+      initiate_user: {
+        Args: { user_id: string }
+        Returns: undefined
       }
       new_entity_with_user_relation: {
         Args: {

@@ -3,7 +3,7 @@ import {createServerSupabaseClient} from "@supabase/auth-helpers-nextjs";
 import {SupabaseClient} from "@supabase/supabase-js";
 import {Session} from "@supabase/auth-helpers-react";
 
-import {Database} from "./database.types";
+import {Database, Json} from "./database.types";
 import {
     Entity,
     EntityMember,
@@ -23,6 +23,8 @@ import {
     RolesDictionary,
     UserStatus
 } from "./types";
+import {FeatureCollection, Geometry} from "geojson";
+import {en} from "@supabase/auth-ui-react";
 
 type DbLinkInsert = Database['public']['Tables']['links']['Insert']
 type DbRelationship = Database['public']['Tables']['relationships']['Row']
@@ -80,18 +82,27 @@ function createEntityMembers(dbRelations: Array<DbEntityMember>): Array<EntityMe
     })
 }
 
-function createEntities(dbEntities: Array<DbEntity>): Array<Entity> {
+function createEntities(dbEntities: Array<DbEntity>): Array<LocationEntity> {
     return dbEntities.map((entry) => {
         return createEntity(entry)
     })
 }
 
-function createEntity(dbEntity: DbEntity): Entity {
+function createEntity(dbEntity: DbEntity): LocationEntity {
+    let geometry = null
+    // verification that the JSONB value returned can be parsed to a Geometry object
+    if (dbEntity.geojson !== null &&
+        typeof dbEntity.geojson === 'object' &&
+        !Array.isArray(dbEntity.geojson)) {
+        geometry = JSON.parse(JSON.stringify(dbEntity.geojson))
+    }
     return {
         id: dbEntity.id,
         name: dbEntity.name,
         description: dbEntity.description || '',
-        type: dbEntity.type_id
+        type: dbEntity.type_id,
+        position: dbEntity.position || null,
+        geometry: geometry
     }
 
 }
@@ -337,12 +348,12 @@ export async function getProjectData(client: SupabaseClient<Database>, projectId
 }
 
 export async function getUserProfile(client: SupabaseClient<Database>, userId: string): Promise<Profile | null> {
-    const {data, error} = await client.from('profiles').select('*').eq('id', userId).single() // uses policy
+    const {data, error} = await client.from('profiles').select('*').eq('id', userId)
     if (error) {
         console.error('Unable to retrieve profile data for user ID '+userId+'. Error: '+error.message)
         throw error
     }
-    return data ? createProfile(client, data.id, data.username || '', data.avatar_filename || '', data.status) : null
+    return data?.length > 0 ? createProfile(client, data[0].id, data[0].username || '', data[0].avatar_filename || '', data[0].status) : null
 }
 
 export async function updateAvatarFile(client: SupabaseClient<Database>, profileId: string, filename: string, file: any): Promise<{filename: string, url: string}> {
@@ -449,20 +460,7 @@ export async function getEntitiesByType(client: SupabaseClient<Database>, type: 
         console.error('Unable to retrieve entities of type '+type+'. Error: '+error.message)
         throw error
     }
-    if (data) {
-        return data.map((item: DbEntity) => {
-            const e: LocationEntity = {
-                id: item.id,
-                name: item.name,
-                description: item.description || '',
-                type: item.type_id,
-                position: item.position || [],
-                polygon: item.polygon ? item.polygon.toString() : null,
-            }
-            return e
-        })
-    }
-    return new Array<LocationEntity>()
+    return data ? createEntities(data as Array<DbEntity>) : new Array<LocationEntity>()
 }
 
 export async function getHubs(client: SupabaseClient<Database>): Promise<Array<Hub>> {
@@ -501,12 +499,50 @@ export async function updateEntity(client: SupabaseClient<Database>, entity: Ent
     if (isLocationEntity(entity)) {
         updates = {...updates, ...{
             position: entity.position,
-            polygon: entity.polygon
+            geojson: entity.geometry
         }}
     }
+    console.log('Updating location on entity with updates: ', updates)
     const {error} = await client.from('entities').update(updates).eq('id', entity.id)
     if (error) {
         console.log('Error updating entity ID '+entity.id)
         throw error
     }
+}
+
+export async function getGeoJsonSource(client: SupabaseClient<Database>, entityType: number): Promise<FeatureCollection> {
+    const {data, error} = await client.from('entities').select('*').eq('type_id', entityType).neq('geojson', null)
+    if (error) {
+        console.error('Unable to retrieve GeoJson data for entities of type '+entityType+'. Error: '+error.message)
+        throw error
+    }
+
+    const result: FeatureCollection = {
+        type: "FeatureCollection",
+        features: []
+    }
+
+    if (data) {
+         data.forEach((dbEntity: DbEntity) => {
+             let geometry = null
+             // verification that the JSONB value returned can be parsed to a Geometry object
+             if (dbEntity.geojson !== null &&
+                 typeof dbEntity.geojson === 'object' &&
+                 !Array.isArray(dbEntity.geojson)) {
+                 geometry = JSON.parse(JSON.stringify(dbEntity.geojson))
+             }
+
+             result.features.push({
+                type: "Feature",
+                properties: {
+                    'id': dbEntity.id,
+                    'name': dbEntity.name,
+                    'description': dbEntity.description,
+                    'type': dbEntity.type_id
+                },
+                geometry: geometry
+            })
+        })
+    }
+    return result
 }

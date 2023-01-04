@@ -25,6 +25,7 @@ const UserAvatar = () => {
 }
 
 const showLoginAtom = atom<boolean>(false)
+const loginEnabledAtom = atom<boolean>( false)
 
 export default function Layout({ title = 'Regen League', children }: LayoutProps) {
     const router = useRouter()
@@ -32,6 +33,7 @@ export default function Layout({ title = 'Regen League', children }: LayoutProps
     const client = useSupabaseClient()
     const [currentProfile, setCurrentProfile] = useAtom(currentUserProfileAtom)
     const [showLogin, setShowLogin] = useAtom(showLoginAtom)
+    const [loginEnabled, setLoginEnabled] = useAtom(loginEnabledAtom)
 
     const populateProfile = useCallback(async (userId: string) => {
         const profile = await getUserProfile(client, userId)
@@ -50,11 +52,13 @@ export default function Layout({ title = 'Regen League', children }: LayoutProps
                 populateProfile(session.user.id).then(() => setShowLogin(false))
             }
         })
-    }, [client, router, populateProfile, setCurrentProfile, setShowLogin])
+        setLoginEnabled(true)
+    }, [client, router, populateProfile, setCurrentProfile, setShowLogin, setLoginEnabled])
 
     const menuItems = [
         { label: 'Hubs', onClick: () => {router.push("/hubs")} },
-        { label: 'Projects', onClick: () => {router.push("/projects")} }
+        { label: 'Projects', onClick: () => {router.push("/projects")} },
+        { label: 'Map', onClick: () => {router.push("/map")} }
     ]
     if (session) {
         menuItems.push({
@@ -83,6 +87,7 @@ export default function Layout({ title = 'Regen League', children }: LayoutProps
                             (<UserAvatar/>) :
                             (
                                 <Button
+                                    disabled={!loginEnabled}
                                     label={
                                         <Text color="white">
                                             <strong>Login</strong>

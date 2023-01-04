@@ -11,7 +11,7 @@ import {
 } from 'grommet'
 import React, {useCallback} from "react";
 import {FormTrash} from "grommet-icons";
-import {useSupabaseClient} from "@supabase/auth-helpers-react";
+import {useSupabaseClient, useUser} from "@supabase/auth-helpers-react";
 import {atom, useAtom, useAtomValue} from "jotai";
 import {useHydrateAtoms} from "jotai/utils";
 
@@ -55,6 +55,7 @@ export default function MembersForm({orgId, roles, initialCandidates, performAdd
     const [loading, setLoading] = useAtom(loadingAtom)
     const availableRoles = useAtomValue(availableRolesAtom)
     const client = useSupabaseClient()
+    const user = useUser()
 
     const updateMemberCandidatesState = useCallback((members: Array<Profile>) => {
         setMemberCandidates(members)
@@ -112,11 +113,12 @@ export default function MembersForm({orgId, roles, initialCandidates, performAdd
             <Box direction="row" gap="medium" pad="small" flex>
                 <Text>{member.username || member.userId}</Text>
                 <Text>[{member.roleName.toUpperCase()}]</Text>
-                <Button
-                    margin={{left: 'auto'}}
-                    onClick={() => setDeleteMember(member)}>
-                    <FormTrash/>
-                </Button>
+                {(member.userId !== user?.id) &&
+                    <Button
+                        margin={{left: 'auto'}}
+                        onClick={() => setDeleteMember(member)}>
+                        <FormTrash/>
+                    </Button>}
             </Box>
         )
     }

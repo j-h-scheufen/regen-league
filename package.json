@@ -17,6 +17,7 @@
     "@supabase/auth-helpers-react": "^0.3.1",
     "@supabase/auth-ui-react": "^0.2.5",
     "@supabase/supabase-js": "^2.0.5",
+    "@mapbox/mapbox-gl-geocoder": "^5.0.1",
     "geojson": "^0.5.0",
     "grommet": "^2.22.0",
     "jotai": "^1.6.2",
@@ -24,7 +25,6 @@
     "next": "^12.0.4",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
-    "react-map-gl": "^7.0.20",
     "styled-components": "^5.3.6",
     "typeface-roboto": "^1.1.13"
   },

@@ -1,26 +1,27 @@
 import {Box, Button, Heading, Page} from "grommet";
 import {useAtom, useAtomValue} from "jotai";
+import {useSupabaseClient} from "@supabase/auth-helpers-react";
+import {waitForAll} from "jotai/utils";
 
+import {hubRolesAtom} from "../../state/global";
+import {currentHubAtom, editAtom, hubMemberCandidatesAtom, isHubAdminAtom} from "../../state/hub";
 import HubAttributesForm from "./HubAttributesForm";
 import RegionInfoCard from "../RegionInfoCard";
 import LinksCard from "../LinksCard";
 import LinksForm from "../LinksForm";
 import MembersCard from "../MembersCard";
 import AttributesCard from "../AttributesCard";
-import {currentHubAtom, editAtom, hubMemberCandidatesAtom, isHubAdminAtom} from "../../state/hub";
 import RegionSelectorPanel from "../RegionSelectorPanel";
 import MembersForm from "../MembersForm";
 import ProjectConnectionsCard from "./ProjectConnectionsCard";
 import ProjectConnectionsForm from "./ProjectConnectionsForm";
-import {waitForAll} from "jotai/utils";
-import {hubRolesAtom} from "../../state/global";
-import {addRelationship, getUserMember, removeRelationship} from "../../utils/supabase";
-import {SupabaseClient, useSupabaseClient} from "@supabase/auth-helpers-react";
-import {MemberDetails} from "../../utils/types";
+import {addRelationship, getUserMember, removeRelationship, updateEntity} from "../../utils/supabase";
+import LocationForm from "./LocationForm";
+import {GeoLocation} from "../../utils/types";
 
 export default function HubMain() {
     const [hubRoles, initialHubCandidates] = useAtomValue(waitForAll([hubRolesAtom, hubMemberCandidatesAtom]))
-    const currentHub = useAtomValue(currentHubAtom)
+    const [currentHub, setCurrentHub] = useAtom(currentHubAtom)
     const isAdmin = useAtomValue(isHubAdminAtom)
     const [edit, setEdit] = useAtom(editAtom)
     const client = useSupabaseClient()
@@ -28,13 +29,19 @@ export default function HubMain() {
     if (!currentHub)
         throw Error('No hub object detected in app state!')
 
-    const performAdd = async (userId: string, roleId: string) => {
+    const addMember = async (userId: string, roleId: string) => {
         await addRelationship(client, userId, currentHub.id, roleId)
         return getUserMember(client, userId, currentHub.id)
     }
 
-    const performDelete = async (userId: string) => {
+    const deleteMember = async (userId: string) => {
         return removeRelationship(client, userId, currentHub.id)
+    }
+
+    const updateLocation = async (location: GeoLocation) => {
+        const updatedHub = {...currentHub, ...location}
+        await updateEntity(client, updatedHub)
+        setCurrentHub(updatedHub)
     }
 
     return (
@@ -52,6 +59,9 @@ export default function HubMain() {
                             margin={{vertical: "medium"}}/>
                         <HubAttributesForm
                             hub={currentHub}/>
+                        <LocationForm
+                            entity={currentHub}
+                            update={updateLocation}/>
                         <RegionSelectorPanel
                             ownerId={currentHub.id}/>
                         <LinksForm
@@ -60,8 +70,8 @@ export default function HubMain() {
                             orgId={currentHub.id}
                             roles={hubRoles}
                             initialCandidates={initialHubCandidates}
-                            performAdd={performAdd}
-                            performDelete={performDelete}/>
+                            performAdd={addMember}
+                            performDelete={deleteMember}/>
                         <ProjectConnectionsForm
                             hubId={currentHub.id}/>
                     </Box>
@@ -73,7 +83,7 @@ export default function HubMain() {
                             onClick={() => setEdit(true)}
                             margin={{vertical: "medium"}}/>}
                         <MembersCard/>
-                        <AttributesCard description={currentHub.description}/>
+                        <AttributesCard entity={currentHub}/>
                         <RegionInfoCard/>
                         <LinksCard/>
                         <ProjectConnectionsCard/>

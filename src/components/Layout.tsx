@@ -57,7 +57,8 @@ export default function Layout({ title = 'Regen League', children }: LayoutProps
 
     const menuItems = [
         { label: 'Hubs', onClick: () => {router.push("/hubs")} },
-        { label: 'Projects', onClick: () => {router.push("/projects")} }
+        { label: 'Projects', onClick: () => {router.push("/projects")} },
+        { label: 'Map', onClick: () => {router.push("/map")} }
     ]
     if (session) {
         menuItems.push({

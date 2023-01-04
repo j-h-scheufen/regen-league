@@ -83,7 +83,7 @@ export default function HubMain() {
                             onClick={() => setEdit(true)}
                             margin={{vertical: "medium"}}/>}
                         <MembersCard/>
-                        <AttributesCard description={currentHub.description}/>
+                        <AttributesCard entity={currentHub}/>
                         <RegionInfoCard/>
                         <LinksCard/>
                         <ProjectConnectionsCard/>

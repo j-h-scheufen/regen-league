@@ -1,17 +1,16 @@
-import {Box, Heading, Paragraph} from 'grommet'
+import {Box, Page} from 'grommet'
 import * as React from "react";
 import dynamic from "next/dynamic";
 import SuspenseSpinner from "../components/utils/SuspenseSpinner";
-
-const DynamicMap = dynamic(() => import("../components/map/GlobalMap"), {
-    loading: () => <Box align="center" margin={{vertical: "100px"}}><SuspenseSpinner/></Box>,
-});
-
+import {Suspense} from "react";
+import GlobalMap from "../components/map/GlobalMap";
 
 export default function DashboardPage() {
     return (
-        <Box align="center" direction="column">
-            <DynamicMap/>
-        </Box>
+        <Page width="large" align="center">
+            <Box height="500px" width="900px">
+                <GlobalMap/>
+            </Box>
+        </Page>
     )
 }

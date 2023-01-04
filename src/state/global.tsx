@@ -12,17 +12,18 @@ import {
     Profile,
     RegionAssociations,
     LinkDetails,
-    MemberDetails, Role, RolesDictionary
+    MemberDetails, Role, RolesDictionary, EntityType
 } from "../utils/types";
 
 import {
     getCustomCatalog,
-    getEPACatalog,
+    getEPACatalog, getGeoJsonSource,
     getHubRoles,
     getLinkTypes,
     getOneEarthCatalog,
     getProjectRoles, getRolesDictionary
 } from "../utils/supabase";
+import {FeatureCollection} from "geojson";
 
 export const dbClientAtom = atom<SupabaseClient>((get) => createBrowserSupabaseClient())
 
@@ -82,3 +83,21 @@ export const linkDetailsAtom = atom<Array<LinkDetails>>(new Array<LinkDetails>()
 export const memberDetailsAtom = atom<Array<MemberDetails>>(new Array<MemberDetails>())
 
 export const locationMapAtom = atom<MapboxMap | null>(null)
+
+export const globalMapAtom = atom<MapboxMap | null>(null)
+
+export const geoJsonHubsAtom = atom<Promise<FeatureCollection>>(async (get) => {
+    return getGeoJsonSource(get(dbClientAtom), EntityType.HUB)
+})
+
+export const geoJsonProjectsAtom = atom<Promise<FeatureCollection>>(async (get) => {
+    return getGeoJsonSource(get(dbClientAtom), EntityType.PROJECT)
+})
+
+export const geoJsonPlatformsAtom = atom<Promise<FeatureCollection>>(async (get) => {
+    return getGeoJsonSource(get(dbClientAtom), EntityType.PLATFORM)
+})
+
+export const geoJsonPeopleAtom = atom<Promise<FeatureCollection>>(async (get) => {
+    return getGeoJsonSource(get(dbClientAtom), EntityType.HUMAN)
+})

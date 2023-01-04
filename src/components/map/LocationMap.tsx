@@ -3,13 +3,13 @@ import "mapbox-gl/dist/mapbox-gl.css"
 import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css'
 // @ts-ignore
 import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder'
-import * as mapboxgl from "mapbox-gl";
-import {atom, useAtom} from "jotai";
-import {Feature, Position} from "geojson";
+import * as mapboxgl from "mapbox-gl"
+import {atom, useAtom} from "jotai"
+import {Feature, Position} from "geojson"
 
-import {locationMapAtom} from "../../state/global";
-import {GeoLocation} from "../../utils/types";
-import {AttributionControl, Marker} from "mapbox-gl";
+import {locationMapAtom} from "../../state/global"
+import {GeoLocation} from "../../utils/types"
+import {AttributionControl, Marker} from "mapbox-gl"
 
 type Props = {
     position?: Position
@@ -28,13 +28,13 @@ export default function LocationMap({zoom}: Props) {
     const marker = useRef<Marker | null>(null)
 
     const createMap = (container: HTMLDivElement): mapboxgl.Map  => {
-        const mapboxMap = new mapboxgl.Map({
+        const map = new mapboxgl.Map({
             container: container,
             accessToken: process.env.NEXT_PUBLIC_MAPBOX_TOKEN,
             style: "mapbox://styles/mapbox/streets-v11",
             center: selection.position as [number,number] || [0, 0],
             zoom: zoom || 4,
-        });
+        })
 
         const geocoder = new MapboxGeocoder({
             accessToken: process.env.NEXT_PUBLIC_MAPBOX_TOKEN,
@@ -42,29 +42,29 @@ export default function LocationMap({zoom}: Props) {
             // marker: {color: 'red'},
             enableEventLogging: false,
             mapboxgl: mapboxgl
-        });
+        })
         geocoder.on('result', (e: {result: Feature & {center: number[]}}) => {
             console.log('Geocoder result: ', e.result)
             setSelection({
                 position: e.result.center,
                 geometry: e.result.geometry})
             marker.current?.remove()
-            marker.current = new Marker({color: 'red'}).setLngLat(e.result.center as [number,number]).addTo(mapboxMap)
+            marker.current = new Marker({color: 'red'}).setLngLat(e.result.center as [number,number]).addTo(map)
             setDirty(true)
         })
-        mapboxMap.on('click', (e) => {
+        map.on('click', (e) => {
             console.log(`A click event has occurred at ${e.lngLat}`);
             setSelection({
                 position: [e.lngLat.lng, e.lngLat.lat],
                 geometry: {type: 'Point', coordinates: [e.lngLat.lng, e.lngLat.lat]}
             })
             marker.current?.remove()
-            marker.current = new Marker({color: 'red'}).setLngLat(e.lngLat).addTo(mapboxMap)
+            marker.current = new Marker({color: 'red'}).setLngLat(e.lngLat).addTo(map)
             setDirty(true)
-        });
-        mapboxMap.addControl(geocoder, 'top-left')
-        mapboxMap.addControl(new AttributionControl({compact: true}))
-        return mapboxMap
+        })
+        map.addControl(geocoder, 'top-left')
+        map.addControl(new AttributionControl({compact: true}))
+        return map
     }
 
     useEffect(() => {

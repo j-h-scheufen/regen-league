@@ -23,7 +23,8 @@ import {
     RolesDictionary,
     UserStatus
 } from "./types";
-import {Geometry} from "geojson";
+import {FeatureCollection, Geometry} from "geojson";
+import {en} from "@supabase/auth-ui-react";
 
 type DbLinkInsert = Database['public']['Tables']['links']['Insert']
 type DbRelationship = Database['public']['Tables']['relationships']['Row']
@@ -507,4 +508,41 @@ export async function updateEntity(client: SupabaseClient<Database>, entity: Ent
         console.log('Error updating entity ID '+entity.id)
         throw error
     }
+}
+
+export async function getGeoJsonSource(client: SupabaseClient<Database>, entityType: number): Promise<FeatureCollection> {
+    const {data, error} = await client.from('entities').select('*').eq('type_id', entityType).neq('geojson', null)
+    if (error) {
+        console.error('Unable to retrieve GeoJson data for entities of type '+entityType+'. Error: '+error.message)
+        throw error
+    }
+
+    const result: FeatureCollection = {
+        type: "FeatureCollection",
+        features: []
+    }
+
+    if (data) {
+         data.forEach((dbEntity: DbEntity) => {
+             let geometry = null
+             // verification that the JSONB value returned can be parsed to a Geometry object
+             if (dbEntity.geojson !== null &&
+                 typeof dbEntity.geojson === 'object' &&
+                 !Array.isArray(dbEntity.geojson)) {
+                 geometry = JSON.parse(JSON.stringify(dbEntity.geojson))
+             }
+
+             result.features.push({
+                type: "Feature",
+                properties: {
+                    'id': dbEntity.id,
+                    'name': dbEntity.name,
+                    'description': dbEntity.description,
+                    'type': dbEntity.type_id
+                },
+                geometry: geometry
+            })
+        })
+    }
+    return result
 }

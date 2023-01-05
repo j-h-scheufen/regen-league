@@ -6,14 +6,14 @@ import {
     TextInput,
 } from 'grommet'
 import {useRouter} from "next/router";
-import {atom, useAtomValue, useAtom} from "jotai";
+import {atom, useAtom} from "jotai";
 import {useSupabaseClient, useUser} from "@supabase/auth-helpers-react";
 import {useCallback} from "react";
 
 import {Database} from "../../utils/database.types";
 import {EntityType, Project} from "../../utils/types";
-import {rolesAtom} from "../../state/global";
 import {createEntityForUser} from "../../utils/supabase";
+import {useAdminRole} from "../../utils/hooks";
 
 const emptyProject: Project = {
     id: "",
@@ -28,26 +28,16 @@ export default function NewProjectForm() {
     const client = useSupabaseClient<Database>()
     const user = useUser()
     const router = useRouter()
+    const adminRole = useAdminRole(EntityType.HUMAN, EntityType.PROJECT)
 
     const [newProject, setProject] = useAtom(newProjectAtom)
     const [loading, setLoading] = useAtom(loadingAtom)
-    const rolesDictionary = useAtomValue(rolesAtom)
-    const roles = rolesDictionary.get(JSON.stringify([EntityType.HUMAN, EntityType.PROJECT]))
-
-    function getAdminRole(): string {
-        const result = roles?.filter((role) => role.name.toUpperCase().startsWith('ADMIN'))
-        if (!result || result.length !== 1) {
-            console.error('No admin role found for a relationship from human (type: ' + EntityType.HUMAN + ') to project (type: ' + EntityType.PROJECT + ')')
-            throw Error('Missing data. Unable to proceed')
-        }
-        return result[0].id
-    }
 
     const createProject = useCallback( async (): Promise<string | undefined> => {
         try {
             setLoading(true)
             if (user) {
-                const newEntity = await createEntityForUser(client, newProject, user.id, getAdminRole())
+                const newEntity = await createEntityForUser(client, newProject, user.id, adminRole)
                 setProject(newEntity)
                 return newEntity.id
             }
@@ -59,7 +49,7 @@ export default function NewProjectForm() {
         } finally {
             setLoading(false)
         }
-    }, [client, user, setLoading, newProject, getAdminRole, setProject])
+    }, [client, user, adminRole, setLoading, newProject, setProject])
 
     return (
         <Box width="large" elevation="medium" round pad="large">

@@ -1,13 +1,13 @@
 import {Box, Button, Form, FormField, TextInput,} from 'grommet'
 import {useRouter} from "next/router";
-import {atom, useAtomValue, useAtom} from "jotai";
+import {atom, useAtom} from "jotai";
 import {useSupabaseClient, useUser} from "@supabase/auth-helpers-react";
 
 import {Database} from "../../utils/database.types";
 import {EntityType, Hub} from "../../utils/types";
-import {rolesAtom} from "../../state/global";
 import {useCallback} from "react";
 import {createEntityForUser} from "../../utils/supabase";
+import {useAdminRole} from "../../utils/hooks";
 
 const emptyHub: Hub = {
     id: "",
@@ -22,26 +22,16 @@ export default function NewHubForm() {
     const client = useSupabaseClient<Database>()
     const user = useUser()
     const router = useRouter()
+    const adminRole = useAdminRole(EntityType.HUMAN, EntityType.HUB)
 
     const [newHub, setHub] = useAtom(newHubAtom)
     const [loading, setLoading] = useAtom(loadingAtom)
-    const rolesDictionary = useAtomValue(rolesAtom)
-    const roles = rolesDictionary.get(JSON.stringify([EntityType.HUMAN, EntityType.HUB]))
-
-    function getAdminRole(): string {
-        const result = roles?.filter((role) => role.name.toUpperCase().startsWith('ADMIN'))
-        if (!result || result.length !== 1) {
-            console.error('No admin role found for a relationship from human (type: ' + EntityType.HUMAN + ') to hub (type: ' + EntityType.HUB + ')')
-            throw Error('Missing data. Unable to proceed')
-        }
-        return result[0].id
-    }
 
     const createHub = useCallback( async (): Promise<string | undefined> => {
         try {
             setLoading(true)
             if (user) {
-                const newEntity = await createEntityForUser(client, newHub, user.id, getAdminRole())
+                const newEntity = await createEntityForUser(client, newHub, user.id, adminRole)
                 setHub(newEntity)
                 return newEntity.id
             }
@@ -53,7 +43,7 @@ export default function NewHubForm() {
         } finally {
             setLoading(false)
         }
-    }, [client, user, setLoading, newHub, getAdminRole, setHub])
+    }, [client, user, adminRole, setLoading, newHub, setHub])
 
     return (
         <Box width="large" elevation="medium" round pad="large">

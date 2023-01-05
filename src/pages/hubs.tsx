@@ -1,7 +1,7 @@
 import {Box, Button, Heading, Page} from 'grommet'
 import {Add as AddIcon} from 'grommet-icons'
 import {GetServerSidePropsContext} from 'next'
-import {Session } from "@supabase/auth-helpers-react"
+import {Session, useSession} from "@supabase/auth-helpers-react"
 
 import {getHubs, getServerClient} from '../utils/supabase'
 import Link from "next/link";
@@ -14,28 +14,31 @@ type PageProps = {
 }
 
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
-    const {client, session} = await getServerClient(ctx)
+    const {client} = await getServerClient(ctx)
 
     const hubs = await getHubs(client)
 
     return {
         props: {
-            session: session,
             hubs: hubs,
         },
     }
 }
 
-export default function Hubs({ session, hubs }: PageProps) {
+export default function Hubs({hubs}: PageProps) {
+    const session = useSession()
+
     return (
-        <Page>
-            <Box direction="row" justify="between">
+        <Page align="center">
+            <Box direction="row" justify="between" align="center" width="95%">
                 <Heading >Hubs</Heading>
                 {session ? <Link href={"/hub/new"} passHref>
-                    <Button><AddIcon size="large"/></Button>
+                    <Button margin={{left: 'auto'}}><AddIcon size="large"/></Button>
                 </Link>: <Box/>}
             </Box>
-            <HubsList hubs={hubs}/>
+            <Box margin={{horizontal: 'xsmall'}}>
+                <HubsList hubs={hubs}/>
+            </Box>
         </Page>
     )
 }

@@ -11,11 +11,12 @@ export default function ProjectsList({projects}: Props) {
     const router = useRouter()
 
     return (
-        <List data={projects} pad="medium"
-          primaryKey='name'
-          secondaryKey='description'
-          onClickItem={(event: {item?: Project}) => { // @ts-ignore
-              router.push("/project/"+event.item.id)}}>
-        </List>
+        <List style={{width: '100vw'}}
+            data={projects}
+            pad="medium"
+            primaryKey='name'
+            secondaryKey='description'
+            onClickItem={(event: {item?: Project}) => {router.push("/project/"+event.item?.id)}}
+        />
     )
 }

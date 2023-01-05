@@ -1,7 +1,7 @@
 import {Box, Button, Heading, Page} from 'grommet'
 import {Add as AddIcon} from 'grommet-icons'
 import {GetServerSidePropsContext} from 'next'
-import {Session} from "@supabase/auth-helpers-react"
+import {Session, useSession} from "@supabase/auth-helpers-react"
 import Link from 'next/link';
 
 import {getProjects, getServerClient} from '../utils/supabase'
@@ -14,27 +14,31 @@ type PageProps = {
 }
 
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
-    const {client, session} = await getServerClient(ctx)
+    const {client} = await getServerClient(ctx)
 
     const projects = await getProjects(client)
+
     return {
         props: {
-            session: session,
             projects: projects,
         },
     }
 }
 
-export default function Projects({ session, projects }: PageProps) {
+export default function Projects({projects}: PageProps) {
+    const session = useSession()
+
     return (
-        <Page>
-            <Box direction="row" justify="between">
+        <Page align="center">
+            <Box direction="row" justify="between" align="center" width="95%">
                 <Heading >Projects</Heading>
                 {session ? <Link href={"/project/new"} passHref>
-                    <Button><AddIcon size="large"/></Button>
+                    <Button margin={{left: 'auto'}}><AddIcon size="large"/></Button>
                 </Link>: <Box/>}
             </Box>
-            <ProjectsList projects={projects}/>
+            <Box margin={{horizontal: 'xsmall'}}>
+                <ProjectsList projects={projects}/>
+            </Box>
         </Page>
     )
 }

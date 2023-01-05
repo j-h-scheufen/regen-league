@@ -124,7 +124,7 @@ export async function isUserEntityAdmin(client: SupabaseClient<Database>, userId
     }
     const adminRole = data.find(role => {
         if (role?.roles && !Array.isArray(role.roles) )
-            return role.roles.name.toUpperCase() == 'ADMIN';
+            return role.roles.name.toUpperCase().startsWith('ADMIN')
         return false
     })
     return adminRole !== undefined
@@ -545,4 +545,16 @@ export async function getGeoJsonSource(client: SupabaseClient<Database>, entityT
         })
     }
     return result
+}
+
+export async function createEntityForUser(client: SupabaseClient<Database>, entity: LocationEntity, userId: string, roleId: string): Promise<LocationEntity> {
+    console.log('NEW ENTITY: ', entity, userId, roleId)
+    const { data, error } = await client.rpc('new_entity_with_user_relation', { name: entity.name, description: entity.description, entity_type_id: entity.type, role_id: roleId, user_id: userId }).single()
+
+    if (error) {
+        console.error('Unable to create a new entity for user ID '+userId+'. Error: '+error.message)
+        throw error
+    }
+    entity = {...entity, id: data}
+    return entity
 }

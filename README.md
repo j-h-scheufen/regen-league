@@ -49,7 +49,7 @@ begin
     new_entity_with_user_relation.user_id
   )
   returning id into new_id;
-  insert into relationships(entity1_id, entity2_id, role_id)
+  insert into relationships(from_id, to_id, role_id)
   values(new_entity_with_user_relation.user_id, new_id, new_entity_with_user_relation.role_id);
   return new_id;
 end;$$ language plpgsql;

@@ -1,103 +1,103 @@
+// @ts-ignore
+import DeckGL from '@deck.gl/react/typed';
+import {GeoJsonLayer} from '@deck.gl/layers/typed';
+import {MapboxOverlay, MapboxOverlayProps} from '@deck.gl/mapbox/typed';
+import {Map as MapboxMap, useControl} from 'react-map-gl';
 import "mapbox-gl/dist/mapbox-gl.css"
 import {useAtom, atom, useAtomValue} from "jotai";
-import * as React from "react";
-import * as mapboxgl from "mapbox-gl";
-import {AttributionControl} from "mapbox-gl";
-import {useEffect, useRef} from "react";
 import {waitForAll} from "jotai/utils";
+import {geoJsonHubsAtom, geoJsonPeopleAtom, geoJsonPlatformsAtom, geoJsonProjectsAtom} from "../../state/global";
+import {booleanLiteral} from "@babel/types";
 
-import {
-    geoJsonHubsAtom,
-    geoJsonPeopleAtom,
-    geoJsonPlatformsAtom,
-    geoJsonProjectsAtom, globalMapAtom,
-} from "../../state/global";
+export type ActiveLayers = {
+    hubs: boolean
+    projects: boolean
+    platforms?: boolean
+    people?: boolean
+}
 
-// const initialViewportState = {
-//     longitude: 0,
-//     latitude: 0,
-//     zoom: 0.75,
-//     bearing: 0,
-//     pitch: 0,
-//     padding: {top: 0, bottom: 0, left: 0, right: 0}
-// }
+const initialViewState = {
+    latitude: 0,
+    longitude: 0,
+    zoom: 0.5
+}
 
-// const viewportAtom = atom(initialViewportState)
+function DeckGLOverlay(props: MapboxOverlayProps & {interleaved?: boolean}) {
+    const overlay = useControl<MapboxOverlay>(() => new MapboxOverlay(props))
+    overlay.setProps(props)
+    return null
+}
+
+const initialLayerVisibility: ActiveLayers = {hubs: true, projects: true}
+export const layerToggleAtom = atom<ActiveLayers>(initialLayerVisibility)
 
 export default function GlobalMap() {
     const [hubSource, projectSource, platformSource, peopleSource] = useAtomValue(waitForAll([geoJsonHubsAtom, geoJsonProjectsAtom, geoJsonPlatformsAtom, geoJsonPeopleAtom]))
-    const [globalMap, setGlobalMap] = useAtom(globalMapAtom)
+    const [activeLayers, setActiveLayers] = useAtom(layerToggleAtom)
 
-    const mapNode = useRef<HTMLDivElement | null>(null)
-
-    const createMap = (container: HTMLDivElement): mapboxgl.Map  => {
-        const map = new mapboxgl.Map({
-            container: container,
-            accessToken: process.env.NEXT_PUBLIC_MAPBOX_TOKEN,
-            // style: 'mapbox://styles/mapbox/satellite-v9', // style URL
-            // projection: 'globe', // Display the map as a globe, since satellite-v9 defaults to Mercator
-            style: 'mapbox://styles/mapbox/satellite-v9',
-            // @ts-ignore
-            projection: 'naturalEarth',
-            zoom: 0.75,
-        })
-
-        map.on('load', (e) => {
-            map.addSource('hubs', {
-                type: 'geojson',
-                data: hubSource
-            });
-            map.addSource('projects', {
-                type: 'geojson',
-                data: projectSource
-            });
-
-            map.addLayer({
-                'id': 'hubs-layer',
-                'type': 'circle',
-                'source': 'hubs',
-                'layout': {
-                    'visibility': 'visible'
-                },
-                'paint': {
-                    'circle-radius': 4,
-                    'circle-stroke-width': 2,
-                    'circle-color': 'yellow',
-                    'circle-stroke-color': 'white'
-                }
-            });
-            map.addLayer({
-                'id': 'projects-layer',
-                'type': 'circle',
-                'source': 'projects',
-                'layout': {
-                    'visibility': 'visible'
-                },
-                'paint': {
-                    'circle-radius': 3,
-                    'circle-stroke-width': 1,
-                    'circle-color': 'green',
-                    'circle-stroke-color': 'white'
-                }
-            });
-        })
-        map.addControl(new AttributionControl({compact: true}))
-        return map
-    }
-
-    useEffect(() => {
-
-        if (typeof window === "undefined" || mapNode.current === null) return
-
-        console.log('Creating a new Map!')
-        const newMap = createMap(mapNode.current)
-        setGlobalMap(newMap)
-
-        return () => {
-            newMap.remove()
+    const onClick = (info: {object?: any}) => {
+        if (info.object) {
+            // eslint-disable-next-line
+            alert(`${info.object.properties.name} (${info.object.properties.id})`);
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+    };
 
-    return <div ref={mapNode} style={{ width: "100%", height: "100%" }} />;
+    const layers = [
+        new GeoJsonLayer({
+            id: 'hubs-layer',
+            //@ts-ignore
+            data: hubSource,
+            visible: activeLayers.hubs,
+            // Styles
+            filled: true,
+            pointRadiusMinPixels: 5,
+            pointRadiusScale: 400,
+            getPointRadius: (f: {properties?: any}) => 11 - f.properties.scalerank,
+            getFillColor: [21, 56, 161, 200],
+            // Interactive props
+            pickable: true,
+            autoHighlight: true,
+            onClick
+        }),
+        new GeoJsonLayer({
+            id: 'projects-layer',
+            //@ts-ignore
+            data: projectSource,
+            visible: activeLayers.projects,
+            // Styles
+            filled: true,
+            pointRadiusMinPixels: 4,
+            pointRadiusScale: 200,
+            getPointRadius: (f: {properties?: any}) => 11 - f.properties.scalerank,
+            getFillColor: [50, 168, 96, 200],
+            // Interactive props
+            pickable: true,
+            autoHighlight: true,
+            onClick
+        })//,
+        // new ArcLayer({
+        //     id: 'arcs',
+        //     data: AIR_PORTS,
+        //     dataTransform: d => d.features.filter(f => f.properties.scalerank < 4),
+        //     // Styles
+        //     getSourcePosition: f => [-0.4531566, 51.4709959], // London
+        //     getTargetPosition: f => f.geometry.coordinates,
+        //     getSourceColor: [0, 128, 200],
+        //     getTargetColor: [200, 0, 80],
+        //     getWidth: 1
+        // })
+    ];
+
+    return (
+            <MapboxMap
+                initialViewState={initialViewState}
+                mapStyle="mapbox://styles/mapbox/satellite-v9"
+                projection="naturalEarth"
+                mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
+                attributionControl={false}
+                reuseMaps={true}>
+                <DeckGLOverlay
+                    layers={layers}/>
+            </MapboxMap>
+    )
 }

@@ -563,6 +563,6 @@ export async function getRelationshipCoordinates(client: SupabaseClient<Database
         console.error('Unable to retrieve relationship positions for role ID '+roleId+'. Error: '+error.message)
         throw error
     }
-    //@ts-ignore // TODO Supabase-guessed produces compiler warning, but data at runtime is as expected 
+    //@ts-ignore // TODO Supabase-guessed produces compiler warning, but data at runtime is as expected
     return data || new Array<{source: Position; target: Position}>()
 }

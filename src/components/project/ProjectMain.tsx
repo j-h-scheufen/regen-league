@@ -15,7 +15,7 @@ import {projectRolesAtom} from "../../state/global";
 import {addRelationship, getUserMember, removeRelationship, updateEntity} from "../../utils/supabase";
 import {useSupabaseClient} from "@supabase/auth-helpers-react";
 import {GeoLocation} from "../../utils/types";
-import LocationForm from "../hub/LocationForm";
+import LocationForm from "../LocationForm";
 
 export default function ProjectMain() {
     const [projectRoles, initialProjectCandidates] = useAtomValue(waitForAll([projectRolesAtom, projectMemberCandidatesAtom]))

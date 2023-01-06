@@ -16,7 +16,7 @@ import MembersForm from "../MembersForm";
 import ProjectConnectionsCard from "./ProjectConnectionsCard";
 import ProjectConnectionsForm from "./ProjectConnectionsForm";
 import {addRelationship, getUserMember, removeRelationship, updateEntity} from "../../utils/supabase";
-import LocationForm from "./LocationForm";
+import LocationForm from "../LocationForm";
 import {GeoLocation} from "../../utils/types";
 
 export default function HubMain() {

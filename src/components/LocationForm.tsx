@@ -11,16 +11,9 @@ import {atom, useAtom, useAtomValue} from "jotai";
 import {useHydrateAtoms} from "jotai/utils";
 import {Position} from "geojson";
 
-import {GeoLocation, LocationEntity} from "../../utils/types";
+import {GeoLocation, LocationEntity} from "../utils/types";
 import * as React from "react";
-import LocationMap, {currentSelectionAtom, dirtyAtom} from "../map/LocationMap";
-import dynamic from "next/dynamic";
-import SuspenseSpinner from "../utils/SuspenseSpinner";
-
-const DynamicMap = dynamic(() => import("../map/LocationMap"), {
-    loading: () => <Box align="center" margin={{vertical: "100px"}}><SuspenseSpinner/></Box>,
-    ssr: false
-});
+import LocationMap, {currentSelectionAtom, dirtyAtom} from "./map/LocationMap";
 
 type Props = {
     entity: LocationEntity

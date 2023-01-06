@@ -56,7 +56,7 @@ export default function NewProjectForm() {
             <Form<Project>
                 value={newProject}
                 onChange={(newValue) => setProject(newValue)}
-                onSubmit={() => createProject().then((projectId) => router.push("/hub/"+projectId))}
+                onSubmit={() => createProject().then((projectId) => router.push("/project/"+projectId))}
             >
                     <FormField width="100%" name="name" htmlFor="nameId" label="Name" required>
                         <TextInput id="nameId" name="name" type="name"/>

@@ -33,7 +33,7 @@ function DeckGLOverlay(props: MapboxOverlayProps & {interleaved?: boolean}) {
     return null
 }
 
-const initialLayerVisibility: ActiveLayers = {hubs: true, projects: true}
+const initialLayerVisibility: ActiveLayers = {hubs: true, projects: true, projects2hubs: true}
 export const layerToggleAtom = atom<ActiveLayers>(initialLayerVisibility)
 
 export default function GlobalMap() {

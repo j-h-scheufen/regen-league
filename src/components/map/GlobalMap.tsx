@@ -1,6 +1,6 @@
 // @ts-ignore
 import DeckGL from '@deck.gl/react/typed';
-import {GeoJsonLayer} from '@deck.gl/layers/typed';
+import {GeoJsonLayer, ArcLayer} from '@deck.gl/layers/typed';
 import {MapboxOverlay, MapboxOverlayProps} from '@deck.gl/mapbox/typed';
 import {Map as MapboxMap, useControl} from 'react-map-gl';
 import "mapbox-gl/dist/mapbox-gl.css"
@@ -8,10 +8,15 @@ import {useAtom, atom, useAtomValue} from "jotai";
 import {waitForAll} from "jotai/utils";
 import {geoJsonHubsAtom, geoJsonPeopleAtom, geoJsonPlatformsAtom, geoJsonProjectsAtom} from "../../state/global";
 import {booleanLiteral} from "@babel/types";
+import {projectToHubCoordinatesAtom} from "../../state/map";
+
+const hubColor = [21, 56, 161]
+const projectColor = [50, 168, 96]
 
 export type ActiveLayers = {
-    hubs: boolean
-    projects: boolean
+    hubs?: boolean
+    projects?: boolean
+    projects2hubs?: boolean
     platforms?: boolean
     people?: boolean
 }
@@ -32,7 +37,8 @@ const initialLayerVisibility: ActiveLayers = {hubs: true, projects: true}
 export const layerToggleAtom = atom<ActiveLayers>(initialLayerVisibility)
 
 export default function GlobalMap() {
-    const [hubSource, projectSource, platformSource, peopleSource] = useAtomValue(waitForAll([geoJsonHubsAtom, geoJsonProjectsAtom, geoJsonPlatformsAtom, geoJsonPeopleAtom]))
+    const [hubSource, projectSource, platformSource, peopleSource, projectToHubs] = useAtomValue(
+        waitForAll([geoJsonHubsAtom, geoJsonProjectsAtom, geoJsonPlatformsAtom, geoJsonPeopleAtom, projectToHubCoordinatesAtom]))
     const [activeLayers, setActiveLayers] = useAtom(layerToggleAtom)
 
     const onClick = (info: {object?: any}) => {
@@ -51,7 +57,7 @@ export default function GlobalMap() {
             // Styles
             filled: true,
             pointRadiusMinPixels: 5,
-            pointRadiusScale: 400,
+            pointRadiusScale: 200,
             getPointRadius: (f: {properties?: any}) => 11 - f.properties.scalerank,
             getFillColor: [21, 56, 161, 200],
             // Interactive props
@@ -74,18 +80,20 @@ export default function GlobalMap() {
             pickable: true,
             autoHighlight: true,
             onClick
-        })//,
-        // new ArcLayer({
-        //     id: 'arcs',
-        //     data: AIR_PORTS,
-        //     dataTransform: d => d.features.filter(f => f.properties.scalerank < 4),
-        //     // Styles
-        //     getSourcePosition: f => [-0.4531566, 51.4709959], // London
-        //     getTargetPosition: f => f.geometry.coordinates,
-        //     getSourceColor: [0, 128, 200],
-        //     getTargetColor: [200, 0, 80],
-        //     getWidth: 1
-        // })
+        }),
+        new ArcLayer({
+            id: 'projects2hubs-layer',
+            data: projectToHubs,
+            visible: activeLayers.projects2hubs,
+            // dataTransform: d => d.features.filter(f => f.properties.scalerank < 4),
+            // Styles
+            getSourcePosition: f => f.source,
+            getTargetPosition: f => f.target,
+            getSourceColor: [50, 168, 96],
+            getTargetColor: [21, 56, 161],
+            getWidth: 5,
+            widthMinPixels: 2
+        })
     ];
 
     return (

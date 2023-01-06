@@ -10,9 +10,10 @@ export default function MapPage() {
             <Box height="500px" width="900px">
                 <GlobalMap/>
             </Box>
-            <Box direction="row" justify="between">
-                <Button label="Toggle Hubs" onClick={() => setActiveLayers({...activeLayers, hubs: !activeLayers.hubs})}/>
-                <Button label="Toggle Projects" onClick={() => setActiveLayers({...activeLayers, projects: !activeLayers.projects})}/>
+            <Box direction="row" justify="between" gap="medium" margin={{top: 'small'}}>
+                <Button label="Hubs" onClick={() => setActiveLayers({hubs: true})}/>
+                <Button label="Projects" onClick={() => setActiveLayers({projects: true})}/>
+                <Button label="Both" onClick={() => setActiveLayers({hubs: true, projects: true, projects2hubs: true})}/>
             </Box>
         </Page>
     )

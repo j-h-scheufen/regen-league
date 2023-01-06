@@ -568,6 +568,10 @@ export interface Database {
           l4_link: string
         }[]
       }
+      get_relationship_positions: {
+        Args: { role_id: string }
+        Returns: { source: number[]; target: number[] }[]
+      }
       get_rl_region_info_l1: {
         Args: { region_id: string }
         Returns: { l1_id: string; l1_name: string; l1_link: string }[]

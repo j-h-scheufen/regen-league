@@ -23,7 +23,7 @@ import {
     RolesDictionary,
     UserStatus
 } from "./types";
-import {FeatureCollection, Geometry} from "geojson";
+import {FeatureCollection, Geometry, Position} from "geojson";
 import {en} from "@supabase/auth-ui-react";
 
 type DbLinkInsert = Database['public']['Tables']['links']['Insert']
@@ -548,13 +548,21 @@ export async function getGeoJsonSource(client: SupabaseClient<Database>, entityT
 }
 
 export async function createEntityForUser(client: SupabaseClient<Database>, entity: LocationEntity, userId: string, roleId: string): Promise<LocationEntity> {
-    console.log('NEW ENTITY: ', entity, userId, roleId)
     const { data, error } = await client.rpc('new_entity_with_user_relation', { name: entity.name, description: entity.description, entity_type_id: entity.type, role_id: roleId, user_id: userId }).single()
-
     if (error) {
         console.error('Unable to create a new entity for user ID '+userId+'. Error: '+error.message)
         throw error
     }
     entity = {...entity, id: data}
     return entity
+}
+
+export async function getRelationshipCoordinates(client: SupabaseClient<Database>, roleId: string): Promise<Array<{source: Position, target: Position}>> {
+    const { data, error } = await client.rpc('get_relationship_positions', { role_id: roleId })
+    if (error) {
+        console.error('Unable to retrieve relationship positions for role ID '+roleId+'. Error: '+error.message)
+        throw error
+    }
+    //@ts-ignore // TODO Supabase-guessed produces compiler warning, but data at runtime is as expected 
+    return data || new Array<{source: Position; target: Position}>()
 }

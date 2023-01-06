@@ -205,6 +205,22 @@ as $$
   WHERE br.id = $1;
 $$;
 
+create or replace function public.get_relationship_positions(role_id uuid)
+returns table (
+  source numeric[],
+  target numeric[]
+)
+language sql
+as $$
+  SELECT e1.position as source, e2.position as target
+  FROM relationships r
+  JOIN entities e1 on (e1.id = r.from_id)
+  JOIN entities e2 on (e2.id = r.to_id)
+  WHERE r.role_id = $1
+  AND e1.position != '{}'
+  AND e2.position != '{}'
+$$;
+
 ```
 
 4. Added ON CASCADE DELETE clause to the profiles table to automatically delete a profile when a user is deleted.

@@ -1,4 +1,4 @@
-import {Box, Button, Form, FormField, TextInput,} from 'grommet'
+import {Box, Button, Form, FormField, TextArea, TextInput,} from 'grommet'
 import {useRouter} from "next/router";
 import {atom, useAtom} from "jotai";
 import {useSupabaseClient, useUser} from "@supabase/auth-helpers-react";
@@ -50,13 +50,16 @@ export default function NewHubForm() {
             <Form<Hub>
                 value={newHub}
                 onChange={(newValue) => setHub(newValue)}
-                onSubmit={() => createHub().then((hubId) => router.push("/hub/"+hubId))}
+                onSubmit={() => createHub().then((hubId) => {
+                    router.push("/hub/"+hubId)
+                    setHub(emptyHub)
+                })}
             >
                     <FormField width="100%" name="name" htmlFor="nameId" label="Name" required>
                         <TextInput id="nameId" name="name" type="name"/>
                     </FormField>
                     <FormField width="100%" name="description" htmlFor="descriptionId" label="Description">
-                        <TextInput id="descriptionId" name="description" type="text"/>
+                        <TextArea id="descriptionId" name="description" rows={10}/>
                     </FormField>
                 <Box direction="row" gap="medium" width="50%" margin={{ horizontal: 'auto', top: 'large' }}>
                     <Button type="submit" primary label={loading ? 'Loading ...' : 'Submit'} disabled={loading} />

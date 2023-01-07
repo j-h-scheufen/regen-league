@@ -45,8 +45,8 @@ export const linkTypeIconsAtom = atom<IconDictionary>((get) => {
         [2]: <Facebook/>,
         [3]: <Instagram/>,
         [4]: <Linkedin/>,
-        [5]: <Twitter/>,
-        [6]: <Github/>,
+        [5]: <Github/>,
+        [6]: <Twitter/>,
         [7]: <Youtube/>,
     }
     return iconConfig

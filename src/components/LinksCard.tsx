@@ -8,17 +8,20 @@ import Link from "next/link";
 import {useAtomValue} from "jotai";
 
 import {LinkDetails} from "../utils/types";
-import {linkDetailsAtom, linkTypeIconsAtom, linkTypesAtom} from "../state/global";
+import {linkTypeIconsAtom} from "../state/global";
 
-export default function LinksCard() {
-    const links = useAtomValue(linkDetailsAtom)
+type Props = {
+    links: Array<LinkDetails>
+}
+
+export default function LinksCard({links}: Props) {
     const iconConfig = useAtomValue(linkTypeIconsAtom)
 
     const LinkRow = (item: LinkDetails) => {
         return (
             <Box direction="row" gap="medium" pad="small" flex>
                 {iconConfig[item.typeId]}
-                <Link href={item.url}>{item.url}</Link>
+                <Link href={item.url} target="_blank">{item.url}</Link>
             </Box>
         )
     }

@@ -11,7 +11,7 @@ import {currentProjectAtom, editAtom, projectMemberCandidatesAtom, isProjectAdmi
 import RegionSelectorPanel from "../RegionSelectorPanel";
 import MembersForm from "../MembersForm";
 import {waitForAll} from "jotai/utils";
-import {projectRolesAtom} from "../../state/global";
+import {linkDetailsAtom, projectRolesAtom} from "../../state/global";
 import {addRelationship, getUserMember, removeRelationship, updateEntity} from "../../utils/supabase";
 import {useSupabaseClient} from "@supabase/auth-helpers-react";
 import {GeoLocation} from "../../utils/types";
@@ -20,6 +20,7 @@ import LocationForm from "../LocationForm";
 export default function ProjectMain() {
     const [projectRoles, initialProjectCandidates] = useAtomValue(waitForAll([projectRolesAtom, projectMemberCandidatesAtom]))
     const [currentProject, setCurrentProject] = useAtom(currentProjectAtom)
+    const linkDetails = useAtomValue(linkDetailsAtom)
     const isAdmin = useAtomValue(isProjectAdminAtom)
     const [edit, setEdit] = useAtom(editAtom)
     const client = useSupabaseClient()
@@ -82,7 +83,7 @@ export default function ProjectMain() {
                             <MembersCard/>
                             <ProjectAttributesCard entity={currentProject}/>
                             <RegionInfoCard/>
-                            <LinksCard/>
+                            <LinksCard links={linkDetails}/>
                     </Box>
                 )}
             </Box>

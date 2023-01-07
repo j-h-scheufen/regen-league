@@ -113,5 +113,13 @@ export type RegionCatalog = {
 // Type Guards
 
 export function isLocationEntity(e: Entity | LocationEntity): e is LocationEntity {
-    return (e as LocationEntity).position !== undefined;
+    return (e as LocationEntity).position !== undefined && (e as LocationEntity).geometry !== undefined;
+}
+
+export function isProject(e: Entity | LocationEntity): e is Hub {
+    return (e as LocationEntity).type === EntityType.PROJECT;
+}
+
+export function isHub(e: Entity | LocationEntity): e is Project {
+    return (e as LocationEntity).type === EntityType.HUB;
 }

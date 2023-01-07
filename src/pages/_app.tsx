@@ -1,14 +1,13 @@
-import {Provider as JotaiProvider, useAtom, useAtomValue} from 'jotai'
+import {Provider as JotaiProvider, useAtomValue} from 'jotai'
 import {createBrowserSupabaseClient} from '@supabase/auth-helpers-nextjs'
-import {SessionContextProvider, Session, useSupabaseClient} from '@supabase/auth-helpers-react'
+import {SessionContextProvider, Session} from '@supabase/auth-helpers-react'
 import type {AppProps} from 'next/app'
-import {Suspense, useCallback, useState} from "react";
+import {Suspense, useState} from "react";
 import "mapbox-gl/dist/mapbox-gl.css"
 
 import '../styles/global.css'
 import Layout from '../components/Layout'
 import {
-    currentUserProfileAtom,
     customCatalogAtom,
     epaCatalogAtom,
     linkTypesAtom,
@@ -16,7 +15,6 @@ import {
     rolesAtom
 } from "../state/global";
 import SuspenseSpinner from "../components/utils/SuspenseSpinner";
-import {getUserProfile} from "../utils/supabase";
 
 export default function App({ Component, pageProps}: AppProps<{
     initialSession: Session,

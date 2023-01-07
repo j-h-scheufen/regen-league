@@ -12,6 +12,7 @@ export default function AttributesCard({entity}: Props) {
             <CardBody gap="small">
                 <Box width="100%" pad="small">
                     <Paragraph
+                        style={{whiteSpace: 'pre-wrap'}}
                         maxLines={20}
                         fill={true}
                         margin={{vertical: "xsmall"}}>

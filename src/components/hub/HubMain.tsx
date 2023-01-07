@@ -3,7 +3,7 @@ import {useAtom, useAtomValue} from "jotai";
 import {useSupabaseClient} from "@supabase/auth-helpers-react";
 import {waitForAll} from "jotai/utils";
 
-import {hubRolesAtom} from "../../state/global";
+import {hubRolesAtom, linkDetailsAtom} from "../../state/global";
 import {currentHubAtom, editAtom, hubMemberCandidatesAtom, isHubAdminAtom} from "../../state/hub";
 import HubAttributesForm from "./HubAttributesForm";
 import RegionInfoCard from "../RegionInfoCard";
@@ -22,6 +22,7 @@ import {GeoLocation} from "../../utils/types";
 export default function HubMain() {
     const [hubRoles, initialHubCandidates] = useAtomValue(waitForAll([hubRolesAtom, hubMemberCandidatesAtom]))
     const [currentHub, setCurrentHub] = useAtom(currentHubAtom)
+    const linkDetails = useAtomValue(linkDetailsAtom)
     const isAdmin = useAtomValue(isHubAdminAtom)
     const [edit, setEdit] = useAtom(editAtom)
     const client = useSupabaseClient()
@@ -85,7 +86,7 @@ export default function HubMain() {
                         <MembersCard/>
                         <AttributesCard entity={currentHub}/>
                         <RegionInfoCard/>
-                        <LinksCard/>
+                        <LinksCard links={linkDetails}/>
                         <ProjectConnectionsCard/>
                     </Box>
                 )}

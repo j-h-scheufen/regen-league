@@ -396,7 +396,7 @@ export async function insertNewLink(client: SupabaseClient<Database>, url: strin
 }
 
 export async function getLinkTypes(client: SupabaseClient): Promise<Array<LinkType>> {
-    const {data, error} = await client.from('link_types').select('*')
+    const {data, error} = await client.from('link_types').select('*').order('name')
     if (error) {
         console.log('Error retrieving link types. Error: '+error.message)
         throw error

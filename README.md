@@ -115,70 +115,74 @@ as $$
   WHERE e.id NOT IN (SELECT rs.from_id from relationships rs where rs.to_id  = $1)
 $$;
 
-create or replace function public.get_entity_target_relations_by_type(from_id uuid, type_id int)
-returns table (
+CREATE OR REPLACE FUNCTION public.get_entity_target_relations_by_type(from_id uuid, type_id int)
+RETURNS TABLE (
   id uuid,
   name varchar,
   description text,
   type_id int,
   role varchar
 )
-language sql
-as $$
-  select e.id, e.name, e.description, $2 as type_id, r.name as role
+LANGUAGE sql
+AS $$
+  SELECT e.id, e.name, e.description, $2 AS type_id, r.name AS role
   from relationships rs
-  join roles r on (rs.role_id = r.id)
-  join entities e on (rs.to_id = e.id)
-  where rs.from_id = $1
-  and e.type_id = $2
+  JOIN roles r on (rs.role_id = r.id)
+  JOIN entities e on (rs.to_id = e.id)
+  WHERE rs.from_id = $1
+  AND e.type_id = $2
+  ORDER BY e.name
 $$;
 
-create or replace function public.get_entity_source_relations_by_type(to_id uuid, type_id int)
-returns table (
+CREATE OR REPLACE FUNCTION public.get_entity_source_relations_by_type(to_id uuid, type_id int)
+RETURNS TABLE (
   id uuid,
   name varchar,
   description text,
   type_id int,
   role varchar
 )
-language sql
-as $$
-  select e.id, e.name, e.description, $2 as type_id, r.name as role
-  from relationships rs
-  join roles r on (rs.role_id = r.id)
-  join entities e on (rs.from_id = e.id)
-  where rs.to_id = $1
-  and e.type_id = $2
+LANGUAGE sql
+AS $$
+  SELECT e.id, e.name, e.description, $2 AS type_id, r.name AS role
+  FROM relationships rs
+  JOIN roles r on (rs.role_id = r.id)
+  JOIN entities e on (rs.from_id = e.id)
+  WHERE rs.to_id = $1
+  AND e.type_id = $2
+  ORDER BY e.name
 $$;
 
-create or replace function public.get_entity_target_candidates_by_type(from_id uuid, type_id int)
-returns table (
+CREATE OR REPLACE FUNCTION public.get_entity_target_candidates_by_type(from_id uuid, type_id int)
+RETURNS TABLE (
   id uuid,
   name varchar,
   description text,
   type_id int
 )
-language sql
-as $$
-  SELECT e.id, e.name, e.description, $2 as type_id
+LANGUAGE sql
+AS $$
+  SELECT e.id, e.name, e.description, $2 AS type_id
   FROM entities e
   WHERE e.id NOT IN (SELECT to_id FROM relationships rs WHERE rs.from_id = $1)
   AND e.type_id = $2
+  ORDER BY e.name
 $$;
 
-create or replace function public.get_entity_source_candidates_by_type(to_id uuid, type_id int)
-returns table (
+CREATE OR REPLACE FUNCTION public.get_entity_source_candidates_by_type(to_id uuid, type_id int)
+RETURNS TABLE (
   id uuid,
   name varchar,
   description text,
   type_id int
 )
-language sql
-as $$
-  SELECT e.id, e.name, e.description, $2 as type_id
+LANGUAGE sql
+AS $$
+  SELECT e.id, e.name, e.description, $2 AS type_id
   FROM entities e
   WHERE e.id NOT IN (SELECT from_id FROM relationships rs WHERE rs.to_id = $1)
   AND e.type_id = $2
+  ORDER BY e.name
 $$;
 
 create or replace function public.get_bioregion_data(bioregion_id int)

@@ -1,8 +1,17 @@
 import {atom} from "jotai";
-import {Position} from "geojson";
-import {getRelationshipCoordinates} from "../utils/supabase";
+import {Feature, Position} from "geojson";
+import {getLinksForEntity, getLinkTypes, getRelationshipCoordinates} from "../utils/supabase";
 import {dbClientAtom, rolesAtom} from "./global";
-import {EntityType} from "../utils/types";
+import {EntityType, LinkDetails, LocationEntity} from "../utils/types";
+
+export const selectedFeatureAtom = atom<Feature | null>(null)
+
+export const selectedEntityLinksAtom = atom<Promise<Array<LinkDetails>>>(async (get) => {
+    const f = get(selectedFeatureAtom)
+    if (f?.properties?.id)
+        return getLinksForEntity(get(dbClientAtom), f.properties.id)
+    return new Array<LinkDetails>()
+})
 
 export const projectToHubCoordinatesAtom = atom<Promise<Array<{source: Position, target: Position}>>>(async (get) => {
     const roles = get(rolesAtom).get(JSON.stringify([EntityType.PROJECT,EntityType.HUB]))

@@ -2,7 +2,7 @@ import {
     Box,
     Button,
     Form,
-    FormField,
+    FormField, TextArea,
     TextInput,
 } from 'grommet'
 import {useRouter} from "next/router";
@@ -56,13 +56,16 @@ export default function NewProjectForm() {
             <Form<Project>
                 value={newProject}
                 onChange={(newValue) => setProject(newValue)}
-                onSubmit={() => createProject().then((projectId) => router.push("/project/"+projectId))}
+                onSubmit={() => createProject().then((projectId) => {
+                    router.push("/project/"+projectId)
+                    setProject(emptyProject)
+                })}
             >
                     <FormField width="100%" name="name" htmlFor="nameId" label="Name" required>
                         <TextInput id="nameId" name="name" type="name"/>
                     </FormField>
                     <FormField width="100%" name="description" htmlFor="descriptionId" label="Description">
-                        <TextInput id="descriptionId" name="description" type="text"/>
+                        <TextArea id="descriptionId" name="description" rows={10}/>
                     </FormField>
                 <Box direction="row" gap="medium" width="50%" margin={{ horizontal: 'auto', top: 'large' }}>
                     <Button type="submit" primary label={loading ? 'Loading ...' : 'Submit'} disabled={loading} />

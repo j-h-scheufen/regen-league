@@ -7,14 +7,18 @@ import "mapbox-gl/dist/mapbox-gl.css"
 import {Feature, Point} from "geojson";
 
 import {useAtom, atom, useAtomValue} from "jotai";
-import {waitForAll} from "jotai/utils";
+import {useHydrateAtoms, waitForAll} from "jotai/utils";
 import {geoJsonHubsAtom, geoJsonPeopleAtom, geoJsonPlatformsAtom, geoJsonProjectsAtom} from "../../state/global";
 import {projectToHubCoordinatesAtom, selectedFeatureAtom} from "../../state/map";
+
+type Props = {
+    initialLayers?: ActiveLayersConfig
+}
 
 const hubColor = [21, 56, 161]
 const projectColor = [50, 168, 96]
 
-export type ActiveLayers = {
+export type ActiveLayersConfig = {
     hubs?: boolean
     projects?: boolean
     projects2hubs?: boolean
@@ -36,13 +40,13 @@ function DeckGLOverlay(props: MapboxOverlayProps & {interleaved?: boolean}) {
     return null
 }
 
-const initialLayerVisibility: ActiveLayers = {hubs: true, projects: true}
-export const layerToggleAtom = atom<ActiveLayers>(initialLayerVisibility)
+export const layerToggleAtom = atom<ActiveLayersConfig>({})
 export const hoverFeatureAtom = atom<Feature | null>(null)
 
-export default function GlobalMap() {
+export default function GlobalMap({initialLayers}: Props) {
     const [hubSource, projectSource, platformSource, peopleSource, projectToHubs] = useAtomValue(
         waitForAll([geoJsonHubsAtom, geoJsonProjectsAtom, geoJsonPlatformsAtom, geoJsonPeopleAtom, projectToHubCoordinatesAtom]))
+    useHydrateAtoms([[layerToggleAtom, initialLayers || {}]])
     const [viewState, setViewState] = useAtom(viewStateAtom)
     const [activeLayers, setActiveLayers] = useAtom(layerToggleAtom)
     const [selectedFeature, setSelectedFeature] = useAtom(selectedFeatureAtom)

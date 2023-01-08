@@ -1,28 +1,36 @@
-import {Box, Button, Card, CardBody, CardHeader, Heading, Layer, Page, Paragraph, TextArea} from 'grommet'
+import {Box, Card, CardBody, CardHeader, Heading, Layer, Page, Paragraph} from 'grommet'
 import * as React from "react";
-import {Suspense} from "react";
 import {useAtom, useAtomValue} from "jotai";
 
-import GlobalMap, {layerToggleAtom} from "../components/map/GlobalMap";
+import GlobalMap, {ActiveLayersConfig, layerToggleAtom} from "../components/map/GlobalMap";
 import {selectedEntityLinksAtom, selectedFeatureAtom} from "../state/map";
 import LinksCard from "../components/LinksCard";
-import SuspenseSpinner from "../components/utils/SuspenseSpinner";
+import EntityTypeSelector, {filteredListAtom} from "../components/entity/EntityTypeSelector";
+import {EntityType} from "../utils/types";
+
+const initialLayerVisibility: ActiveLayersConfig = {hubs: true, projects: true} // see also defaultChecked on EntityTypeSelector
 
 export default function MapPage() {
     const [activeLayers, setActiveLayers] = useAtom(layerToggleAtom)
     const [selectedFeature, setSelectedFeature] = useAtom(selectedFeatureAtom)
     const selectedEntityLinks = useAtomValue(selectedEntityLinksAtom)
+    const selectedEntities = useAtomValue(filteredListAtom)
 
     return (
         <Page width="large" align="center">
             <Box height="500px" width="900px">
-                <GlobalMap/>
+                <GlobalMap initialLayers={initialLayerVisibility}/>
             </Box>
-            <Box direction="row" justify="between" gap="medium" margin={{top: 'small'}}>
-                <Button label="Hubs" onClick={() => setActiveLayers({hubs: true})}/>
-                <Button label="Projects" onClick={() => setActiveLayers({projects: true})}/>
-                <Button label="Both" onClick={() => setActiveLayers({hubs: true, projects: true, projects2hubs: true})}/>
-            </Box>
+            <EntityTypeSelector
+                entities={[]}
+                types={[EntityType.PROJECT, EntityType.HUB]}
+                initialChecked={[EntityType.PROJECT, EntityType.HUB]}
+                onChange={(selection) => {
+                    setActiveLayers({...activeLayers,
+                        hubs: selection.includes(EntityType.HUB),
+                        projects: selection.includes(EntityType.PROJECT)
+                    })
+                }}/>
             {selectedFeature && (
                 <Layer
                     id="selectionModal"

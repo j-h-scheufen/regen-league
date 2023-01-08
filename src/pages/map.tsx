@@ -3,17 +3,34 @@ import * as React from "react";
 import {useAtom, useAtomValue} from "jotai";
 
 import GlobalMap, {ActiveLayersConfig, layerToggleAtom} from "../components/map/GlobalMap";
-import {selectedEntityLinksAtom, selectedFeatureAtom} from "../state/map";
+import {entitiesListAtom, selectedEntityLinksAtom, selectedFeatureAtom} from "../state/map";
 import LinksCard from "../components/LinksCard";
 import EntityTypeSelector, {filteredListAtom} from "../components/entity/EntityTypeSelector";
 import {EntityType} from "../utils/types";
+import {GetServerSidePropsContext, InferGetServerSidePropsType} from "next";
+import {getEntitiesByType, getHubs, getServerClient} from "../utils/supabase";
+import {useHydrateAtoms} from "jotai/utils";
+
+export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
+    const {client} = await getServerClient(ctx)
+    const entities = await getEntitiesByType(client,[EntityType.PROJECT, EntityType.HUB])
+    console.log("ENTITIES: ", entities)
+
+    return {
+        props: {
+            entities: entities,
+        },
+    }
+}
 
 const initialLayerVisibility: ActiveLayersConfig = {hubs: true, projects: true} // see also defaultChecked on EntityTypeSelector
 
-export default function MapPage() {
+export default function MapPage({entities}: InferGetServerSidePropsType<typeof getServerSideProps>) {
+    useHydrateAtoms([[entitiesListAtom, entities]])
     const [activeLayers, setActiveLayers] = useAtom(layerToggleAtom)
     const [selectedFeature, setSelectedFeature] = useAtom(selectedFeatureAtom)
     const selectedEntityLinks = useAtomValue(selectedEntityLinksAtom)
+    const availableEntities = useAtomValue(entitiesListAtom)
     const selectedEntities = useAtomValue(filteredListAtom)
 
     return (
@@ -22,7 +39,7 @@ export default function MapPage() {
                 <GlobalMap initialLayers={initialLayerVisibility}/>
             </Box>
             <EntityTypeSelector
-                entities={[]}
+                entities={availableEntities}
                 types={[EntityType.PROJECT, EntityType.HUB]}
                 initialChecked={[EntityType.PROJECT, EntityType.HUB]}
                 onChange={(selection) => {
@@ -31,6 +48,10 @@ export default function MapPage() {
                         projects: selection.includes(EntityType.PROJECT)
                     })
                 }}/>
+            <Paragraph>
+                Available: {availableEntities?.length}
+                Selected: {selectedEntities?.length}
+            </Paragraph>
             {selectedFeature && (
                 <Layer
                     id="selectionModal"

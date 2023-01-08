@@ -3,6 +3,7 @@ import {atom, useAtom} from "jotai";
 import {EntityType, LocationEntity} from "../../utils/types";
 import {CheckBoxGroup} from "grommet";
 import {useHydrateAtoms} from "jotai/utils";
+import {useEffect} from "react";
 
 export const filteredListAtom = atom<Array<LocationEntity>>(new Array<LocationEntity>)
 
@@ -24,13 +25,19 @@ const labels: LabelDictionary = {
 const selectionAtom = atom<Array<number>>([])
 
 export default function EntityTypeSelector({entities, types, initialChecked, onChange}: Props) {
-    useHydrateAtoms([[selectionAtom, initialChecked]])
+    useHydrateAtoms([[selectionAtom, initialChecked]] as const)
     const [selection, setSelection] = useAtom(selectionAtom)
     const [ , setFilteredList] = useAtom(filteredListAtom)
 
     const options = types.map((type) => {
         return {label: labels[type], value: type}
     })
+
+    useEffect(() => {
+        if (initialChecked)
+            setFilteredList(entities.filter((e) => initialChecked.includes(e.type)))
+    }, [entities, initialChecked, setFilteredList])
+
     return (
         <CheckBoxGroup
             direction="row"

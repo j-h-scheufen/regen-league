@@ -6,6 +6,8 @@ import {EntityType, LinkDetails, LocationEntity} from "../utils/types";
 
 export const selectedFeatureAtom = atom<Feature | null>(null)
 
+export const entitiesListAtom = atom<Array<LocationEntity>>([])
+
 export const selectedEntityLinksAtom = atom<Promise<Array<LinkDetails>>>(async (get) => {
     const f = get(selectedFeatureAtom)
     if (f?.properties?.id)

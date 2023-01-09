@@ -2,8 +2,9 @@ import {GetServerSidePropsContext} from "next";
 import {createServerSupabaseClient} from "@supabase/auth-helpers-nextjs";
 import {SupabaseClient} from "@supabase/supabase-js";
 import {Session} from "@supabase/auth-helpers-react";
+import {FeatureCollection, Position} from "geojson";
 
-import {Database, Json} from "./database.types";
+import {Database} from "./database.types";
 import {
     Entity,
     EntityMember,
@@ -23,8 +24,6 @@ import {
     RolesDictionary,
     UserStatus
 } from "./types";
-import {FeatureCollection, Geometry, Position} from "geojson";
-import {en} from "@supabase/auth-ui-react";
 
 type DbLinkInsert = Database['public']['Tables']['links']['Insert']
 type DbRelationship = Database['public']['Tables']['relationships']['Row']
@@ -454,21 +453,26 @@ export async function removeRelationship(client: SupabaseClient<Database>, fromI
     }
 }
 
-export async function getEntitiesByType(client: SupabaseClient<Database>, type: EntityType): Promise<Array<LocationEntity>> {
-    const {data, error} = await client.from('entities').select('*').eq('type_id', type).order('name')
+export async function getEntitiesByType(client: SupabaseClient<Database>, types: Array<EntityType>): Promise<Array<LocationEntity>> {
+    let query = client.from('entities').select('*')
+    if (types)
+        query.in('type_id', types)
+    query.order('name')
+
+    const {data, error} = await query
     if (error) {
-        console.error('Unable to retrieve entities of type '+type+'. Error: '+error.message)
+        console.error('Unable to retrieve entities of types '+JSON.stringify(types)+'. Error: '+error.message)
         throw error
     }
     return data ? createEntities(data as Array<DbEntity>) : new Array<LocationEntity>()
 }
 
 export async function getHubs(client: SupabaseClient<Database>): Promise<Array<Hub>> {
-    return getEntitiesByType(client, EntityType.HUB)
+    return getEntitiesByType(client, [EntityType.HUB])
 }
 
 export async function getProjects(client: SupabaseClient<Database>): Promise<Array<Project>> {
-    return getEntitiesByType(client, EntityType.PROJECT)
+    return getEntitiesByType(client, [EntityType.PROJECT])
 }
 
 export async function getRolesDictionary(client: SupabaseClient<Database>): Promise<RolesDictionary> {

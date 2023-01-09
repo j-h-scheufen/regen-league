@@ -1,5 +1,5 @@
-import {Box, Card, CardBody, CardHeader, Heading, Layer, Page, Paragraph} from 'grommet'
-import * as React from "react";
+import {Box, Card, CardBody, CardHeader, DataTable, Heading, Layer, Page, Paragraph, Text} from 'grommet'
+import {Suspense} from "react";
 import {useAtom, useAtomValue} from "jotai";
 
 import GlobalMap, {ActiveLayersConfig, layerToggleAtom} from "../components/map/GlobalMap";
@@ -10,6 +10,7 @@ import {EntityType} from "../utils/types";
 import {GetServerSidePropsContext, InferGetServerSidePropsType} from "next";
 import {getEntitiesByType, getHubs, getServerClient} from "../utils/supabase";
 import {useHydrateAtoms} from "jotai/utils";
+import SuspenseSpinner from "../components/utils/SuspenseSpinner";
 
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
     const {client} = await getServerClient(ctx)
@@ -31,52 +32,82 @@ export default function MapPage({entities}: InferGetServerSidePropsType<typeof g
     const [selectedFeature, setSelectedFeature] = useAtom(selectedFeatureAtom)
     const selectedEntityLinks = useAtomValue(selectedEntityLinksAtom)
     const availableEntities = useAtomValue(entitiesListAtom)
-    const selectedEntities = useAtomValue(filteredListAtom)
+    const filteredEntities = useAtomValue(filteredListAtom)
 
     return (
         <Page width="large" align="center">
             <Box height="500px" width="900px">
                 <GlobalMap initialLayers={initialLayerVisibility}/>
             </Box>
-            <EntityTypeSelector
-                entities={availableEntities}
-                types={[EntityType.PROJECT, EntityType.HUB]}
-                initialChecked={[EntityType.PROJECT, EntityType.HUB]}
-                onChange={(selection) => {
-                    setActiveLayers({...activeLayers,
-                        hubs: selection.includes(EntityType.HUB),
-                        projects: selection.includes(EntityType.PROJECT)
-                    })
-                }}/>
-            <Paragraph>
-                Available: {availableEntities?.length}
-                Selected: {selectedEntities?.length}
-            </Paragraph>
+            <Box margin={{top: 'small'}}>
+                <EntityTypeSelector
+                    entities={availableEntities}
+                    types={[EntityType.PROJECT, EntityType.HUB]}
+                    initialChecked={[EntityType.PROJECT, EntityType.HUB]}
+                    onChange={(selection) => {
+                        setActiveLayers({...activeLayers,
+                            hubs: selection.includes(EntityType.HUB),
+                            projects: selection.includes(EntityType.PROJECT)
+                        })
+                    }}/>
+            </Box>
+            <Box margin={{top: 'small'}}>
+                <DataTable
+                    data={filteredEntities}
+                    columns={[
+                        {
+                            property: 'name',
+                            header: <Text>Name</Text>,
+                            primary: true,
+                            search: true
+                        },
+                        {
+                            property: 'description',
+                            header: 'Description',
+                            render: e => (<Box width="600px"><Text truncate>{e.description}</Text></Box>),
+                        },
+                    ]}>
+                </DataTable>
+            </Box>
             {selectedFeature && (
-                <Layer
-                    id="selectionModal"
-                    position="center"
+                // <Suspense fallback="Loading ..."> {/* Required to avoid infinite loop with async atoms that were not preloaded */}
+                    <Layer
+                    id="selectionFlyOut"
+                    position="right"
                     onClickOutside={() => setSelectedFeature(null)}
                     onEsc={() => setSelectedFeature(null)}
                     animation="slide"
+                    modal={false}
+                    plain={true}
+                    full="vertical"
                 >
+                    <Box
+                        width="50%"
+                        height="100%"
+                        background="white"
+                        alignSelf="end"
+                    >
                         <Card>
                             <CardHeader elevation="medium" justify="center">
                                 <Heading level={3}>{selectedFeature.properties?.name}</Heading>
                             </CardHeader>
+
                             <CardBody gap="small">
-                                <Paragraph
-                                    margin={{horizontal: 'medium'}}
-                                    style={{whiteSpace: 'pre-wrap'}}
-                                    maxLines={25}
-                                    fill={true}
-                                >
-                                    {selectedFeature.properties?.description}
-                                </Paragraph>
+                                <Box overflow="scroll">
+                                    <Paragraph
+                                        margin={{horizontal: 'medium'}}
+                                        style={{whiteSpace: 'pre-wrap'}}
+                                        fill={true}
+                                    >
+                                        {selectedFeature.properties?.description}
+                                    </Paragraph>
+                                </Box>
                                 <LinksCard links={selectedEntityLinks}/>
                             </CardBody>
                         </Card>
+                    </Box>
                 </Layer>
+                // </Suspense>
             )}
         </Page>
     )

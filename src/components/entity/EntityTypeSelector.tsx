@@ -36,7 +36,8 @@ export default function EntityTypeSelector({entities, types, initialChecked, onC
     useEffect(() => {
         if (initialChecked)
             setFilteredList(entities.filter((e) => initialChecked.includes(e.type)))
-    }, [entities, initialChecked, setFilteredList])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
 
     return (
         <CheckBoxGroup

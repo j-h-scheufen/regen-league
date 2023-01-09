@@ -17,7 +17,7 @@ export default function HomePage() {
                     <li style={{paddingTop: '5px'}}>A mapping tool for the Regen Community.</li>
                     <li style={{paddingTop: '5px'}}>A showcase for the breadth of regenerative efforts already happening around the globe.</li>
                     <li style={{paddingTop: '5px'}}>A way for people to find each other and connect.</li>
-                    <li style={{paddingTop: '5px'}}>A funnel for new projects into the space to find tools, services, and platforms already in use by projects and hubs.</li>
+                    <li style={{paddingTop: '5px'}}>A funnel for new projects into the space to find tools, services, and platforms already in use by others.</li>
                     <li style={{paddingTop: '5px'}}>Helping to meme into existence the proverbial and literal <i>Army of Regeneratoooors</i> the planet needs.</li>
                 </ul>
             </Box>

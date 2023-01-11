@@ -13,6 +13,7 @@ import {projectToHubCoordinatesAtom, selectedFeatureAtom} from "../../state/map"
 
 type Props = {
     initialLayers?: ActiveLayersConfig
+    onSelection: (feature: Feature) => void
 }
 
 const hubColor = [21, 56, 161]
@@ -43,7 +44,7 @@ function DeckGLOverlay(props: MapboxOverlayProps & {interleaved?: boolean}) {
 export const layerToggleAtom = atom<ActiveLayersConfig>({})
 export const hoverFeatureAtom = atom<Feature | null>(null)
 
-export default function GlobalMap({initialLayers}: Props) {
+export default function GlobalMap({initialLayers, onSelection}: Props) {
     const [hubSource, projectSource, platformSource, peopleSource, projectToHubs] = useAtomValue(
         waitForAll([geoJsonHubsAtom, geoJsonProjectsAtom, geoJsonPlatformsAtom, geoJsonPeopleAtom, projectToHubCoordinatesAtom]))
     useHydrateAtoms([[layerToggleAtom, initialLayers || {}]])
@@ -55,6 +56,7 @@ export default function GlobalMap({initialLayers}: Props) {
     const onClick = (source: PickingInfo) => {
         if (source.object) {
             setSelectedFeature(source.object)
+            onSelection(source.object)
         }
     };
 

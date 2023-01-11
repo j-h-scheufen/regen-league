@@ -12,7 +12,7 @@ import {
     Profile,
     RegionAssociations,
     LinkDetails,
-    MemberDetails, Role, RolesDictionary, EntityType
+    MemberDetails, Role, RolesDictionary, EntityType, LocationEntity
 } from "../utils/types";
 
 import {
@@ -30,6 +30,8 @@ export const dbClientAtom = atom<SupabaseClient>((get) => createBrowserSupabaseC
 export const currentUserProfileAtom = atom<Profile | null>(null)
 
 export const currentAvatarUrlAtom = atom<string>((get) => get(currentUserProfileAtom)?.avatarURL || '')
+
+export const currentEntityAtom = atom<LocationEntity | null>(null)
 
 export const linkTypesAtom = atom<Promise<Array<LinkType>>>(async (get) => {
     return getLinkTypes(get(dbClientAtom))

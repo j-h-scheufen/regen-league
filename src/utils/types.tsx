@@ -1,4 +1,4 @@
-import {Feature, Geometry, Position} from "geojson";
+import {Geometry, Position} from "geojson";
 
 export enum UserStatus {
     ONBOARDING = 1,
@@ -117,9 +117,9 @@ export function isLocationEntity(e: Entity | LocationEntity): e is LocationEntit
 }
 
 export function isProject(e: Entity | LocationEntity): e is Hub {
-    return (e as LocationEntity).type === EntityType.PROJECT;
+    return (e as Entity).type === EntityType.PROJECT;
 }
 
 export function isHub(e: Entity | LocationEntity): e is Project {
-    return (e as LocationEntity).type === EntityType.HUB;
+    return (e as Entity).type === EntityType.HUB;
 }

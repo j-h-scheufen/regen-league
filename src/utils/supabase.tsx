@@ -328,22 +328,21 @@ export async function getLinksForEntity(client: SupabaseClient<Database>, entity
     }) : new Array<LinkDetails>()
 }
 
-export async function getHubData(client: SupabaseClient<Database>, hubId: string): Promise<Hub | null> {
-    const {data, error} = await client.from('entities').select('*').eq('id', hubId).single()
+export async function getEntity(client: SupabaseClient<Database>, id: string): Promise<LocationEntity | null> {
+    const {data, error} = await client.from('entities').select('*').eq('id', id).single()
     if (error) {
-        console.error('Unable to retrieve data for hub ID '+hubId+'. Error: '+error.message)
+        console.error('Unable to retrieve data for entity ID '+id+'. Error: '+error.message)
         throw error
     }
     return data ? createEntity(data) : null
 }
 
+export async function getHubData(client: SupabaseClient<Database>, hubId: string): Promise<Hub | null> {
+    return getEntity(client, hubId)
+}
+
 export async function getProjectData(client: SupabaseClient<Database>, projectId: string): Promise<Project | null> {
-    const {data, error} = await client.from('entities').select('*').eq('id', projectId).single()
-    if (error) {
-        console.error('Unable to retrieve data for project ID '+projectId+'. Error: '+error.message)
-        throw error
-    }
-    return data ? createEntity(data) : null
+    return getEntity(client, projectId)
 }
 
 export async function getUserProfile(client: SupabaseClient<Database>, userId: string): Promise<Profile | null> {

@@ -1,17 +1,24 @@
 import {atom} from "jotai";
 import {Feature, Position} from "geojson";
-import {getLinksForEntity, getLinkTypes, getRelationshipCoordinates} from "../utils/supabase";
-import {dbClientAtom, rolesAtom} from "./global";
+
+import {getLinksForEntity, getRelationshipCoordinates} from "../utils/supabase";
+import {dbClientAtom, rolesAtom, currentEntityAtom} from "./global";
 import {EntityType, LinkDetails, LocationEntity} from "../utils/types";
 
 export const selectedFeatureAtom = atom<Feature | null>(null)
 
 export const entitiesListAtom = atom<Array<LocationEntity>>([])
 
+export const entitiesMapAtom = atom<Map<string, LocationEntity>>((get) => {
+    const result = new Map<string, LocationEntity>()
+    get(entitiesListAtom).forEach((entity) => result.set(entity.id, entity))
+    return result
+})
+
 export const selectedEntityLinksAtom = atom<Promise<Array<LinkDetails>>>(async (get) => {
-    const f = get(selectedFeatureAtom)
-    if (f?.properties?.id)
-        return getLinksForEntity(get(dbClientAtom), f.properties.id)
+    const e = get(currentEntityAtom)
+    if (e)
+        return getLinksForEntity(get(dbClientAtom), e.id)
     return new Array<LinkDetails>()
 })
 

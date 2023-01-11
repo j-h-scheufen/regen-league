@@ -1,21 +1,20 @@
-import {Box, Card, CardBody, CardHeader, DataTable, Heading, Layer, Page, Paragraph, Text} from 'grommet'
-import {Suspense} from "react";
-import {useAtom, useAtomValue} from "jotai";
+import {Box, Button, Card, CardBody, CardHeader, DataTable, Heading, Layer, Page, Paragraph, Text} from 'grommet'
+import {Close} from "grommet-icons";
+import {GetServerSidePropsContext, InferGetServerSidePropsType} from "next";
+import {atom, useAtom, useAtomValue} from "jotai";
+import {useHydrateAtoms} from "jotai/utils";
 
+import {EntityType, LocationEntity} from "../utils/types";
+import {currentEntityAtom} from "../state/global";
+import {entitiesListAtom, entitiesMapAtom, selectedEntityLinksAtom} from "../state/map";
 import GlobalMap, {ActiveLayersConfig, layerToggleAtom} from "../components/map/GlobalMap";
-import {entitiesListAtom, selectedEntityLinksAtom, selectedFeatureAtom} from "../state/map";
 import LinksCard from "../components/LinksCard";
 import EntityTypeSelector, {filteredListAtom} from "../components/entity/EntityTypeSelector";
-import {EntityType} from "../utils/types";
-import {GetServerSidePropsContext, InferGetServerSidePropsType} from "next";
-import {getEntitiesByType, getHubs, getServerClient} from "../utils/supabase";
-import {useHydrateAtoms} from "jotai/utils";
-import SuspenseSpinner from "../components/utils/SuspenseSpinner";
+import {getEntitiesByType, getServerClient} from "../utils/supabase";
 
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
     const {client} = await getServerClient(ctx)
     const entities = await getEntitiesByType(client,[EntityType.PROJECT, EntityType.HUB])
-    console.log("ENTITIES: ", entities)
 
     return {
         props: {
@@ -25,23 +24,39 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
 }
 
 const initialLayerVisibility: ActiveLayersConfig = {hubs: true, projects: true} // see also defaultChecked on EntityTypeSelector
+const showEntityAtom = atom<boolean>(false)
 
 export default function MapPage({entities}: InferGetServerSidePropsType<typeof getServerSideProps>) {
     useHydrateAtoms([[entitiesListAtom, entities]])
     const [activeLayers, setActiveLayers] = useAtom(layerToggleAtom)
-    const [selectedFeature, setSelectedFeature] = useAtom(selectedFeatureAtom)
+    const [selectedEntity, setSelectedEntity] = useAtom(currentEntityAtom)
     const selectedEntityLinks = useAtomValue(selectedEntityLinksAtom)
-    const availableEntities = useAtomValue(entitiesListAtom)
+    const entitiesList = useAtomValue(entitiesListAtom)
+    const entitiesMap = useAtomValue(entitiesMapAtom)
     const filteredEntities = useAtomValue(filteredListAtom)
+    const [showEntity, setShowEntity] = useAtom(showEntityAtom)
 
     return (
         <Page width="large" align="center">
             <Box height="500px" width="900px">
-                <GlobalMap initialLayers={initialLayerVisibility}/>
+                <GlobalMap
+                    initialLayers={initialLayerVisibility}
+                    onSelection={(feature) => {
+                        if (feature.properties?.id && feature.properties.id !== selectedEntity?.id) {
+                            const newEntity = entitiesMap.get(feature.properties.id)
+                            if (newEntity) {
+                                setSelectedEntity(newEntity)
+                                setShowEntity(true)
+                            }
+                            else
+                                console.error('Data out of sync. Unable to find a corresponding Entity for a Feature selected on the map.')
+                        }
+                    }}
+                />
             </Box>
             <Box margin={{top: 'small'}}>
                 <EntityTypeSelector
-                    entities={availableEntities}
+                    entities={entitiesList}
                     types={[EntityType.PROJECT, EntityType.HUB]}
                     initialChecked={[EntityType.PROJECT, EntityType.HUB]}
                     onChange={(selection) => {
@@ -69,13 +84,13 @@ export default function MapPage({entities}: InferGetServerSidePropsType<typeof g
                     ]}>
                 </DataTable>
             </Box>
-            {selectedFeature && (
+            {selectedEntity && showEntity && (
                 // <Suspense fallback="Loading ..."> {/* Required to avoid infinite loop with async atoms that were not preloaded */}
                     <Layer
                     id="selectionFlyOut"
                     position="right"
-                    onClickOutside={() => setSelectedFeature(null)}
-                    onEsc={() => setSelectedFeature(null)}
+                    onClickOutside={() => setShowEntity(false)}
+                    onEsc={() => setShowEntity(false)}
                     animation="slide"
                     modal={false}
                     plain={true}
@@ -88,8 +103,16 @@ export default function MapPage({entities}: InferGetServerSidePropsType<typeof g
                         alignSelf="end"
                     >
                         <Card>
-                            <CardHeader elevation="medium" justify="center">
-                                <Heading level={3}>{selectedFeature.properties?.name}</Heading>
+                            <CardHeader elevation="small" justify="center">
+                                <Box pad={{left: 'medium'}}>
+                                    <Button
+                                        onClick={() => setShowEntity(false)}>
+                                        <Close/>
+                                    </Button>
+                                </Box>
+                                <Box flex>
+                                    <Heading level={3}>{selectedEntity.name}</Heading>
+                                </Box>
                             </CardHeader>
 
                             <CardBody gap="small">
@@ -99,7 +122,7 @@ export default function MapPage({entities}: InferGetServerSidePropsType<typeof g
                                         style={{whiteSpace: 'pre-wrap'}}
                                         fill={true}
                                     >
-                                        {selectedFeature.properties?.description}
+                                        {selectedEntity.description}
                                     </Paragraph>
                                 </Box>
                                 <LinksCard links={selectedEntityLinks}/>

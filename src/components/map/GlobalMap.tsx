@@ -5,9 +5,10 @@ import {MapboxOverlay, MapboxOverlayProps} from '@deck.gl/mapbox/typed';
 import {Map as MapboxMap, Popup, useControl, ViewState} from 'react-map-gl';
 import "mapbox-gl/dist/mapbox-gl.css"
 import {Feature, Point} from "geojson";
-
+import {Cluster} from 'grommet-icons'
 import {useAtom, atom, useAtomValue} from "jotai";
 import {useHydrateAtoms, waitForAll} from "jotai/utils";
+
 import {geoJsonHubsAtom, geoJsonPeopleAtom, geoJsonPlatformsAtom, geoJsonProjectsAtom} from "../../state/global";
 import {projectToHubCoordinatesAtom, selectedFeatureAtom} from "../../state/map";
 
@@ -66,6 +67,7 @@ export default function GlobalMap({initialLayers, onSelection}: Props) {
             //@ts-ignore
             data: hubSource,
             visible: activeLayers.hubs,
+            pointType:'circle',
             filled: true,
             pointRadiusMinPixels: 5,
             pointRadiusScale: 200,

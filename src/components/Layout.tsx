@@ -71,8 +71,9 @@ export default function Layout({ title = 'Regen League', children }: LayoutProps
         <Grommet theme={globalTheme}>
             <Box direction="column" flex>
 
-                <Header justify="center">
-                    <Box pad="medium" flex>
+                <Header justify="center" height="xxsmall" margin={{bottom: 'medium', top: 'small'}}>
+
+                    <Box pad="small" flex>
                         <Menu
                           label="Menu"
                           items={menuItems}>
@@ -82,7 +83,7 @@ export default function Layout({ title = 'Regen League', children }: LayoutProps
                     <Box width="50%">
                         <Heading size="medium" textAlign="center">Regen League</Heading>
                     </Box>
-                    <Box pad="medium" flex>
+                    <Box pad="small" flex>
                         {session ?
                             (<UserAvatar/>) :
                             (

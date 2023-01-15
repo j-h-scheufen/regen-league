@@ -9,7 +9,6 @@ import {
     Layer,
     Page,
     Paragraph,
-    RadioButtonGroup,
     Text
 } from 'grommet'
 import {Close} from "grommet-icons";
@@ -24,6 +23,7 @@ import GlobalMap, {ActiveLayersConfig, layerToggleAtom} from "../components/map/
 import LinksCard from "../components/LinksCard";
 import EntityTypeSelector, {filteredListAtom} from "../components/entity/EntityTypeSelector";
 import {getEntitiesByType, getServerClient} from "../utils/supabase";
+import React from "react";
 
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
     const {client} = await getServerClient(ctx)
@@ -36,7 +36,7 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
     }
 }
 
-enum ViewMode {
+export enum ViewMode {
     TABLE = 'Search',
     MAP = 'Map'
 }
@@ -59,12 +59,73 @@ export default function MapPage({entities}: InferGetServerSidePropsType<typeof g
     const filteredEntities = useAtomValue(filteredListAtom)
     const [pageState, setPageState] = useAtom(pageStateAtom)
 
+    const ViewModeToggle = () => {
+        switch (pageState.viewMode) {
+            case ViewMode.MAP:
+                return <Button size="small" label="Search / Filter" onClick={() => setPageState({...pageState, viewMode: ViewMode.TABLE})}/>
+            case ViewMode.TABLE:
+                return <Button size="small" label="View on Map" onClick={() => setPageState({...pageState, viewMode: ViewMode.MAP})}/>
+        }
+    }
+
+    const MainContent = () => {
+        switch (pageState.viewMode) {
+            case ViewMode.MAP:
+                return (
+                    <Box height="80vh" width="100vw">
+                        <GlobalMap
+                            initialLayers={initialLayerVisibility}
+                            onSelection={(feature) => {
+                                if (feature.properties?.id && feature.properties.id !== selectedEntity?.id) {
+                                    const newEntity = entitiesMap.get(feature.properties.id)
+                                    if (newEntity) {
+                                        setSelectedEntity(newEntity)
+                                        setPageState({...pageState, showEntity: true})
+                                    }
+                                    else
+                                        console.error('Data out of sync. Unable to find a corresponding Entity for a Feature selected on the map.')
+                                }
+                            }}
+                        />
+                    </Box>
+                )
+            case ViewMode.TABLE:
+                return (
+                    <Box>
+                        <DataTable
+                            step={10}
+                            data={filteredEntities}
+                            style={{width: '100vw'}}
+                            columns={[
+                                {
+                                    property: 'name',
+                                    header: <Text>Name</Text>,
+                                    primary: true,
+                                    search: true
+                                },
+                                {
+                                    property: 'description',
+                                    header: 'Description',
+                                    render: e => (<Box width="600px"><Text truncate>{e.description}</Text></Box>),
+                                },
+                            ]}
+                            onClickRow={(event) => {
+                                setSelectedEntity(event.datum as LocationEntity)
+                                setPageState({...pageState, showEntity: true})
+                            }}
+                        />
+                    </Box>
+                )
+        }
+    }
+
     return (
         <Page width="large" align="center">
             <Box
                 direction="row"
-                margin={{bottom: 'small'}}
+                margin={{vertical: 'small'}}
                 gap="large">
+                <Text alignSelf="center">Found {filteredEntities.length} Entities</Text>
                 <EntityTypeSelector
                     entities={entitiesList}
                     types={[EntityType.PROJECT, EntityType.HUB]}
@@ -75,57 +136,13 @@ export default function MapPage({entities}: InferGetServerSidePropsType<typeof g
                             projects: selection.includes(EntityType.PROJECT)
                         })
                     }}/>
-                <RadioButtonGroup
-                    direction="row"
-                    name="viewMode"
-                    options={[{label: 'Search', value: ViewMode.TABLE}, {label: 'Map', value: ViewMode.MAP}]}
-                    value={pageState.viewMode}
-                    onChange={(event) => setPageState({...pageState, viewMode: event.target.value as ViewMode})}
-                />
+                <ViewModeToggle/>
             </Box>
-            <Box height="500px" width="900px">
-                <GlobalMap
-                    initialLayers={initialLayerVisibility}
-                    onSelection={(feature) => {
-                        if (feature.properties?.id && feature.properties.id !== selectedEntity?.id) {
-                            const newEntity = entitiesMap.get(feature.properties.id)
-                            if (newEntity) {
-                                setSelectedEntity(newEntity)
-                                setPageState({...pageState, showEntity: true})
-                            }
-                            else
-                                console.error('Data out of sync. Unable to find a corresponding Entity for a Feature selected on the map.')
-                        }
-                    }}
-                />
-            </Box>
-            <Box
-                margin={{top: 'small'}}>
-                <DataTable
-                    step={10}
-                    data={filteredEntities}
-                    columns={[
-                        {
-                            property: 'name',
-                            header: <Text>Name</Text>,
-                            primary: true,
-                            search: true
-                        },
-                        {
-                            property: 'description',
-                            header: 'Description',
-                            render: e => (<Box width="600px"><Text truncate>{e.description}</Text></Box>),
-                        },
-                    ]}
-                    onClickRow={(event) => {
-                        setSelectedEntity(event.datum as LocationEntity)
-                        setPageState({...pageState, showEntity: true})
-                    }}
-                />
-            </Box>
+
+            <MainContent/>
+
             {selectedEntity && pageState.showEntity && (
-                // <Suspense fallback="Loading ..."> {/* Required to avoid infinite loop with async atoms that were not preloaded */}
-                    <Layer
+                <Layer
                     id="selectionFlyOut"
                     position="right"
                     onClickOutside={() => setPageState({...pageState, showEntity: false})}
@@ -169,7 +186,6 @@ export default function MapPage({entities}: InferGetServerSidePropsType<typeof g
                         </Card>
                     </Box>
                 </Layer>
-                // </Suspense>
             )}
         </Page>
     )

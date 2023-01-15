@@ -13,6 +13,6 @@ export const globalTheme: ThemeType = {
         },
         colors: {
             "brand": "#01a982",
-        }
+        },
     },
 }

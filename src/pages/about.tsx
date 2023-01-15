@@ -1,18 +1,8 @@
-import {useSupabaseClient, useUser} from "@supabase/auth-helpers-react";
 import {Anchor, Box, Card, Text} from "grommet";
-import {Auth, ThemeSupa} from "@supabase/auth-ui-react";
-import {useRouter} from "next/router";
 import {Github, Twitter} from "grommet-icons";
 import React from "react";
 
-export default function Login() {
-  const user = useUser()
-  const router = useRouter()
-
-  if (user)
-    router.push("/")
-
-  const supabase = useSupabaseClient()
+export default function AboutPage() {
 
   return (
       <Box direction="row" pad="small" justify="between" gap="medium">

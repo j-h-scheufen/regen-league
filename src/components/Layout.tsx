@@ -1,13 +1,12 @@
-import React, {useCallback, useEffect} from "react";
-import {Login, Menu as MenuIcon} from "grommet-icons";
-import {Anchor, Box, Button, Grommet, Header, Heading, Layer, Main, Menu, Text} from 'grommet'
+import React, {useCallback, useEffect, useRef} from "react";
+import {User as UserIcon, HelpOption} from "grommet-icons";
+import {Anchor, Box, Button, Drop, Grommet, Header, Heading, Layer, Main, List, Text} from 'grommet'
 import {useRouter} from "next/router";
-import {atom, useAtom, useAtomValue} from "jotai";
-import {useSession, useSupabaseClient, useUser} from "@supabase/auth-helpers-react";
+import {atom, useAtom} from "jotai";
+import {useSession, useSupabaseClient} from "@supabase/auth-helpers-react";
 
 import {getUserProfile} from "../utils/supabase";
-import {currentAvatarUrlAtom, currentUserProfileAtom} from "../state/global";
-import ProfileAvatar from "./profile/ProfileAvatar";
+import {currentUserProfileAtom} from "../state/global";
 import {globalTheme} from "./Styles";
 import {Auth, ThemeSupa} from "@supabase/auth-ui-react";
 
@@ -15,17 +14,14 @@ type LayoutProps = React.PropsWithChildren<{
   title?: string
 }>
 
-const UserAvatar = () => {
-    const url = useAtomValue(currentAvatarUrlAtom)
-    const user = useUser()
-    if (!user)
-        return <Anchor href="/login"><Login size="medium" color="black"/></Anchor>
-    else
-        return <ProfileAvatar profileId={user.id} avatarURL={url} linkTo="/profile"/>
+type UserMenuItem = {
+    label: string,
+    onClick: () => void
 }
 
 const showLoginAtom = atom<boolean>(false)
 const loginEnabledAtom = atom<boolean>( false)
+const showUserMenuAtom =  atom<boolean>(false)
 
 export default function Layout({ title = 'Regen League', children }: LayoutProps) {
     const router = useRouter()
@@ -34,6 +30,7 @@ export default function Layout({ title = 'Regen League', children }: LayoutProps
     const [currentProfile, setCurrentProfile] = useAtom(currentUserProfileAtom)
     const [showLogin, setShowLogin] = useAtom(showLoginAtom)
     const [loginEnabled, setLoginEnabled] = useAtom(loginEnabledAtom)
+    const userMenuRef = useRef<HTMLAnchorElement | null>(null)
 
     const populateProfile = useCallback(async (userId: string) => {
         const profile = await getUserProfile(client, userId)
@@ -55,37 +52,65 @@ export default function Layout({ title = 'Regen League', children }: LayoutProps
         setLoginEnabled(true)
     }, [client, router, populateProfile, setCurrentProfile, setShowLogin, setLoginEnabled])
 
-    const menuItems = [
-        { label: 'Hubs', onClick: () => {router.push("/hubs")} },
-        { label: 'Projects', onClick: () => {router.push("/projects")} },
-        { label: 'Map', onClick: () => {router.push("/map")} }
+    const menuItems: Array<UserMenuItem> = [
+        { label: 'Add a Hub', onClick: () => {router.push("/hub/new")} },
+        { label: 'Add a Project', onClick: () => {router.push("/project/new")} },
+        { label: 'My Profile', onClick: () => {router.push("/profile")} },
+        { label: 'Logout', onClick: () => client.auth.signOut() }
     ]
-    if (session) {
-        menuItems.push({
-            label: 'Logout',
-            onClick: () => client.auth.signOut()
-        })
+
+    const UserMenu = () => {
+        const [showUserMenu, setShowUserMenu] = useAtom(showUserMenuAtom)
+        return (
+            <Box margin={{right: 'xsmall'}}>
+                <Anchor
+                    ref={userMenuRef}
+                    onClick={() => setShowUserMenu(true)}
+                >
+                    <UserIcon/>
+                </Anchor>
+                {showUserMenu && userMenuRef.current && (
+                    <Drop
+                        target={userMenuRef.current}
+                        align={{top: 'bottom', right: 'right' }}
+                        onClickOutside={() => setShowUserMenu(false)}
+                        onMouseLeave={() => setShowUserMenu(false)}
+                    >
+                        <List
+                            data={menuItems}
+                            primaryKey='label'
+                            onClickItem={(event: {item?: UserMenuItem}) => {
+                                setShowUserMenu(false)
+                                event.item?.onClick()
+                            }}
+                        />
+                    </Drop>
+                )}
+            </Box>
+        )
     }
 
     return (
         <Grommet theme={globalTheme}>
             <Box direction="column" flex>
 
-                <Header justify="center">
-                    <Box pad="medium" flex>
-                        <Menu
-                          label="Menu"
-                          items={menuItems}>
-                          <MenuIcon size="large"/>
-                        </Menu>
+                <Header justify="center" height="xxsmall" margin={{vertical: 'small'}}>
+                    <Box
+                        direction="row"
+                        pad="small"
+                        flex>
+                        <Button label="Browse" onClick={() => router.push('/map')}/>
                     </Box>
                     <Box width="50%">
-                        <Heading size="medium" textAlign="center">Regen League</Heading>
+                        <Heading level="1" textAlign="center">Regen League</Heading>
                     </Box>
-                    <Box pad="medium" flex>
-                        {session ?
-                            (<UserAvatar/>) :
-                            (
+                    <Box
+                        direction="row-reverse"
+                        pad="small"
+                        flex>
+                        {session ? (
+                                <UserMenu/>
+                            ) : (
                                 <Button
                                     disabled={!loginEnabled}
                                     label={
@@ -99,6 +124,11 @@ export default function Layout({ title = 'Regen League', children }: LayoutProps
                                 />
                             )
                         }
+                        <Box margin={{right: 'medium'}}>
+                            <Anchor onClick={() => router.push('/about')}>
+                                <HelpOption />
+                            </Anchor>
+                        </Box>
                     </Box>
                 </Header>
 

@@ -5,9 +5,9 @@ import {MapboxOverlay, MapboxOverlayProps} from '@deck.gl/mapbox/typed';
 import {Map as MapboxMap, Popup, useControl, ViewState} from 'react-map-gl';
 import "mapbox-gl/dist/mapbox-gl.css"
 import {Feature, Point} from "geojson";
-
 import {useAtom, atom, useAtomValue} from "jotai";
 import {useHydrateAtoms, waitForAll} from "jotai/utils";
+
 import {geoJsonHubsAtom, geoJsonPeopleAtom, geoJsonPlatformsAtom, geoJsonProjectsAtom} from "../../state/global";
 import {projectToHubCoordinatesAtom, selectedFeatureAtom} from "../../state/map";
 
@@ -28,9 +28,9 @@ export type ActiveLayersConfig = {
 }
 
 const initialViewState = {
-    latitude: 0,
-    longitude: 0,
-    zoom: 0.75
+    latitude: 20,
+    longitude: 4,
+    zoom: 1.1
 }
 
 const viewStateAtom = atom<ViewState | null>(null)
@@ -66,6 +66,7 @@ export default function GlobalMap({initialLayers, onSelection}: Props) {
             //@ts-ignore
             data: hubSource,
             visible: activeLayers.hubs,
+            pointType:'circle',
             filled: true,
             pointRadiusMinPixels: 5,
             pointRadiusScale: 200,
@@ -117,6 +118,7 @@ export default function GlobalMap({initialLayers, onSelection}: Props) {
                 mapStyle="mapbox://styles/mapbox/satellite-v9"
                 // projection="naturalEarth"
                 mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
+                // style={{width: '100vw', height: '100vh'}}
                 attributionControl={false}
                 reuseMaps={true}>
                 <DeckGLOverlay

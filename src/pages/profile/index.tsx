@@ -74,14 +74,15 @@ export default function CurrentUserProfile({ profile, hubs, projects, editMode }
                         <Heading size="medium" margin="small" alignSelf="center">{currentProfile?.username || currentProfile?.id}</Heading>
                     </Box>
                     <Box>
-                        <ProfileAttributesCard profile={currentProfile!}/>
-                        <MembershipCard title="My Hubs" subpage="hub" items={hubs}/>
-                        <MembershipCard title="My Projects" subpage="project" items={projects}/>
                         <Button
                             label="Edit"
                             style={{textAlign: 'center'}}
                             onClick={() => setEdit(true)}
                             margin={{top: "medium"}}/>
+
+                        <ProfileAttributesCard profile={currentProfile!}/>
+                        <MembershipCard title="My Hubs" subpage="hub" items={hubs}/>
+                        <MembershipCard title="My Projects" subpage="project" items={projects}/>
                     </Box>
                 </Box>
             )}

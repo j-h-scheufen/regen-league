@@ -99,7 +99,10 @@ export default function Layout({ title = 'Regen League', children }: LayoutProps
                         direction="row"
                         pad="small"
                         flex>
-                        <Button label="Browse" onClick={() => router.push('/map')}/>
+                        <Button label="Browse" onClick={() => {
+                            if (router.pathname !== '/map') // don't reload if already on the page
+                                router.push('/map')
+                        }}/>
                     </Box>
                     <Box width="50%">
                         <Heading level="1" textAlign="center">Regen League</Heading>
@@ -124,9 +127,9 @@ export default function Layout({ title = 'Regen League', children }: LayoutProps
                                 />
                             )
                         }
-                        <Box margin={{right: 'medium'}}>
+                        <Box margin={{right: 'medium'}} justify="center">
                             <Anchor onClick={() => router.push('/about')}>
-                                <HelpOption />
+                                <HelpOption/>
                             </Anchor>
                         </Box>
                     </Box>

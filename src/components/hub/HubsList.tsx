@@ -1,23 +1,25 @@
-import {List} from "grommet";
-import {useRouter} from "next/router";
+import { List } from "grommet";
+import { useRouter } from "next/router";
 
-import {Hub} from "../../utils/types";
+import { Hub } from "../../utils/types";
 
 type Props = {
-    hubs: Array<Hub>
-}
+    hubs: Array<Hub>;
+};
 
-export default function HubsList({hubs}: Props) {
-    const router = useRouter()
+export default function HubsList({ hubs }: Props) {
+    const router = useRouter();
 
     return (
-        <List style={{width: '100vw'}}
+        <List
+            style={{ width: "100vw" }}
             data={hubs}
             pad="medium"
-            primaryKey='name'
-            secondaryKey='description'
-            onClickItem={(event: {item?: Hub}) => {
-              router.push("/hub/"+event.item?.id)}}
+            primaryKey="name"
+            secondaryKey="description"
+            onClickItem={(event: { item?: Hub }) => {
+                router.push("/hub/" + event.item?.id);
+            }}
         />
-    )
+    );
 }

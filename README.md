@@ -3,31 +3,34 @@
 Created in service of bioregionalism: https://utopia.org/guide/what-is-a-bioregion-and-which-ones-are-there/
 
 This is essentially a mapping exercise to catalogue the regenerative movement via an app that can permeate the space
-by first letting power users map out what they know in terms of entities, projects and efforts using publicly available information. 
+by first letting power users map out what they know in terms of entities, projects and efforts using publicly available information.
 Actual operators of projects can later claim and take ownership of their profiles, if desired!
 
 Bioregion data from the following sources was used:
-- One Earth Bioregions 2020 framework: https://www.oneearth.org/bioregions/
-- EPA Ecoregions definition: https://www.epa.gov/eco-research/ecoregions-north-america
 
+-   One Earth Bioregions 2020 framework: https://www.oneearth.org/bioregions/
+-   EPA Ecoregions definition: https://www.epa.gov/eco-research/ecoregions-north-america
 
 ## Requirements
 
 ### General notes on using Supabase
+
 The app makes use of a lot of stored functions to select data and sometimes to store it. If a table being queried uses RLS
 and there is no rule corresponding rule, the function just returns an empty result and no error. Using the JS API to query
 a table correctly returns an error. This is mentioned here as a warning when working with Supabase. The current behavior
 is considered a bug!
 
 ### Generating types for Supabase
-In order for the code to work, the types need to be exported from the Supabase tables 
 
-1. ```npx supabase login```
-2. ```npx supabase gen types typescript --project-id "project-id" --schema public > src/utils/database.types.tsx```
+In order for the code to work, the types need to be exported from the Supabase tables
+
+1. `npx supabase login`
+2. `npx supabase gen types typescript --project-id "project-id" --schema public > src/utils/database.types.tsx`
 
 ## Postgres Changes
 
 1. In order to modify a user's avatar image (bucket 'avatars'), public access had to be granted. The bucket was made public to allow invocation of 'getPublicUrl'.
+
 ```
 create policy "Public Access"
 on storage.objects for select
@@ -35,8 +38,9 @@ using ( bucket_id = 'public' );
 ```
 
 2. The app uses stored SQL functions to INSERT an entity + a relationship atomically, e.g. to ensure that an admin is atomically assigned.
+
 ```
-create or replace function public.new_entity_with_user_relation(name varchar, description text, entity_type_id int, role_id uuid, user_id uuid) 
+create or replace function public.new_entity_with_user_relation(name varchar, description text, entity_type_id int, role_id uuid, user_id uuid)
 returns uuid as $$
 declare
   new_id uuid;
@@ -66,6 +70,7 @@ language sql;
 ```
 
 3. Special getter functions to perform JOIN queries which are not possible via the supabase-js functionality
+
 ```
 create or replace function public.get_user_member(user_id uuid, entity_id uuid)
 returns table (
@@ -199,7 +204,7 @@ RETURNS TABLE (
 )
 language sql
 as $$
-  SELECT 
+  SELECT
     br.id AS br_id, br.code AS br_code, br.name AS br_name, br.link AS br_link,
     sr.id AS sr_id, sr.name AS sr_name,
     r.id AS r_id, r.name AS r_name, r.link AS r_link
@@ -233,6 +238,7 @@ The Supabase UI cannot handle defining cascading deletes, so a table either has 
 or an existing table can be altered in the following way.
 
 This command lists existing constraints on tables (see also https://stackoverflow.com/questions/69251891/delete-associated-records-in-supabase:)
+
 ```
 SELECT con.*
     FROM pg_catalog.pg_constraint con
@@ -243,7 +249,9 @@ SELECT con.*
     WHERE 1=1
          AND rel.relname = 'profiles';
 ```
+
 Then drop and re-add the appropriate constraint. This procedure was used for the following constraints:
+
 ```
 ALTER TABLE public.relationships
 DROP CONSTRAINT relationships_from_id_fkey,
@@ -279,7 +287,7 @@ RETURNS TABLE (
 )
 language sql
 as $$
-  SELECT 
+  SELECT
     l1.id AS l1_id, l1.name AS l1_name, l1.link AS l1_link
   FROM oe_regions_1 l1
   WHERE l1.id = $1;
@@ -296,7 +304,7 @@ RETURNS TABLE (
 )
 language sql
 as $$
-  SELECT 
+  SELECT
     l1.id AS l1_id, l1.name AS l1_name, l1.link AS l1_link,
     l2.id AS l2_id, l2.name AS l2_name, l2.link AS l2_link
   FROM oe_regions_1 l1
@@ -318,7 +326,7 @@ RETURNS TABLE (
 )
 language sql
 as $$
-  SELECT 
+  SELECT
     l1.id AS l1_id, l1.name AS l1_name, l1.link AS l1_link,
     l2.id AS l2_id, l2.name AS l2_name, l2.link AS l2_link,
     l3.id AS l3_id, l3.name AS l3_name, l3.link AS l3_link
@@ -345,7 +353,7 @@ RETURNS TABLE (
 )
 language sql
 as $$
-  SELECT 
+  SELECT
     l1.id AS l1_id, l1.name AS l1_name, l1.link AS l1_link,
     l2.id AS l2_id, l2.name AS l2_name, l2.link AS l2_link,
     l3.id AS l3_id, l3.name AS l3_name, l3.link AS l3_link,
@@ -365,7 +373,7 @@ RETURNS TABLE (
 )
 language sql
 as $$
-  SELECT 
+  SELECT
     l1.id AS l1_id, l1.name AS l1_name, l1.link AS l1_link
   FROM epa_regions_1 l1
   WHERE l1.id = $1;
@@ -382,7 +390,7 @@ RETURNS TABLE (
 )
 language sql
 as $$
-  SELECT 
+  SELECT
     l1.id AS l1_id, l1.name AS l1_name, l1.link AS l1_link,
     l2.id AS l2_id, l2.name AS l2_name, l2.link AS l2_link
   FROM epa_regions_1 l1
@@ -404,7 +412,7 @@ RETURNS TABLE (
 )
 language sql
 as $$
-  SELECT 
+  SELECT
     l1.id AS l1_id, l1.name AS l1_name, l1.link AS l1_link,
     l2.id AS l2_id, l2.name AS l2_name, l2.link AS l2_link,
     l3.id AS l3_id, l3.name AS l3_name, l3.link AS l3_link
@@ -431,7 +439,7 @@ RETURNS TABLE (
 )
 language sql
 as $$
-  SELECT 
+  SELECT
     l1.id AS l1_id, l1.name AS l1_name, l1.link AS l1_link,
     l2.id AS l2_id, l2.name AS l2_name, l2.link AS l2_link,
     l3.id AS l3_id, l3.name AS l3_name, l3.link AS l3_link,
@@ -451,7 +459,7 @@ RETURNS TABLE (
 )
 language sql
 as $$
-  SELECT 
+  SELECT
     l1.id AS l1_id, l1.name AS l1_name, l1.link AS l1_link
   FROM rl_regions_1 l1
   WHERE l1.id = $1;
@@ -468,7 +476,7 @@ RETURNS TABLE (
 )
 language sql
 as $$
-  SELECT 
+  SELECT
     l1.id AS l1_id, l1.name AS l1_name, l1.link AS l1_link,
     l2.id AS l2_id, l2.name AS l2_name, l2.link AS l2_link
   FROM rl_regions_1 l1
@@ -490,7 +498,7 @@ RETURNS TABLE (
 )
 language sql
 as $$
-  SELECT 
+  SELECT
     l1.id AS l1_id, l1.name AS l1_name, l1.link AS l1_link,
     l2.id AS l2_id, l2.name AS l2_name, l2.link AS l2_link,
     l3.id AS l3_id, l3.name AS l3_name, l3.link AS l3_link
@@ -517,7 +525,7 @@ RETURNS TABLE (
 )
 language sql
 as $$
-  SELECT 
+  SELECT
     l1.id AS l1_id, l1.name AS l1_name, l1.link AS l1_link,
     l2.id AS l2_id, l2.name AS l2_name, l2.link AS l2_link,
     l3.id AS l3_id, l3.name AS l3_name, l3.link AS l3_link,
@@ -529,4 +537,3 @@ as $$
   WHERE l4.id = $1;
 $$;
 ```
-

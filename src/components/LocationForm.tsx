@@ -1,55 +1,56 @@
-import {
-    Box,
-    Button,
-    Card,
-    CardBody,
-    CardHeader,
-    Text,
-} from 'grommet'
-import {useCallback} from 'react'
-import {atom, useAtom, useAtomValue} from "jotai";
-import {useHydrateAtoms} from "jotai/utils";
-import {Position} from "geojson";
+import { Box, Button, Card, CardBody, CardHeader, Text } from "grommet";
+import { useCallback } from "react";
+import { atom, useAtom, useAtomValue } from "jotai";
+import { useHydrateAtoms } from "jotai/utils";
+import { Position } from "geojson";
 
-import {GeoLocation, LocationEntity} from "../utils/types";
+import { GeoLocation, LocationEntity } from "../utils/types";
 import * as React from "react";
-import LocationMap, {currentSelectionAtom, dirtyAtom} from "./map/LocationMap";
+import LocationMap, {
+    currentSelectionAtom,
+    dirtyAtom,
+} from "./map/LocationMap";
 
 type Props = {
-    entity: LocationEntity
-    update: (location: GeoLocation) => Promise<void>
-}
+    entity: LocationEntity;
+    update: (location: GeoLocation) => Promise<void>;
+};
 
-const loadingAtom = atom<boolean>(false)
-const editAtom = atom<boolean>(false)
-const editPositionAtom = atom<Position>([0,0])
+const loadingAtom = atom<boolean>(false);
+const editAtom = atom<boolean>(false);
+const editPositionAtom = atom<Position>([0, 0]);
 
-export default function LocationForm({entity, update}: Props) {
-    if(!entity)
-        throw Error('This component requires a LocationEntity')
+export default function LocationForm({ entity, update }: Props) {
+    if (!entity) throw Error("This component requires a LocationEntity");
 
-    useHydrateAtoms([[currentSelectionAtom, {position: entity.position, geometry: entity.geometry}]] as const)
-    const [edit, setEdit] = useAtom(editAtom)
-    const [loading, setLoading] = useAtom(loadingAtom)
-    const [selection, setSelection] = useAtom(currentSelectionAtom)
-    const isDirty = useAtomValue(dirtyAtom)
+    useHydrateAtoms([
+        [
+            currentSelectionAtom,
+            { position: entity.position, geometry: entity.geometry },
+        ],
+    ] as const);
+    const [edit, setEdit] = useAtom(editAtom);
+    const [loading, setLoading] = useAtom(loadingAtom);
+    const [selection, setSelection] = useAtom(currentSelectionAtom);
+    const isDirty = useAtomValue(dirtyAtom);
 
-    const saveLocation = useCallback( async () => {
+    const saveLocation = useCallback(async () => {
         try {
-            setLoading(true)
-            if (selection)
-                await update(selection)
+            setLoading(true);
+            if (selection) await update(selection);
         } catch (error) {
-            console.error(error)
-            throw error
+            console.error(error);
+            throw error;
         } finally {
-            setLoading(false)
+            setLoading(false);
         }
-    }, [selection, setLoading, update])
+    }, [selection, setLoading, update]);
 
     return (
-        <Card pad="small" margin={{vertical: "small"}}>
-            <CardHeader justify="center"><Text size="large">Location</Text></CardHeader>
+        <Card pad="small" margin={{ vertical: "small" }}>
+            <CardHeader justify="center">
+                <Text size="large">Location</Text>
+            </CardHeader>
             <CardBody>
                 <Box pad="small">
                     <Box direction="row">
@@ -60,36 +61,49 @@ export default function LocationForm({entity, update}: Props) {
                         {!edit && (
                             <Button
                                 label="Change"
-                                style={{textAlign: 'center'}}
+                                style={{ textAlign: "center" }}
                                 onClick={() => setEdit(true)}
-                                margin={{vertical: "small", left: "auto"}}/>
+                                margin={{ vertical: "small", left: "auto" }}
+                            />
                         )}
                     </Box>
                     {edit && (
                         <Box height="400px">
-                            <LocationMap/>
+                            <LocationMap />
                             <Box direction="row">
                                 <Button
                                     label="Cancel"
-                                    style={{textAlign: 'center'}}
+                                    style={{ textAlign: "center" }}
                                     onClick={() => {
-                                        setSelection({position: entity.position, geometry: entity.geometry})
-                                        setEdit(false)
+                                        setSelection({
+                                            position: entity.position,
+                                            geometry: entity.geometry,
+                                        });
+                                        setEdit(false);
                                     }}
-                                    margin={{vertical: "small", left: "auto"}}/>
+                                    margin={{ vertical: "small", left: "auto" }}
+                                />
                                 <Button
                                     primary
-                                    label={loading ? 'Loading ...' : 'Save'}
+                                    label={loading ? "Loading ..." : "Save"}
                                     type="submit"
-                                    style={{textAlign: 'center'}}
-                                    margin={{vertical: "small", left: "small"}}
-                                    onClick={() => saveLocation().then(() => setEdit(false))}
-                                    disabled={!isDirty || loading}/>
+                                    style={{ textAlign: "center" }}
+                                    margin={{
+                                        vertical: "small",
+                                        left: "small",
+                                    }}
+                                    onClick={() =>
+                                        saveLocation().then(() =>
+                                            setEdit(false)
+                                        )
+                                    }
+                                    disabled={!isDirty || loading}
+                                />
                             </Box>
                         </Box>
                     )}
                 </Box>
             </CardBody>
         </Card>
-    )
+    );
 }

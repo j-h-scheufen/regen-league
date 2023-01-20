@@ -1,15 +1,20 @@
-import {Box, Button, Heading, Layer, Text} from "grommet";
+import { Box, Button, Heading, Layer, Text } from "grommet";
 
 type Props = {
-    id: string,
-    heading: string,
-    text?: string,
-    onCancel: () => void,
-    onSubmit: () => void
-}
+    id: string;
+    heading: string;
+    text?: string;
+    onCancel: () => void;
+    onSubmit: () => void;
+};
 
-export default function ConfirmDialog({id, heading, text, onCancel, onSubmit}: Props) {
-
+export default function ConfirmDialog({
+    id,
+    heading,
+    text,
+    onCancel,
+    onSubmit,
+}: Props) {
     return (
         <Layer
             id={id}
@@ -19,15 +24,17 @@ export default function ConfirmDialog({id, heading, text, onCancel, onSubmit}: P
             animation="fadeIn"
         >
             <Box pad="medium" gap="small" width="medium">
-                <Heading level={3} margin="none">{heading}</Heading>
-                {text && (<Text>{text}</Text>)}
+                <Heading level={3} margin="none">
+                    {heading}
+                </Heading>
+                {text && <Text>{text}</Text>}
                 <Box
                     as="footer"
                     gap="small"
                     direction="row"
                     align="center"
                     justify="end"
-                    pad={{ top: 'medium', bottom: 'small' }}
+                    pad={{ top: "medium", bottom: "small" }}
                 >
                     <Button label="Cancel" onClick={onCancel} color="dark-3" />
                     <Button
@@ -43,6 +50,5 @@ export default function ConfirmDialog({id, heading, text, onCancel, onSubmit}: P
                 </Box>
             </Box>
         </Layer>
-    )
-
+    );
 }

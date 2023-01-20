@@ -1,15 +1,16 @@
-import {GetServerSidePropsContext} from "next";
-import {createServerSupabaseClient} from "@supabase/auth-helpers-nextjs";
-import {SupabaseClient} from "@supabase/supabase-js";
-import {Session} from "@supabase/auth-helpers-react";
-import {FeatureCollection, Position} from "geojson";
+import { GetServerSidePropsContext } from "next";
+import { createServerSupabaseClient } from "@supabase/auth-helpers-nextjs";
+import { SupabaseClient } from "@supabase/supabase-js";
+import { Session } from "@supabase/auth-helpers-react";
+import { FeatureCollection, Position } from "geojson";
 
-import {Database} from "./database.types";
+import { Database } from "./database.types";
 import {
     Entity,
     EntityMember,
     EntityType,
-    Hub, isLocationEntity,
+    Hub,
+    isLocationEntity,
     LinkDetails,
     LinkType,
     LocationEntity,
@@ -22,384 +23,789 @@ import {
     RegionNode,
     Role,
     RolesDictionary,
-    UserStatus
+    UserStatus,
 } from "./types";
 
-type DbLinkInsert = Database['public']['Tables']['links']['Insert']
-type DbRelationship = Database['public']['Tables']['relationships']['Row']
-type DbEntity = Database['public']['Tables']['entities']['Row']
-type DbRole = Database['public']['Tables']['roles']['Row']
-type DbEntityMember = {id: string, name: string, description: string, type_id: number, role: string}
+type DbLinkInsert = Database["public"]["Tables"]["links"]["Insert"];
+type DbRelationship = Database["public"]["Tables"]["relationships"]["Row"];
+type DbEntity = Database["public"]["Tables"]["entities"]["Row"];
+type DbRole = Database["public"]["Tables"]["roles"]["Row"];
+type DbEntityMember = {
+    id: string;
+    name: string;
+    description: string;
+    type_id: number;
+    role: string;
+};
 
 export type DbContext = {
-    client: SupabaseClient<Database>
-    session: Session | null
-}
+    client: SupabaseClient<Database>;
+    session: Session | null;
+};
 
 //##########################
 // Helper Functions
-function createMemberDetails(client: SupabaseClient<Database>, userId: string, username: string, avatarFilename: string, role: string): MemberDetails {
+function createMemberDetails(
+    client: SupabaseClient<Database>,
+    userId: string,
+    username: string,
+    avatarFilename: string,
+    role: string
+): MemberDetails {
     const member: MemberDetails = {
         userId: userId,
         username: username,
         avatarFilename: avatarFilename,
         roleName: role,
-        avatarURL: ''
-    }
+        avatarURL: "",
+    };
     if (member.avatarFilename) {
-        const urlResult = client.storage.from('avatars').getPublicUrl(member.avatarFilename)
-        member.avatarURL = urlResult.data.publicUrl
+        const urlResult = client.storage
+            .from("avatars")
+            .getPublicUrl(member.avatarFilename);
+        member.avatarURL = urlResult.data.publicUrl;
     }
-    return member
+    return member;
 }
 
-function createProfile(client: SupabaseClient<Database>, id: string, username: string, avatarFilename: string, status: UserStatus): Profile {
+function createProfile(
+    client: SupabaseClient<Database>,
+    id: string,
+    username: string,
+    avatarFilename: string,
+    status: UserStatus
+): Profile {
     const p: Profile = {
         status: status,
         id: id,
         username: username,
         avatarFilename: avatarFilename,
-        avatarURL: ''
-    }
+        avatarURL: "",
+    };
     if (p.avatarFilename) {
-        const urlResult = client.storage.from('avatars').getPublicUrl(p.avatarFilename)
-        p.avatarURL = urlResult.data.publicUrl
+        const urlResult = client.storage
+            .from("avatars")
+            .getPublicUrl(p.avatarFilename);
+        p.avatarURL = urlResult.data.publicUrl;
     }
-    return p
+    return p;
 }
 
-function createEntityMembers(dbRelations: Array<DbEntityMember>): Array<EntityMember> {
+function createEntityMembers(
+    dbRelations: Array<DbEntityMember>
+): Array<EntityMember> {
     return dbRelations.map((entry) => {
         const member: EntityMember = {
             id: entry.id,
             name: entry.name,
             description: entry.description,
             roleName: entry.role,
-            type: entry.type_id
-        }
-        return member
-    })
+            type: entry.type_id,
+        };
+        return member;
+    });
 }
 
 function createEntities(dbEntities: Array<DbEntity>): Array<LocationEntity> {
     return dbEntities.map((entry) => {
-        return createEntity(entry)
-    })
+        return createEntity(entry);
+    });
 }
 
 function createEntity(dbEntity: DbEntity): LocationEntity {
-    let geometry = null
+    let geometry = null;
     // verification that the JSONB value returned can be parsed to a Geometry object
-    if (dbEntity.geojson !== null &&
-        typeof dbEntity.geojson === 'object' &&
-        !Array.isArray(dbEntity.geojson)) {
-        geometry = JSON.parse(JSON.stringify(dbEntity.geojson))
+    if (
+        dbEntity.geojson !== null &&
+        typeof dbEntity.geojson === "object" &&
+        !Array.isArray(dbEntity.geojson)
+    ) {
+        geometry = JSON.parse(JSON.stringify(dbEntity.geojson));
     }
     return {
         id: dbEntity.id,
         name: dbEntity.name,
-        description: dbEntity.description || '',
+        description: dbEntity.description || "",
         type: dbEntity.type_id,
         position: dbEntity.position || null,
-        geometry: geometry
-    }
-
+        geometry: geometry,
+    };
 }
 
-export const getServerClient = async (ctx: GetServerSidePropsContext): Promise<DbContext> => {
-    const client = createServerSupabaseClient<Database>(ctx)
+export const getServerClient = async (
+    ctx: GetServerSidePropsContext
+): Promise<DbContext> => {
+    const client = createServerSupabaseClient<Database>(ctx);
     const {
-        data: {session},
-    } = await client.auth.getSession()
+        data: { session },
+    } = await client.auth.getSession();
 
-    return { client, session }
-}
+    return { client, session };
+};
 
-export async function isUserEntityAdmin(client: SupabaseClient<Database>, userId: string, entityId: string): Promise<boolean> {
-    const {data, error} = await client.from('relationships').select('roles(name)').match({from_id: userId, to_id: entityId})
+export async function isUserEntityAdmin(
+    client: SupabaseClient<Database>,
+    userId: string,
+    entityId: string
+): Promise<boolean> {
+    const { data, error } = await client
+        .from("relationships")
+        .select("roles(name)")
+        .match({ from_id: userId, to_id: entityId });
     if (error) {
-        console.error('Unable to retrieve member relationship for hub ID ' + entityId + ' and user ' + userId + '. Error: ' + error.message)
-        return false
+        console.error(
+            "Unable to retrieve member relationship for hub ID " +
+                entityId +
+                " and user " +
+                userId +
+                ". Error: " +
+                error.message
+        );
+        return false;
     }
-    const adminRole = data.find(role => {
-        if (role?.roles && !Array.isArray(role.roles) )
-            return role.roles.name.toUpperCase().startsWith('ADMIN')
-        return false
-    })
-    return adminRole !== undefined
+    const adminRole = data.find((role) => {
+        if (role?.roles && !Array.isArray(role.roles))
+            return role.roles.name.toUpperCase().startsWith("ADMIN");
+        return false;
+    });
+    return adminRole !== undefined;
 }
 
-export async function getProjectsForUser(client: SupabaseClient<Database>, userId: string): Promise<Array<EntityMember>> {
-    const {data, error} = await client.rpc('get_entity_target_relations_by_type', {from_id: userId, type_id: EntityType.PROJECT})
+export async function getProjectsForUser(
+    client: SupabaseClient<Database>,
+    userId: string
+): Promise<Array<EntityMember>> {
+    const { data, error } = await client.rpc(
+        "get_entity_target_relations_by_type",
+        { from_id: userId, type_id: EntityType.PROJECT }
+    );
     if (error) {
-        console.error('Unable to retrieve projects for user ' + userId + '. Error: ' + error.message)
-        throw error
-    }
-    // @ts-ignore
-    return data ? createEntityMembers(data as Array<DbEntityMember>) : new Array<EntityMember>()
-}
-
-export async function getHubsForUser(client: SupabaseClient<Database>, userId: string): Promise<Array<EntityMember>> {
-    const {data, error} = await client.rpc('get_entity_target_relations_by_type', {from_id: userId, type_id: EntityType.HUB})
-    if (error) {
-        console.error('Unable to retrieve hubs for user ' + userId + '. Error: ' + error.message)
-        throw error
-    }
-    // @ts-ignore
-    return data ? createEntityMembers(data as Array<DbEntityMember>) : new Array<EntityMember>()
-}
-
-export async function getProjectsForHub(client: SupabaseClient<Database>, hubId: string): Promise<Array<EntityMember>> {
-    const {data, error} = await client.rpc('get_entity_source_relations_by_type', {to_id: hubId, type_id: EntityType.PROJECT})
-    if (error) {
-        console.error('Unable to retrieve projects for hub ID ' + hubId + '. Error: ' + error.message)
-        throw error
-    }
-    // @ts-ignore
-    return data ? createEntityMembers(data as Array<DbEntityMember>) : new Array<EntityMember>()
-}
-
-export async function getProjectCandidatesForHub(client: SupabaseClient<Database>, hubId: string): Promise<Array<Entity>> {
-    const {data, error} = await client.rpc('get_entity_source_candidates_by_type', {to_id: hubId, type_id: EntityType.PROJECT})
-    if (error) {
-        console.error('Unable to retrieve project candidates for hub ID ' + hubId + '. Error: ' + error.message)
-        throw error
+        console.error(
+            "Unable to retrieve projects for user " +
+                userId +
+                ". Error: " +
+                error.message
+        );
+        throw error;
     }
     // @ts-ignore
-    return data ? createEntities(data as Array<DbEntity>) : new Array<Entity>()
+    return data
+        ? createEntityMembers(data as Array<DbEntityMember>)
+        : new Array<EntityMember>();
 }
 
-async function getRegionInfo(client: SupabaseClient<Database>, regionId: number | string, level: number, tablePrefix: string): Promise<RegionInfo> {
-    const tablename = 'get_'+tablePrefix+'_region_info_l'+level
-    // @ts-ignore
-    const {data, error} = await client.rpc(tablename, {region_id: regionId}).single()
+export async function getHubsForUser(
+    client: SupabaseClient<Database>,
+    userId: string
+): Promise<Array<EntityMember>> {
+    const { data, error } = await client.rpc(
+        "get_entity_target_relations_by_type",
+        { from_id: userId, type_id: EntityType.HUB }
+    );
     if (error) {
-        console.error('Unable to retrieve region info from table '+tablename+', region ID: ' + regionId + ', level: '+level+'. Error: ' + error.message)
-        throw error
+        console.error(
+            "Unable to retrieve hubs for user " +
+                userId +
+                ". Error: " +
+                error.message
+        );
+        throw error;
+    }
+    // @ts-ignore
+    return data
+        ? createEntityMembers(data as Array<DbEntityMember>)
+        : new Array<EntityMember>();
+}
+
+export async function getProjectsForHub(
+    client: SupabaseClient<Database>,
+    hubId: string
+): Promise<Array<EntityMember>> {
+    const { data, error } = await client.rpc(
+        "get_entity_source_relations_by_type",
+        { to_id: hubId, type_id: EntityType.PROJECT }
+    );
+    if (error) {
+        console.error(
+            "Unable to retrieve projects for hub ID " +
+                hubId +
+                ". Error: " +
+                error.message
+        );
+        throw error;
+    }
+    // @ts-ignore
+    return data
+        ? createEntityMembers(data as Array<DbEntityMember>)
+        : new Array<EntityMember>();
+}
+
+export async function getProjectCandidatesForHub(
+    client: SupabaseClient<Database>,
+    hubId: string
+): Promise<Array<Entity>> {
+    const { data, error } = await client.rpc(
+        "get_entity_source_candidates_by_type",
+        { to_id: hubId, type_id: EntityType.PROJECT }
+    );
+    if (error) {
+        console.error(
+            "Unable to retrieve project candidates for hub ID " +
+                hubId +
+                ". Error: " +
+                error.message
+        );
+        throw error;
+    }
+    // @ts-ignore
+    return data ? createEntities(data as Array<DbEntity>) : new Array<Entity>();
+}
+
+async function getRegionInfo(
+    client: SupabaseClient<Database>,
+    regionId: number | string,
+    level: number,
+    tablePrefix: string
+): Promise<RegionInfo> {
+    const tablename = "get_" + tablePrefix + "_region_info_l" + level;
+    // @ts-ignore
+    const { data, error } = await client
+        .rpc(tablename, { region_id: regionId })
+        .single();
+    if (error) {
+        console.error(
+            "Unable to retrieve region info from table " +
+                tablename +
+                ", region ID: " +
+                regionId +
+                ", level: " +
+                level +
+                ". Error: " +
+                error.message
+        );
+        throw error;
     }
 
-    const result = Array<RegionNode>()
+    const result = Array<RegionNode>();
     if (data) {
-        for (let i=1; i <= level; i++) {
+        for (let i = 1; i <= level; i++) {
             // @ts-ignore
-            result[i-1] = {id: data['l'+i+'_id'], level: i, link: data['l'+i+'_link'], name: data['l'+i+'_name']}
+            result[i - 1] = {
+                id: data["l" + i + "_id"],
+                level: i,
+                link: data["l" + i + "_link"],
+                name: data["l" + i + "_name"],
+            };
         }
     }
-    return result
+    return result;
 }
 
-export async function getRegionAssociations(client: SupabaseClient<Database>, ownerId: string): Promise<RegionAssociations> {
-    const {data, error} = await client.from('region_associations').select('*').eq('owner_id', ownerId)
+export async function getRegionAssociations(
+    client: SupabaseClient<Database>,
+    ownerId: string
+): Promise<RegionAssociations> {
+    const { data, error } = await client
+        .from("region_associations")
+        .select("*")
+        .eq("owner_id", ownerId);
     if (error) {
-        console.error('Unable to retrieve region associations from owner ID ' + ownerId + '. Error: ' + error.message)
-        throw error
+        console.error(
+            "Unable to retrieve region associations from owner ID " +
+                ownerId +
+                ". Error: " +
+                error.message
+        );
+        throw error;
     }
 
-    let associations: RegionAssociations = {custom: null, epa: null, oneEarth: null}
+    let associations: RegionAssociations = {
+        custom: null,
+        epa: null,
+        oneEarth: null,
+    };
     if (data && data.length > 0) {
         // @ts-ignore
-        associations.oneEarth = data[0].oe_region_id ? await getRegionInfo(client, data[0].oe_region_id, data[0].oe_level, 'oe') : null,
-        // @ts-ignore
-        associations.epa = data[0].epa_region_id ? await getRegionInfo(client, data[0].epa_region_id, data[0].epa_level, 'epa') : null,
-        // @ts-ignore
-        associations.custom = data[0].rl_region_id ? await getRegionInfo(client, data[0].rl_region_id, data[0].rl_level, 'rl') : null
+        (associations.oneEarth = data[0].oe_region_id
+            ? await getRegionInfo(
+                  client,
+                  data[0].oe_region_id,
+                  data[0].oe_level,
+                  "oe"
+              )
+            : null),
+            // @ts-ignore
+            (associations.epa = data[0].epa_region_id
+                ? await getRegionInfo(
+                      client,
+                      data[0].epa_region_id,
+                      data[0].epa_level,
+                      "epa"
+                  )
+                : null),
+            // @ts-ignore
+            (associations.custom = data[0].rl_region_id
+                ? await getRegionInfo(
+                      client,
+                      data[0].rl_region_id,
+                      data[0].rl_level,
+                      "rl"
+                  )
+                : null);
     }
-    return associations
+    return associations;
 }
 
-export async function getOneEarthCatalog(client: SupabaseClient): Promise<RegionCatalog> {
-    return getStandardCatalog(client, 'oe', ['Realm','Subrealm','Bioregion','Ecoregion'])
+export async function getOneEarthCatalog(
+    client: SupabaseClient
+): Promise<RegionCatalog> {
+    return getStandardCatalog(client, "oe", [
+        "Realm",
+        "Subrealm",
+        "Bioregion",
+        "Ecoregion",
+    ]);
 }
 
-export async function getEPACatalog(client: SupabaseClient): Promise<RegionCatalog> {
-    return getStandardCatalog(client, 'epa', ['Level I','Level II','Level III','Level IV'])
+export async function getEPACatalog(
+    client: SupabaseClient
+): Promise<RegionCatalog> {
+    return getStandardCatalog(client, "epa", [
+        "Level I",
+        "Level II",
+        "Level III",
+        "Level IV",
+    ]);
 }
 
-export async function getCustomCatalog(client: SupabaseClient): Promise<RegionCatalog> {
-    return getStandardCatalog(client, 'rl', ['Bioregion','Bioregion','Bioregion','Bioregion'])
+export async function getCustomCatalog(
+    client: SupabaseClient
+): Promise<RegionCatalog> {
+    return getStandardCatalog(client, "rl", [
+        "Bioregion",
+        "Bioregion",
+        "Bioregion",
+        "Bioregion",
+    ]);
 }
 
-async function getStandardCatalog(client: SupabaseClient<Database>, tablePrefix: string, labels: Array<string>): Promise<RegionCatalog> {
-    const result1 = await client.from(tablePrefix+'_regions_1').select('*').order('name')
+async function getStandardCatalog(
+    client: SupabaseClient<Database>,
+    tablePrefix: string,
+    labels: Array<string>
+): Promise<RegionCatalog> {
+    const result1 = await client
+        .from(tablePrefix + "_regions_1")
+        .select("*")
+        .order("name");
     if (result1.error) {
-        console.error('Unable to retrieve regions level 1 with table prefix: '+tablePrefix+'. Error: ' + result1.error.message)
-        throw result1.error
+        console.error(
+            "Unable to retrieve regions level 1 with table prefix: " +
+                tablePrefix +
+                ". Error: " +
+                result1.error.message
+        );
+        throw result1.error;
     }
-    const result2 = await client.from(tablePrefix+'_regions_2').select('*').order('name')
+    const result2 = await client
+        .from(tablePrefix + "_regions_2")
+        .select("*")
+        .order("name");
     if (result2.error) {
-        console.error('Unable to retrieve regions level 2 with table prefix: '+tablePrefix+'. Error: ' + result2.error.message)
-        throw result2.error
+        console.error(
+            "Unable to retrieve regions level 2 with table prefix: " +
+                tablePrefix +
+                ". Error: " +
+                result2.error.message
+        );
+        throw result2.error;
     }
-    const result3 = await client.from(tablePrefix+'_regions_3').select('*').order('name')
+    const result3 = await client
+        .from(tablePrefix + "_regions_3")
+        .select("*")
+        .order("name");
     if (result3.error) {
-        console.error('Unable to retrieve regions level 3 with table prefix: '+tablePrefix+'. Error: ' + result3.error.message)
-        throw result3.error
+        console.error(
+            "Unable to retrieve regions level 3 with table prefix: " +
+                tablePrefix +
+                ". Error: " +
+                result3.error.message
+        );
+        throw result3.error;
     }
-    const result4 = await client.from(tablePrefix+'_regions_4').select('*').order('name')
+    const result4 = await client
+        .from(tablePrefix + "_regions_4")
+        .select("*")
+        .order("name");
     if (result4.error) {
-        console.error('Unable to retrieve regions level 4 with table prefix: '+tablePrefix+'. Error: ' + result4.error.message)
-        throw result4.error
+        console.error(
+            "Unable to retrieve regions level 4 with table prefix: " +
+                tablePrefix +
+                ". Error: " +
+                result4.error.message
+        );
+        throw result4.error;
     }
 
     const level1: Array<RegionNode> = result1.data.map((entry) => {
-        return {id: entry.id, name: entry.name, level: 1, description: entry.description || ''}
-    })
+        return {
+            id: entry.id,
+            name: entry.name,
+            level: 1,
+            description: entry.description || "",
+        };
+    });
     const level2: Array<RegionNode> = result2.data.map((entry) => {
-        return {id: entry.id, name: entry.name, level: 2, description: entry.description || '', parentId: entry.parent_id}
-    })
+        return {
+            id: entry.id,
+            name: entry.name,
+            level: 2,
+            description: entry.description || "",
+            parentId: entry.parent_id,
+        };
+    });
     const level3: Array<RegionNode> = result3.data.map((entry) => {
-        return {id: entry.id, name: entry.name, level: 3, description: entry.description || '', parentId: entry.parent_id}
-    })
+        return {
+            id: entry.id,
+            name: entry.name,
+            level: 3,
+            description: entry.description || "",
+            parentId: entry.parent_id,
+        };
+    });
     const level4: Array<RegionNode> = result4.data.map((entry) => {
-        return {id: entry.id, name: entry.name, level: 4, description: entry.description || '', parentId: entry.parent_id}
-    })
+        return {
+            id: entry.id,
+            name: entry.name,
+            level: 4,
+            description: entry.description || "",
+            parentId: entry.parent_id,
+        };
+    });
 
-    return {labels, level1, level2, level3, level4}
+    return { labels, level1, level2, level3, level4 };
 }
 
-export async function getUserMember(client: SupabaseClient<Database>, userId: string, entityId: string): Promise<MemberDetails> {
-    const {data, error} = await client.rpc('get_user_member', {user_id: userId, entity_id: entityId}).single()
+export async function getUserMember(
+    client: SupabaseClient<Database>,
+    userId: string,
+    entityId: string
+): Promise<MemberDetails> {
+    const { data, error } = await client
+        .rpc("get_user_member", { user_id: userId, entity_id: entityId })
+        .single();
     if (error) {
-        console.error('Unable to retrieve member details for entity ID '+entityId+' and user ID '+userId+'. Error: '+error.message)
-        throw error
+        console.error(
+            "Unable to retrieve member details for entity ID " +
+                entityId +
+                " and user ID " +
+                userId +
+                ". Error: " +
+                error.message
+        );
+        throw error;
     }
     // @ts-ignore
-    const result = data as {user_id: string, username: string, avatar_filename: string, role_name: string}
-    return createMemberDetails(client, result.user_id, result.username, result.avatar_filename, result.role_name)
+    const result = data as {
+        user_id: string;
+        username: string;
+        avatar_filename: string;
+        role_name: string;
+    };
+    return createMemberDetails(
+        client,
+        result.user_id,
+        result.username,
+        result.avatar_filename,
+        result.role_name
+    );
 }
 
-export async function getUserMembers(client: SupabaseClient<Database>, entityId: string): Promise<Array<MemberDetails>> {
-    const {data, error} = await client.rpc('get_user_members', {entity_id: entityId})
+export async function getUserMembers(
+    client: SupabaseClient<Database>,
+    entityId: string
+): Promise<Array<MemberDetails>> {
+    const { data, error } = await client.rpc("get_user_members", {
+        entity_id: entityId,
+    });
     if (error) {
-        console.error('Unable to retrieve members for entity '+entityId+'. Error: '+error.message)
-        throw error
+        console.error(
+            "Unable to retrieve members for entity " +
+                entityId +
+                ". Error: " +
+                error.message
+        );
+        throw error;
     }
-    return data ? data.map((dbMember) => {
-        // @ts-ignore
-        const result = dbMember as {user_id: string, username: string, avatar_filename: string, role_name: string}
-        return createMemberDetails(client, result.user_id, result.username, result.avatar_filename, result.role_name)
-    }) : new Array<MemberDetails>()
+    return data
+        ? data.map((dbMember) => {
+              // @ts-ignore
+              const result = dbMember as {
+                  user_id: string;
+                  username: string;
+                  avatar_filename: string;
+                  role_name: string;
+              };
+              return createMemberDetails(
+                  client,
+                  result.user_id,
+                  result.username,
+                  result.avatar_filename,
+                  result.role_name
+              );
+          })
+        : new Array<MemberDetails>();
 }
 
-export async function getUserCandidates(client: SupabaseClient<Database>, entityId: string): Promise<Array<Profile>> {
-    const {data, error} = await client.rpc('get_user_candidates', {entity_id: entityId})
+export async function getUserCandidates(
+    client: SupabaseClient<Database>,
+    entityId: string
+): Promise<Array<Profile>> {
+    const { data, error } = await client.rpc("get_user_candidates", {
+        entity_id: entityId,
+    });
     if (error) {
-        console.error('Unable to retrieve non-members for entity '+entityId+'. Error: '+error.message)
-        throw error
+        console.error(
+            "Unable to retrieve non-members for entity " +
+                entityId +
+                ". Error: " +
+                error.message
+        );
+        throw error;
     }
     // @ts-ignore
-    const result = data as Array<{user_id: string, user_name: string, avatar_filename: string, status: number}>
-    return result ? result.map((dbProfile) => {
-        return createProfile(client, dbProfile.user_id, dbProfile.user_name, dbProfile.avatar_filename, dbProfile.status)
-    }) : new Array<Profile>()
+    const result = data as Array<{
+        user_id: string;
+        user_name: string;
+        avatar_filename: string;
+        status: number;
+    }>;
+    return result
+        ? result.map((dbProfile) => {
+              return createProfile(
+                  client,
+                  dbProfile.user_id,
+                  dbProfile.user_name,
+                  dbProfile.avatar_filename,
+                  dbProfile.status
+              );
+          })
+        : new Array<Profile>();
 }
 
-export async function getProjectRoles(client: SupabaseClient): Promise<Array<Role>> {
-    const {data, error} = await client.from('roles').select('*').match({from_type: EntityType.HUMAN, to_type: EntityType.PROJECT}).order('name')
+export async function getProjectRoles(
+    client: SupabaseClient
+): Promise<Array<Role>> {
+    const { data, error } = await client
+        .from("roles")
+        .select("*")
+        .match({ from_type: EntityType.HUMAN, to_type: EntityType.PROJECT })
+        .order("name");
     if (error) {
-        console.error('Unable to retrieve project roles. Error: '+error.message)
-        throw error
+        console.error(
+            "Unable to retrieve project roles. Error: " + error.message
+        );
+        throw error;
     }
-    return data || new Array<Role>()
+    return data || new Array<Role>();
 }
 
-export async function getHubRoles(client: SupabaseClient): Promise<Array<Role>> {
-    const {data, error} = await client.from('roles').select('*').match({from_type: EntityType.HUMAN, to_type: EntityType.HUB}).order('name')
+export async function getHubRoles(
+    client: SupabaseClient
+): Promise<Array<Role>> {
+    const { data, error } = await client
+        .from("roles")
+        .select("*")
+        .match({ from_type: EntityType.HUMAN, to_type: EntityType.HUB })
+        .order("name");
     if (error) {
-        console.error('Unable to retrieve hub roles. Error: '+error.message)
-        throw error
+        console.error("Unable to retrieve hub roles. Error: " + error.message);
+        throw error;
     }
-    return data || new Array<Role>()
+    return data || new Array<Role>();
 }
 
-export async function getLinksForEntity(client: SupabaseClient<Database>, entityId: string): Promise<Array<LinkDetails>> {
-    const {data, error} = await client.from('links').select('*').eq('owner_id', entityId)
+export async function getLinksForEntity(
+    client: SupabaseClient<Database>,
+    entityId: string
+): Promise<Array<LinkDetails>> {
+    const { data, error } = await client
+        .from("links")
+        .select("*")
+        .eq("owner_id", entityId);
     if (error) {
-        console.error('Unable to retrieve links for owner ID '+entityId+'. Error: '+error.message)
-        throw error
+        console.error(
+            "Unable to retrieve links for owner ID " +
+                entityId +
+                ". Error: " +
+                error.message
+        );
+        throw error;
     }
-    return data ? data.map((dbLink) => {
-        const newItem: LinkDetails = {
-            id: dbLink.id,
-            url: dbLink.url,
-            typeId: dbLink.type_id
-        }
-        return newItem
-    }) : new Array<LinkDetails>()
+    return data
+        ? data.map((dbLink) => {
+              const newItem: LinkDetails = {
+                  id: dbLink.id,
+                  url: dbLink.url,
+                  typeId: dbLink.type_id,
+              };
+              return newItem;
+          })
+        : new Array<LinkDetails>();
 }
 
-export async function getEntity(client: SupabaseClient<Database>, id: string): Promise<LocationEntity | null> {
-    const {data, error} = await client.from('entities').select('*').eq('id', id).single()
+export async function getEntity(
+    client: SupabaseClient<Database>,
+    id: string
+): Promise<LocationEntity | null> {
+    const { data, error } = await client
+        .from("entities")
+        .select("*")
+        .eq("id", id)
+        .single();
     if (error) {
-        console.error('Unable to retrieve data for entity ID '+id+'. Error: '+error.message)
-        throw error
+        console.error(
+            "Unable to retrieve data for entity ID " +
+                id +
+                ". Error: " +
+                error.message
+        );
+        throw error;
     }
-    return data ? createEntity(data) : null
+    return data ? createEntity(data) : null;
 }
 
-export async function getHubData(client: SupabaseClient<Database>, hubId: string): Promise<Hub | null> {
-    return getEntity(client, hubId)
+export async function getHubData(
+    client: SupabaseClient<Database>,
+    hubId: string
+): Promise<Hub | null> {
+    return getEntity(client, hubId);
 }
 
-export async function getProjectData(client: SupabaseClient<Database>, projectId: string): Promise<Project | null> {
-    return getEntity(client, projectId)
+export async function getProjectData(
+    client: SupabaseClient<Database>,
+    projectId: string
+): Promise<Project | null> {
+    return getEntity(client, projectId);
 }
 
-export async function getUserProfile(client: SupabaseClient<Database>, userId: string): Promise<Profile | null> {
-    const {data, error} = await client.from('profiles').select('*').eq('id', userId)
+export async function getUserProfile(
+    client: SupabaseClient<Database>,
+    userId: string
+): Promise<Profile | null> {
+    const { data, error } = await client
+        .from("profiles")
+        .select("*")
+        .eq("id", userId);
     if (error) {
-        console.error('Unable to retrieve profile data for user ID '+userId+'. Error: '+error.message)
-        throw error
+        console.error(
+            "Unable to retrieve profile data for user ID " +
+                userId +
+                ". Error: " +
+                error.message
+        );
+        throw error;
     }
-    return data?.length > 0 ? createProfile(client, data[0].id, data[0].username || '', data[0].avatar_filename || '', data[0].status) : null
+    return data?.length > 0
+        ? createProfile(
+              client,
+              data[0].id,
+              data[0].username || "",
+              data[0].avatar_filename || "",
+              data[0].status
+          )
+        : null;
 }
 
-export async function updateAvatarFile(client: SupabaseClient<Database>, profileId: string, filename: string, file: any): Promise<{filename: string, url: string}> {
+export async function updateAvatarFile(
+    client: SupabaseClient<Database>,
+    profileId: string,
+    filename: string,
+    file: any
+): Promise<{ filename: string; url: string }> {
     const { error: uploadError } = await client.storage
-        .from('avatars')
-        .upload(filename, file, { upsert: true })
+        .from("avatars")
+        .upload(filename, file, { upsert: true });
     if (uploadError) {
-        console.log('Error uploading the file to storage: '+uploadError.message)
-        throw uploadError
+        console.log(
+            "Error uploading the file to storage: " + uploadError.message
+        );
+        throw uploadError;
     }
 
-    const updates = {avatar_filename: filename}
-    const {error: updateError} = await client.from('profiles').update(updates).eq('id', profileId)
+    const updates = { avatar_filename: filename };
+    const { error: updateError } = await client
+        .from("profiles")
+        .update(updates)
+        .eq("id", profileId);
     if (updateError) {
-        console.log('Error updating avatar filename for user ID ' + profileId+'. Error: '+updateError.message)
-        throw updateError
+        console.log(
+            "Error updating avatar filename for user ID " +
+                profileId +
+                ". Error: " +
+                updateError.message
+        );
+        throw updateError;
     }
 
-    const {data} = client.storage.from('avatars').getPublicUrl(filename)
+    const { data } = client.storage.from("avatars").getPublicUrl(filename);
 
-    return {filename: filename, url: data?.publicUrl || ''}
+    return { filename: filename, url: data?.publicUrl || "" };
 }
 
-export async function deleteLink(client: SupabaseClient<Database>, linkId: number) {
-    const {error} = await client.from('links').delete().eq('id', linkId)
+export async function deleteLink(
+    client: SupabaseClient<Database>,
+    linkId: number
+) {
+    const { error } = await client.from("links").delete().eq("id", linkId);
     if (error) {
-        console.log('Error deleting link ID: '+linkId+'. Error: '+error.message)
-        throw error
+        console.log(
+            "Error deleting link ID: " + linkId + ". Error: " + error.message
+        );
+        throw error;
     }
 }
 
-export async function insertNewLink(client: SupabaseClient<Database>, url: string, typeId: number, ownerId: string): Promise<LinkDetails> {
-    const newDbLink: DbLinkInsert = {url: url, type_id: typeId, owner_id: ownerId}
-    const {data, error} = await client.from('links').insert(newDbLink).select('*').single()
+export async function insertNewLink(
+    client: SupabaseClient<Database>,
+    url: string,
+    typeId: number,
+    ownerId: string
+): Promise<LinkDetails> {
+    const newDbLink: DbLinkInsert = {
+        url: url,
+        type_id: typeId,
+        owner_id: ownerId,
+    };
+    const { data, error } = await client
+        .from("links")
+        .insert(newDbLink)
+        .select("*")
+        .single();
     if (error) {
-        console.log('Error insert a new link: '+JSON.stringify(newDbLink)+'. Error: '+error.message)
-        throw error
+        console.log(
+            "Error insert a new link: " +
+                JSON.stringify(newDbLink) +
+                ". Error: " +
+                error.message
+        );
+        throw error;
     }
-    return {id: data!.id, typeId: data!.type_id, url: url}
+    return { id: data!.id, typeId: data!.type_id, url: url };
 }
 
-export async function getLinkTypes(client: SupabaseClient): Promise<Array<LinkType>> {
-    const {data, error} = await client.from('link_types').select('*').order('name')
+export async function getLinkTypes(
+    client: SupabaseClient
+): Promise<Array<LinkType>> {
+    const { data, error } = await client
+        .from("link_types")
+        .select("*")
+        .order("name");
     if (error) {
-        console.log('Error retrieving link types. Error: '+error.message)
-        throw error
+        console.log("Error retrieving link types. Error: " + error.message);
+        throw error;
     }
-    return data as Array<LinkType>
+    return data as Array<LinkType>;
 }
 
 //
@@ -409,163 +815,272 @@ export async function updateRegionAssociations(
     client: SupabaseClient<Database>,
     ownerId: string,
     oeRegion: RegionNode | null | undefined,
-    epaRegion:RegionNode | null | undefined,
+    epaRegion: RegionNode | null | undefined,
     customRegion: RegionNode | null | undefined
 ) {
-
-    const updates: any = {owner_id: ownerId}
+    const updates: any = { owner_id: ownerId };
     if (oeRegion !== undefined) {
-        updates['oe_region_id'] = oeRegion ? oeRegion.id : null
-        updates['oe_level'] = oeRegion ? oeRegion.level : null
+        updates["oe_region_id"] = oeRegion ? oeRegion.id : null;
+        updates["oe_level"] = oeRegion ? oeRegion.level : null;
     }
     if (epaRegion !== undefined) {
-        updates['epa_region_id'] = epaRegion ? epaRegion.id : null
-        updates['epa_level'] = epaRegion ? epaRegion.level : null
+        updates["epa_region_id"] = epaRegion ? epaRegion.id : null;
+        updates["epa_level"] = epaRegion ? epaRegion.level : null;
     }
     if (customRegion !== undefined) {
-        updates['rl_region_id'] = customRegion ? customRegion.id : null
-        updates['rl_level'] = customRegion ? customRegion.level : null
+        updates["rl_region_id"] = customRegion ? customRegion.id : null;
+        updates["rl_level"] = customRegion ? customRegion.level : null;
     }
 
-    const {data, error} = await client.from('region_associations').upsert(updates)
+    const { data, error } = await client
+        .from("region_associations")
+        .upsert(updates);
     if (error) {
-        console.log('Error updating region associations for owner ID: ' + ownerId + ', updates: '+JSON.stringify(updates)+'. Error: ' + error.message)
-        throw error
+        console.log(
+            "Error updating region associations for owner ID: " +
+                ownerId +
+                ", updates: " +
+                JSON.stringify(updates) +
+                ". Error: " +
+                error.message
+        );
+        throw error;
     }
-    return getRegionAssociations(client, ownerId)
+    return getRegionAssociations(client, ownerId);
 }
 
-export async function addRelationship(client: SupabaseClient<Database>, fromId: string, toId: string, roleId: string) {
-    const updates: DbRelationship = {from_id: fromId, to_id: toId, role_id: roleId}
-    const {data, error} = await client.from('relationships').insert(updates)
+export async function addRelationship(
+    client: SupabaseClient<Database>,
+    fromId: string,
+    toId: string,
+    roleId: string
+) {
+    const updates: DbRelationship = {
+        from_id: fromId,
+        to_id: toId,
+        role_id: roleId,
+    };
+    const { data, error } = await client.from("relationships").insert(updates);
     if (error) {
-        console.error('Unable to add relation from ID '+fromId+' to ID '+toId+' with role '+roleId+'. Error: '+error.message)
-        throw error
+        console.error(
+            "Unable to add relation from ID " +
+                fromId +
+                " to ID " +
+                toId +
+                " with role " +
+                roleId +
+                ". Error: " +
+                error.message
+        );
+        throw error;
     }
 }
 
-export async function removeRelationship(client: SupabaseClient<Database>, fromId: string, toId: string) {
-    const {data, error} = await client.from('relationships').delete().match({from_id: fromId, to_id: toId})
+export async function removeRelationship(
+    client: SupabaseClient<Database>,
+    fromId: string,
+    toId: string
+) {
+    const { data, error } = await client
+        .from("relationships")
+        .delete()
+        .match({ from_id: fromId, to_id: toId });
     if (error) {
-        console.error('Unable to remove relationship from ID '+fromId+' to ID '+toId+'. Error: '+error.message)
-        throw error
+        console.error(
+            "Unable to remove relationship from ID " +
+                fromId +
+                " to ID " +
+                toId +
+                ". Error: " +
+                error.message
+        );
+        throw error;
     }
 }
 
-export async function getEntitiesByType(client: SupabaseClient<Database>, types: Array<EntityType>): Promise<Array<LocationEntity>> {
-    let query = client.from('entities').select('*')
-    if (types)
-        query.in('type_id', types)
-    query.order('name')
+export async function getEntitiesByType(
+    client: SupabaseClient<Database>,
+    types: Array<EntityType>
+): Promise<Array<LocationEntity>> {
+    let query = client.from("entities").select("*");
+    if (types) query.in("type_id", types);
+    query.order("name");
 
-    const {data, error} = await query
+    const { data, error } = await query;
     if (error) {
-        console.error('Unable to retrieve entities of types '+JSON.stringify(types)+'. Error: '+error.message)
-        throw error
+        console.error(
+            "Unable to retrieve entities of types " +
+                JSON.stringify(types) +
+                ". Error: " +
+                error.message
+        );
+        throw error;
     }
-    return data ? createEntities(data as Array<DbEntity>) : new Array<LocationEntity>()
+    return data
+        ? createEntities(data as Array<DbEntity>)
+        : new Array<LocationEntity>();
 }
 
-export async function getHubs(client: SupabaseClient<Database>): Promise<Array<Hub>> {
-    return getEntitiesByType(client, [EntityType.HUB])
+export async function getHubs(
+    client: SupabaseClient<Database>
+): Promise<Array<Hub>> {
+    return getEntitiesByType(client, [EntityType.HUB]);
 }
 
-export async function getProjects(client: SupabaseClient<Database>): Promise<Array<Project>> {
-    return getEntitiesByType(client, [EntityType.PROJECT])
+export async function getProjects(
+    client: SupabaseClient<Database>
+): Promise<Array<Project>> {
+    return getEntitiesByType(client, [EntityType.PROJECT]);
 }
 
-export async function getRolesDictionary(client: SupabaseClient<Database>): Promise<RolesDictionary> {
-    const {data, error} = await client.from('roles').select('*')
+export async function getRolesDictionary(
+    client: SupabaseClient<Database>
+): Promise<RolesDictionary> {
+    const { data, error } = await client.from("roles").select("*");
     if (error) {
-        console.error('Unable to retrieve roles. Error: '+error.message)
-        throw error
+        console.error("Unable to retrieve roles. Error: " + error.message);
+        throw error;
     }
-    const result: RolesDictionary = new Map<string, Array<Role>>()
+    const result: RolesDictionary = new Map<string, Array<Role>>();
     if (data) {
         data.forEach((dbRole: DbRole) => {
-            const roleKey = JSON.stringify([dbRole.from_type, dbRole.to_type])
-            const role: Role = {id: dbRole.id, name: dbRole.name, description: dbRole.description || ''}
+            const roleKey = JSON.stringify([dbRole.from_type, dbRole.to_type]);
+            const role: Role = {
+                id: dbRole.id,
+                name: dbRole.name,
+                description: dbRole.description || "",
+            };
             if (result.has(roleKey))
-                result.set(roleKey, [...result.get(roleKey)!, role])
-            else
-                result.set(roleKey, [role])
-        })
+                result.set(roleKey, [...result.get(roleKey)!, role]);
+            else result.set(roleKey, [role]);
+        });
     }
-    return result
+    return result;
 }
 
-export async function updateEntity(client: SupabaseClient<Database>, entity: Entity | LocationEntity) {
+export async function updateEntity(
+    client: SupabaseClient<Database>,
+    entity: Entity | LocationEntity
+) {
     let updates = {
         name: entity.name,
-        description: entity.description
-    }
+        description: entity.description,
+    };
     if (isLocationEntity(entity)) {
-        updates = {...updates, ...{
-            position: entity.position,
-            geojson: entity.geometry
-        }}
+        updates = {
+            ...updates,
+            ...{
+                position: entity.position,
+                geojson: entity.geometry,
+            },
+        };
     }
-    console.log('Updating location on entity with updates: ', updates)
-    const {error} = await client.from('entities').update(updates).eq('id', entity.id)
+    console.log("Updating location on entity with updates: ", updates);
+    const { error } = await client
+        .from("entities")
+        .update(updates)
+        .eq("id", entity.id);
     if (error) {
-        console.log('Error updating entity ID '+entity.id)
-        throw error
+        console.log("Error updating entity ID " + entity.id);
+        throw error;
     }
 }
 
-export async function getGeoJsonSource(client: SupabaseClient<Database>, entityType: number): Promise<FeatureCollection> {
-    const {data, error} = await client.from('entities').select('*').eq('type_id', entityType).neq('geojson', null)
+export async function getGeoJsonSource(
+    client: SupabaseClient<Database>,
+    entityType: number
+): Promise<FeatureCollection> {
+    const { data, error } = await client
+        .from("entities")
+        .select("*")
+        .eq("type_id", entityType)
+        .neq("geojson", null);
     if (error) {
-        console.error('Unable to retrieve GeoJson data for entities of type '+entityType+'. Error: '+error.message)
-        throw error
+        console.error(
+            "Unable to retrieve GeoJson data for entities of type " +
+                entityType +
+                ". Error: " +
+                error.message
+        );
+        throw error;
     }
 
     const result: FeatureCollection = {
         type: "FeatureCollection",
-        features: []
-    }
+        features: [],
+    };
 
     if (data) {
-         data.forEach((dbEntity: DbEntity) => {
-             let geometry = null
-             // verification that the JSONB value returned can be parsed to a Geometry object
-             if (dbEntity.geojson !== null &&
-                 typeof dbEntity.geojson === 'object' &&
-                 !Array.isArray(dbEntity.geojson)) {
-                 geometry = JSON.parse(JSON.stringify(dbEntity.geojson))
-             }
+        data.forEach((dbEntity: DbEntity) => {
+            let geometry = null;
+            // verification that the JSONB value returned can be parsed to a Geometry object
+            if (
+                dbEntity.geojson !== null &&
+                typeof dbEntity.geojson === "object" &&
+                !Array.isArray(dbEntity.geojson)
+            ) {
+                geometry = JSON.parse(JSON.stringify(dbEntity.geojson));
+            }
 
-             result.features.push({
+            result.features.push({
                 type: "Feature",
                 properties: {
-                    'id': dbEntity.id,
-                    'name': dbEntity.name,
-                    'description': dbEntity.description,
-                    'type': dbEntity.type_id
+                    id: dbEntity.id,
+                    name: dbEntity.name,
+                    description: dbEntity.description,
+                    type: dbEntity.type_id,
                 },
-                geometry: geometry
-            })
+                geometry: geometry,
+            });
+        });
+    }
+    return result;
+}
+
+export async function createEntityForUser(
+    client: SupabaseClient<Database>,
+    entity: LocationEntity,
+    userId: string,
+    roleId: string
+): Promise<LocationEntity> {
+    const { data, error } = await client
+        .rpc("new_entity_with_user_relation", {
+            name: entity.name,
+            description: entity.description,
+            entity_type_id: entity.type,
+            role_id: roleId,
+            user_id: userId,
         })
+        .single();
+    if (error) {
+        console.error(
+            "Unable to create a new entity for user ID " +
+                userId +
+                ". Error: " +
+                error.message
+        );
+        throw error;
     }
-    return result
+    entity = { ...entity, id: data };
+    return entity;
 }
 
-export async function createEntityForUser(client: SupabaseClient<Database>, entity: LocationEntity, userId: string, roleId: string): Promise<LocationEntity> {
-    const { data, error } = await client.rpc('new_entity_with_user_relation', { name: entity.name, description: entity.description, entity_type_id: entity.type, role_id: roleId, user_id: userId }).single()
+export async function getRelationshipCoordinates(
+    client: SupabaseClient<Database>,
+    roleId: string
+): Promise<Array<{ source: Position; target: Position }>> {
+    const { data, error } = await client.rpc("get_relationship_positions", {
+        role_id: roleId,
+    });
     if (error) {
-        console.error('Unable to create a new entity for user ID '+userId+'. Error: '+error.message)
-        throw error
-    }
-    entity = {...entity, id: data}
-    return entity
-}
-
-export async function getRelationshipCoordinates(client: SupabaseClient<Database>, roleId: string): Promise<Array<{source: Position, target: Position}>> {
-    const { data, error } = await client.rpc('get_relationship_positions', { role_id: roleId })
-    if (error) {
-        console.error('Unable to retrieve relationship positions for role ID '+roleId+'. Error: '+error.message)
-        throw error
+        console.error(
+            "Unable to retrieve relationship positions for role ID " +
+                roleId +
+                ". Error: " +
+                error.message
+        );
+        throw error;
     }
     //@ts-ignore // TODO Supabase-guessed produces compiler warning, but data at runtime is as expected
-    return data || new Array<{source: Position; target: Position}>()
+    return data || new Array<{ source: Position; target: Position }>();
 }

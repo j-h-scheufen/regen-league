@@ -188,9 +188,9 @@ export async function getProjectsForUser(
     );
     throw error;
   }
-  // @ts-ignore
   return data
-    ? createEntityMembers(data as Array<DbEntityMember>)
+    ? // @ts-ignore
+      createEntityMembers(data as Array<DbEntityMember>)
     : new Array<EntityMember>();
 }
 
@@ -208,9 +208,9 @@ export async function getHubsForUser(
     );
     throw error;
   }
-  // @ts-ignore
   return data
-    ? createEntityMembers(data as Array<DbEntityMember>)
+    ? // @ts-ignore
+      createEntityMembers(data as Array<DbEntityMember>)
     : new Array<EntityMember>();
 }
 
@@ -231,9 +231,9 @@ export async function getProjectsForHub(
     );
     throw error;
   }
-  // @ts-ignore
   return data
-    ? createEntityMembers(data as Array<DbEntityMember>)
+    ? // @ts-ignore
+      createEntityMembers(data as Array<DbEntityMember>)
     : new Array<EntityMember>();
 }
 
@@ -265,8 +265,8 @@ async function getRegionInfo(
   tablePrefix: string
 ): Promise<RegionInfo> {
   const tablename = "get_" + tablePrefix + "_region_info_l" + level;
-  // @ts-ignore
   const { data, error } = await client
+    // @ts-ignore
     .rpc(tablename, { region_id: regionId })
     .single();
   if (error) {
@@ -286,11 +286,13 @@ async function getRegionInfo(
   const result = Array<RegionNode>();
   if (data) {
     for (let i = 1; i <= level; i++) {
-      // @ts-ignore
       result[i - 1] = {
+        // @ts-ignore
         id: data["l" + i + "_id"],
         level: i,
+        // @ts-ignore
         link: data["l" + i + "_link"],
+        // @ts-ignore
         name: data["l" + i + "_name"],
       };
     }
@@ -327,6 +329,7 @@ export async function getRegionAssociations(
       ? await getRegionInfo(
           client,
           data[0].oe_region_id,
+          // @ts-ignore
           data[0].oe_level,
           "oe"
         )
@@ -336,6 +339,7 @@ export async function getRegionAssociations(
         ? await getRegionInfo(
             client,
             data[0].epa_region_id,
+            // @ts-ignore
             data[0].epa_level,
             "epa"
           )
@@ -345,6 +349,7 @@ export async function getRegionAssociations(
         ? await getRegionInfo(
             client,
             data[0].rl_region_id,
+            // @ts-ignore
             data[0].rl_level,
             "rl"
           )

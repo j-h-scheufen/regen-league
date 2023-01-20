@@ -1,0 +1,4 @@
+# Ignore artifacts:
+build
+coveragenpx prettier --write .
+

@@ -1,4 +1,4 @@
-import { atom } from 'jotai'
+import { atom } from "jotai";
 
-export const editAtom = atom<boolean>(false)
-export const isProjectAdminAtom = atom<boolean>(false)
+export const editAtom = atom<boolean>(false);
+export const isProjectAdminAtom = atom<boolean>(false);

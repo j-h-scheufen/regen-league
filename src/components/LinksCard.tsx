@@ -24,7 +24,11 @@ export default function LinksCard({ links }: Props) {
   };
 
   return (
-    <Card pad="small" margin={{ vertical: "small" }}>
+    <Card
+      pad="small"
+      margin={{ vertical: "small" }}
+      style={{ boxShadow: "none" }}
+    >
       <CardHeader justify="center">
         <Text size="large">Links</Text>
       </CardHeader>

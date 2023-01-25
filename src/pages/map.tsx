@@ -6,7 +6,6 @@ import {
   CardHeader,
   DataTable,
   Heading,
-  Layer,
   Page,
   Paragraph,
   Text,
@@ -32,7 +31,8 @@ import EntityTypeSelector, {
   filteredListAtom,
 } from "../components/entity/EntityTypeSelector";
 import { getEntitiesByType, getServerClient } from "../utils/supabase";
-import React from "react";
+import React, { KeyboardEventHandler } from "react";
+import { useEventListener } from "../hooks/useEventListener";
 
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
   const { client } = await getServerClient(ctx);
@@ -78,6 +78,16 @@ export default function MapPage({
   const entitiesMap = useAtomValue(entitiesMapAtom);
   const filteredEntities = useAtomValue(filteredListAtom);
   const [pageState, setPageState] = useAtom(pageStateAtom);
+
+  const handleKeyUp: KeyboardEventHandler = (event) => {
+    if (event.key === "Escape") {
+      setPageState({ ...pageState, showEntity: false });
+    }
+  };
+
+  // add an event listener to the page (in this case, we're binding an event listener to the 'keyup' action)
+  // by using this, you don't need to worry about binding an event listener to a component, so it's more reliable
+  useEventListener("keyup", handleKeyUp);
 
   const ViewModeToggle = () => {
     switch (pageState.viewMode) {
@@ -184,51 +194,50 @@ export default function MapPage({
 
       <MainContent />
 
+      {/* We can just use a Box with some custom styles here to replicate a sidebar, while also allowing clicks elsewhere on the page */}
       {selectedEntity && pageState.showEntity && (
-        <Layer
-          id="selectionFlyOut"
-          position="right"
-          onClickOutside={() =>
-            setPageState({ ...pageState, showEntity: false })
-          }
-          onEsc={() => setPageState({ ...pageState, showEntity: false })}
-          animation="slide"
-          modal={false}
-          plain={true}
-          full="vertical"
+        <Box
+          width="50%"
+          height="100%"
+          background="white"
+          alignSelf="end"
+          style={{
+            position: "absolute",
+            right: "0",
+            top: "0",
+            zIndex: "10",
+          }}
         >
-          <Box width="50%" height="100%" background="white" alignSelf="end">
-            <Card>
-              <CardHeader elevation="small" justify="center">
-                <Box pad={{ left: "medium" }}>
-                  <Button
-                    onClick={() =>
-                      setPageState({ ...pageState, showEntity: false })
-                    }
-                  >
-                    <Close />
-                  </Button>
-                </Box>
-                <Box flex>
-                  <Heading level={3}>{selectedEntity.name}</Heading>
-                </Box>
-              </CardHeader>
+          <Card>
+            <CardHeader elevation="small" justify="center">
+              <Box pad={{ left: "medium" }}>
+                <Button
+                  onClick={() =>
+                    setPageState({ ...pageState, showEntity: false })
+                  }
+                >
+                  <Close />
+                </Button>
+              </Box>
+              <Box flex>
+                <Heading level={3}>{selectedEntity.name}</Heading>
+              </Box>
+            </CardHeader>
 
-              <CardBody gap="small">
-                <Box overflow="scroll">
-                  <Paragraph
-                    margin={{ horizontal: "medium" }}
-                    style={{ whiteSpace: "pre-wrap" }}
-                    fill={true}
-                  >
-                    {selectedEntity.description}
-                  </Paragraph>
-                </Box>
-                <LinksCard links={selectedEntityLinks} />
-              </CardBody>
-            </Card>
-          </Box>
-        </Layer>
+            <CardBody gap="small">
+              <Box overflow="auto">
+                <Paragraph
+                  margin={{ horizontal: "medium" }}
+                  style={{ whiteSpace: "pre-wrap" }}
+                  fill={true}
+                >
+                  {selectedEntity.description}
+                </Paragraph>
+              </Box>
+              <LinksCard links={selectedEntityLinks} />
+            </CardBody>
+          </Card>
+        </Box>
       )}
     </Page>
   );

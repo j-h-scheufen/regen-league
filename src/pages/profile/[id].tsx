@@ -1,6 +1,5 @@
 import { GetServerSidePropsContext, InferGetServerSidePropsType } from "next";
 import { Box, Heading, Page } from "grommet";
-import { useRouter } from "next/router";
 
 import {
   getHubsForUser,

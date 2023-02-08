@@ -61,11 +61,11 @@ type PageState = {
 const initialLayerVisibility: ActiveLayersConfig = {
   hubs: true,
   projects: true,
+  projects2hubs: false,
 }; // see also defaultChecked on EntityTypeSelector
-const pageStateAtom = atom<PageState>({
-  showEntity: false,
-  viewMode: ViewMode.MAP,
-});
+
+const showEntityAtom = atom<boolean>(false);
+const viewModeAtom = atom<ViewMode>(ViewMode.MAP);
 
 export default function MapPage({
   entities,
@@ -77,11 +77,12 @@ export default function MapPage({
   const entitiesList = useAtomValue(entitiesListAtom);
   const entitiesMap = useAtomValue(entitiesMapAtom);
   const filteredEntities = useAtomValue(filteredListAtom);
-  const [pageState, setPageState] = useAtom(pageStateAtom);
+  const [showEntity, setShowEntity] = useAtom(showEntityAtom);
+  const [viewMode, setViewMode] = useAtom(viewModeAtom);
 
   const handleKeyUp: KeyboardEventHandler = (event) => {
     if (event.key === "Escape") {
-      setPageState({ ...pageState, showEntity: false });
+      setShowEntity(false);
     }
   };
 
@@ -90,15 +91,13 @@ export default function MapPage({
   useEventListener("keyup", handleKeyUp);
 
   const ViewModeToggle = () => {
-    switch (pageState.viewMode) {
+    switch (viewMode) {
       case ViewMode.MAP:
         return (
           <Button
             size="small"
             label="Search / Filter"
-            onClick={() =>
-              setPageState({ ...pageState, viewMode: ViewMode.TABLE })
-            }
+            onClick={() => setViewMode(ViewMode.TABLE)}
           />
         );
       case ViewMode.TABLE:
@@ -106,69 +105,8 @@ export default function MapPage({
           <Button
             size="small"
             label="View on Map"
-            onClick={() =>
-              setPageState({ ...pageState, viewMode: ViewMode.MAP })
-            }
+            onClick={() => setViewMode(ViewMode.MAP)}
           />
-        );
-    }
-  };
-
-  const MainContent = () => {
-    switch (pageState.viewMode) {
-      case ViewMode.MAP:
-        return (
-          <Box height="80vh" width="100vw">
-            <GlobalMap
-              initialLayers={initialLayerVisibility}
-              onSelection={(feature) => {
-                if (
-                  feature.properties?.id &&
-                  feature.properties.id !== selectedEntity?.id
-                ) {
-                  const newEntity = entitiesMap.get(feature.properties.id);
-                  if (newEntity) {
-                    setSelectedEntity(newEntity);
-                    setPageState({ ...pageState, showEntity: true });
-                  } else
-                    console.error(
-                      "Data out of sync. Unable to find a corresponding Entity for a Feature selected on the map."
-                    );
-                }
-              }}
-            />
-          </Box>
-        );
-      case ViewMode.TABLE:
-        return (
-          <Box>
-            <DataTable
-              step={10}
-              data={filteredEntities}
-              style={{ width: "100vw" }}
-              columns={[
-                {
-                  property: "name",
-                  header: <Text>Name</Text>,
-                  primary: true,
-                  search: true,
-                },
-                {
-                  property: "description",
-                  header: "Description",
-                  render: (e) => (
-                    <Box width="600px">
-                      <Text truncate>{e.description}</Text>
-                    </Box>
-                  ),
-                },
-              ]}
-              onClickRow={(event) => {
-                setSelectedEntity(event.datum as LocationEntity);
-                setPageState({ ...pageState, showEntity: true });
-              }}
-            />
-          </Box>
         );
     }
   };
@@ -192,10 +130,62 @@ export default function MapPage({
         <ViewModeToggle />
       </Box>
 
-      <MainContent />
+      {viewMode == ViewMode.MAP && (
+        <Box style={{ height: "80vh", width: "100vw", position: "relative" }}>
+          <GlobalMap
+            initialLayers={initialLayerVisibility}
+            onSelection={(feature) => {
+              if (
+                feature.properties?.id &&
+                feature.properties.id !== selectedEntity?.id
+              ) {
+                const newEntity = entitiesMap.get(feature.properties.id);
+                if (newEntity) {
+                  setSelectedEntity(newEntity);
+                  setShowEntity(true);
+                } else
+                  console.error(
+                    "Data out of sync. Unable to find a corresponding Entity for a Feature selected on the map."
+                  );
+              }
+            }}
+          />
+        </Box>
+      )}
+
+      {viewMode == ViewMode.TABLE && (
+        <Box>
+          <DataTable
+            step={10}
+            data={filteredEntities}
+            style={{ width: "100vw" }}
+            columns={[
+              {
+                property: "name",
+                header: <Text>Name</Text>,
+                primary: true,
+                search: true,
+              },
+              {
+                property: "description",
+                header: "Description",
+                render: (e) => (
+                  <Box width="600px">
+                    <Text truncate>{e.description}</Text>
+                  </Box>
+                ),
+              },
+            ]}
+            onClickRow={(event) => {
+              setSelectedEntity(event.datum as LocationEntity);
+              setShowEntity(true);
+            }}
+          />
+        </Box>
+      )}
 
       {/* We can just use a Box with some custom styles here to replicate a sidebar, while also allowing clicks elsewhere on the page */}
-      {selectedEntity && pageState.showEntity && (
+      {selectedEntity && showEntity && (
         <Box
           width="50%"
           height="100%"
@@ -211,11 +201,7 @@ export default function MapPage({
           <Card>
             <CardHeader elevation="small" justify="center">
               <Box pad={{ left: "medium" }}>
-                <Button
-                  onClick={() =>
-                    setPageState({ ...pageState, showEntity: false })
-                  }
-                >
+                <Button onClick={() => setShowEntity(false)}>
                   <Close />
                 </Button>
               </Box>

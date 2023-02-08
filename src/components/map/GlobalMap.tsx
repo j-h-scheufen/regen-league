@@ -35,13 +35,16 @@ export type ActiveLayersConfig = {
   people?: boolean;
 };
 
-const initialViewState = {
+const initialViewState: ViewState = {
   latitude: 20,
   longitude: 4,
   zoom: 1.1,
+  bearing: 0,
+  pitch: 0,
+  padding: { top: 0, bottom: 0, right: 0, left: 0 },
 };
 
-const viewStateAtom = atom<ViewState | null>(null);
+const viewStateAtom = atom<ViewState | null>(initialViewState);
 
 function DeckGLOverlay(props: MapboxOverlayProps & { interleaved?: boolean }) {
   const overlay = useControl<MapboxOverlay>(() => new MapboxOverlay(props));
@@ -133,38 +136,62 @@ export default function GlobalMap({ initialLayers, onSelection }: Props) {
     }),
   ];
 
+  // @ts-ignore
+  // @ts-ignore
   return (
-    <MapboxMap
+    // <MapboxMap
+    //   initialViewState={initialViewState}
+    //   mapStyle="mapbox://styles/mapbox/satellite-v9"
+    //   // projection="naturalEarth"
+    //   mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
+    //   // style={{width: '100vw', height: '100vh'}}
+    //   attributionControl={false}
+    //   reuseMaps={true}
+    // >
+    //   <DeckGLOverlay
+    //     layers={layers}
+    //     pickingRadius={3}
+    //     getTooltip={(info: HoverInfo) => {
+    //       if (info.object) {
+    //         return info.object.properties.name || "No Name";
+    //       }
+    //     }}
+    //     onClick={onClick}
+    //     // onViewStateChange={(state) => setViewState(state)}
+    //   />
+    //   {hoverFeature && (
+    //     <Popup
+    //       longitude={(hoverFeature.geometry as Point).coordinates[0]}
+    //       latitude={(hoverFeature.geometry as Point).coordinates[1]}
+    //       closeButton={false}
+    //       anchor="bottom"
+    //       style={{ zIndex: 100 }}
+    //     >
+    //       {hoverFeature.properties?.name}
+    //     </Popup>
+    //   )}
+    // </MapboxMap>
+    <DeckGL
       initialViewState={initialViewState}
-      mapStyle="mapbox://styles/mapbox/satellite-v9"
-      // projection="naturalEarth"
-      mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
-      // style={{width: '100vw', height: '100vh'}}
-      attributionControl={false}
-      reuseMaps={true}
+      viewState={viewState}
+      controller={true}
+      layers={layers}
+      pickingRadius={3}
+      getTooltip={(info: HoverInfo) => {
+        if (info.object) {
+          return info.object.properties.name || "No Name";
+        }
+      }}
+      onClick={onClick}
+      //@ts-ignore
+      onViewStateChange={(nextState) => setViewState(nextState.viewState)}
     >
-      <DeckGLOverlay
-        layers={layers}
-        pickingRadius={3}
-        getTooltip={(info: HoverInfo) => {
-          if (info.object) {
-            return info.object.properties.name || "No Name";
-          }
-        }}
-        onClick={onClick}
-        // onViewStateChange={(state) => setViewState(state)}
+      <MapboxMap
+        mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
+        mapStyle="mapbox://styles/mapbox/satellite-v9"
+        attributionControl={false}
+        reuseMaps={true}
       />
-      {hoverFeature && (
-        <Popup
-          longitude={(hoverFeature.geometry as Point).coordinates[0]}
-          latitude={(hoverFeature.geometry as Point).coordinates[1]}
-          closeButton={false}
-          anchor="bottom"
-          style={{ zIndex: 100 }}
-        >
-          {hoverFeature.properties?.name}
-        </Popup>
-      )}
-    </MapboxMap>
+    </DeckGL>
   );
 }

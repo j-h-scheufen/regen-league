@@ -14,6 +14,7 @@ import { Close } from "grommet-icons";
 import { GetServerSidePropsContext, InferGetServerSidePropsType } from "next";
 import { atom, useAtom, useAtomValue } from "jotai";
 import { useHydrateAtoms } from "jotai/utils";
+import React, { KeyboardEventHandler } from "react";
 
 import { EntityType, LocationEntity } from "../utils/types";
 import { currentEntityAtom } from "../state/global";
@@ -31,7 +32,6 @@ import EntityTypeSelector, {
   filteredListAtom,
 } from "../components/entity/EntityTypeSelector";
 import { getEntitiesByType, getServerClient } from "../utils/supabase";
-import React, { KeyboardEventHandler } from "react";
 import { useEventListener } from "../hooks/useEventListener";
 
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {

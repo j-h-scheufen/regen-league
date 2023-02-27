@@ -172,7 +172,6 @@ export default function GlobalMap({ initialLayers, onSelection }: Props) {
     //   )}
     // </MapboxMap>
     <DeckGL
-      initialViewState={initialViewState}
       viewState={viewState}
       controller={true}
       layers={layers}

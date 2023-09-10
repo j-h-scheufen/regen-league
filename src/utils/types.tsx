@@ -1,4 +1,4 @@
-import { Geometry, Position } from "geojson";
+import { Geometry, Position } from 'geojson';
 
 export enum UserStatus {
   ONBOARDING = 1,
@@ -112,12 +112,9 @@ export type RegionCatalog = {
 //#########################
 // Type Guards
 
-export function isLocationEntity(
-  e: Entity | LocationEntity
-): e is LocationEntity {
+export function isLocationEntity(e: Entity | LocationEntity): e is LocationEntity {
   return (
-    (e as LocationEntity).position !== undefined &&
-    (e as LocationEntity).geometry !== undefined
+    (e as LocationEntity).position !== undefined && (e as LocationEntity).geometry !== undefined
   );
 }
 

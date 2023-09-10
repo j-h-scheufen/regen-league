@@ -1,54 +1,28 @@
-import { Provider as JotaiProvider, useAtomValue } from "jotai";
-import { createBrowserSupabaseClient } from "@supabase/auth-helpers-nextjs";
-import { SessionContextProvider, Session } from "@supabase/auth-helpers-react";
-import type { AppProps } from "next/app";
-import { Suspense, useState } from "react";
-import "mapbox-gl/dist/mapbox-gl.css";
+import { NextPage } from 'next';
+import { AppProps } from 'next/app';
+import Head from 'next/head';
+import ThemeProvider from '../theme';
 
-import "../styles/global.css";
-import Layout from "../components/Layout";
-import {
-  customCatalogAtom,
-  epaCatalogAtom,
-  linkTypesAtom,
-  oneEarthCatalogAtom,
-  rolesAtom,
-} from "../state/global";
-import SuspenseSpinner from "../components/utils/SuspenseSpinner";
+type NextPageWithLayout = NextPage & {
+  // eslint-disable-next-line no-unused-vars
+  getLayout?: (page: React.ReactElement) => React.ReactNode;
+};
 
-export default function App({
-  Component,
-  pageProps,
-}: AppProps<{
-  initialSession: Session;
-}>) {
-  const [client] = useState(() => createBrowserSupabaseClient());
+interface MyAppProps extends AppProps {
+  Component: NextPageWithLayout;
+}
 
-  const GlobalStatePreloader = () => {
-    // place async atoms here that you want to load early
-    useAtomValue(linkTypesAtom);
-    useAtomValue(rolesAtom);
-    useAtomValue(oneEarthCatalogAtom);
-    useAtomValue(epaCatalogAtom);
-    useAtomValue(customCatalogAtom);
-    return null;
-  };
+export default function App({ Component, pageProps }: MyAppProps) {
+  const getLayout = Component.getLayout ?? ((page): JSX.Element => page);
 
   return (
-    <JotaiProvider>
-      <Suspense fallback={<SuspenseSpinner />}>
-        {" "}
-        {/* Required to avoid infinite loop with async atoms that were not preloaded */}
-        <GlobalStatePreloader />
-        <SessionContextProvider
-          supabaseClient={client}
-          initialSession={pageProps.initialSession}
-        >
-          <Layout>
-            <Component {...pageProps} />
-          </Layout>
-        </SessionContextProvider>
-      </Suspense>
-    </JotaiProvider>
+    <>
+      <Head>
+        <title>Regen League</title>
+        <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width" />
+      </Head>
+
+      <ThemeProvider>{getLayout(<Component {...pageProps} />)}</ThemeProvider>
+    </>
   );
 }

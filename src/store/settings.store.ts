@@ -1,10 +1,10 @@
-import { ColorScheme } from '@mantine/core';
+import { MantineColorScheme } from '@mantine/core';
 import { create } from 'zustand';
 
 export type Direction = 'rtl' | 'ltr';
 
 interface ThemeSettings {
-  colorScheme: ColorScheme;
+  colorScheme: MantineColorScheme;
   direction: Direction;
 }
 

@@ -19,7 +19,7 @@ export default function App({ Component, pageProps }: MyAppProps) {
   return (
     <ThemeProvider>
       <Head>
-        <title>Mantine Template</title>
+        <title>Regen Link</title>
         <meta
           name="viewport"
           content="minimum-scale=1, initial-scale=1, width=device-width, user-scalable=no"
